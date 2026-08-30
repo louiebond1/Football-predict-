@@ -55,6 +55,11 @@ function avatar(name, size = '') {
   const initial = esc((name || '?').trim().slice(0, 1).toUpperCase());
   return `<span class="avatar ${size}">${initial}</span>`;
 }
+function initials(name) {
+  const words = (name || '?').trim().split(/\s+/).filter(Boolean);
+  const letters = words.length > 1 ? words[0][0] + words[words.length - 1][0] : words[0].slice(0, 2);
+  return esc(letters.toUpperCase());
+}
 
 const state = {
   tab: 'gw', supabase: null, session: null, config: null,
@@ -490,7 +495,8 @@ function renderGroup() {
   const p = myPayment();
   const { pot, paidCount, total } = potMeta();
   const anyUnconfirmed = Object.values(state.payments).some(x => !x.confirmed_paid_at);
-  screen.innerHTML = `<section class="group-head"><div class="group-emblem">${esc(g.name.toUpperCase())}</div><div><div class="private-badge">${ic('shield', 13)} Private Group</div><h1 style="margin:4px 0 2px;font-size:28px;letter-spacing:-1px">${esc(g.name)}</h1><div class="hero-sub">${gbp(g.stake_pence)} / week · ${state.members.length} members · Treasurer: ${esc(profileName(g.treasurer_id))}</div></div></section>
+  screen.innerHTML = `<section class="group-head"><div class="group-emblem">${initials(g.name)}</div><div><div class="private-badge">${ic('shield', 13)} Private Group</div><h1 style="margin:4px 0 2px;font-size:26px;letter-spacing:-1px;line-height:1.1">${esc(g.name)}</h1><div class="hero-sub">${gbp(g.stake_pence)} / week · ${state.members.length} members · Treasurer: ${esc(profileName(g.treasurer_id))}</div></div></section>
+  <div class="pill" style="margin:4px 0 14px">Join code <strong class="accent" style="letter-spacing:3px;margin-left:5px">${esc(g.join_code)}</strong></div>
   ${groupSwitcher()}
   <section class="card"><div class="card-head"><div class="card-title">${ic('wallet')} ${esc(state.round || 'Gameweek')} Pot</div><span class="badge">${paidCount}/${total} paid</span></div><div class="pot-hero"><div class="pot-amount">${pot}</div><div class="pot-icon">${ic('wallet', 26)}</div></div></section>
   <section class="card"><div class="card-head"><div class="card-title">${ic('users')} Member Payments</div>${isTreasurer() && anyUnconfirmed ? `<button class="secondary chip-btn" id="confirmAllBtn">Confirm All</button>` : ''}</div>${state.members.map(m => {
@@ -498,11 +504,10 @@ function renderGroup() {
     const status = pay?.confirmed_paid_at ? 'Paid' : pay?.claimed_paid_at ? 'Claimed' : 'Unpaid';
     const cls = pay?.confirmed_paid_at ? 'paid' : 'unpaid';
     const canConfirm = isTreasurer() && !pay?.confirmed_paid_at;
-    return `<div class="payment-row"><div class="row-left">${avatar(profileName(m.user_id), 'sm')}<strong>${esc(profileName(m.user_id))}${m.user_id === myId() ? ' (you)' : ''}</strong></div><span style="display:flex;align-items:center;gap:8px"><span class="${cls}">${pay?.confirmed_paid_at ? ic('check', 15) : ''} ${status}</span>${canConfirm ? `<button class="secondary confirm-btn chip-btn" data-user="${m.user_id}">Confirm</button>` : ''}</span></div>`;
+    return `<div class="payment-row"><div class="row-left">${avatar(profileName(m.user_id), 'sm')}<strong>${esc(profileName(m.user_id))}${m.user_id === myId() ? ' (you)' : ''}</strong></div><span><span class="${cls}">${pay?.confirmed_paid_at ? ic('check', 15) : ''} ${status}</span>${canConfirm ? `<button class="secondary confirm-btn chip-btn" data-user="${m.user_id}">Confirm</button>` : ''}</span></div>`;
   }).join('')}</section>
   <section class="card"><div class="card-title">${ic('clock')} This Week</div><div class="rivalry-row"><span class="row-left">${ic('trophy', 15)} Winner takes all</span></div><div class="rivalry-row"><span class="row-left">${ic('lock', 15)} Predictions lock per fixture kickoff</span></div><div class="rivalry-row"><span class="row-left">${ic('target', 15)} Exact score +3 · Correct result +1</span></div></section>
   <section class="card" id="rivalryCard"><div class="card-title">${ic('award')} Group Rivalry</div><div class="empty">Loading…</div></section>
-  <section class="card"><div class="card-title">Join Code</div><div style="font-size:32px;font-weight:900;letter-spacing:4px;color:var(--accent);text-align:center">${esc(g.join_code)}</div><div class="rules">Share this code so friends can join the group.</div></section>
   <section class="card"><div class="card-title">${ic('landmark')} Pay the Treasurer</div><p class="muted">Money is sent separately. KickPot only records whether the Treasurer has confirmed payment.</p>
   <div class="bankbox"><div class="bankline"><span>Account name</span><b>${esc(g.bank_account_name || 'Not set')}</b></div><div class="bankline"><span>Sort code</span><b>${esc(g.bank_sort_code || '••-••-••')}</b></div><div class="bankline"><span>Account no.</span><b>${esc(g.bank_account_number || '••••••••')}</b></div><div class="bankline"><span>Reference</span><b>${esc(state.round || 'GW')}-${esc((state.session.user.email || '').split('@')[0].toUpperCase())}</b></div></div>
   ${p?.claimed_paid_at ? `<div class="status warning" style="margin-top:12px">${ic('clock', 15)} Waiting on Treasurer confirmation.</div>` : `<button class="secondary" id="claimPaid" style="margin-top:12px">I've Paid</button>`}
