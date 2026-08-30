@@ -16,10 +16,14 @@
   <div id="app" class="app-shell">
     <header class="topbar">
       <div class="brand"><div class="brand-mark">⚽</div><span>KickPot</span></div>
-      <button class="icon-btn" id="installBtn" hidden aria-label="Install KickPot">＋</button>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="installBtn" hidden aria-label="Install KickPot">＋</button>
+        <button class="user-chip" id="userChip" hidden aria-label="Account"></button>
+      </div>
     </header>
 
     <main id="screen" class="screen"></main>
+    <div id="toast" class="status toast"></div>
 
     <nav class="bottom-nav" aria-label="Main navigation">
       <button data-tab="gw" class="nav-item active"><span>▣</span><small>GW</small></button>
