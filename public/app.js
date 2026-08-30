@@ -441,13 +441,19 @@ function renderLive() {
   bindGroupSwitcher();
 }
 
+const STATUS_LABELS = { FT: 'Full-time', AET: 'After extra time', PEN: 'Penalties', HT: 'Half-time', PST: 'Postponed', CANC: 'Cancelled' };
+function statusLabel(f) {
+  if (f.status?.short === 'NS') return kickoffLabel(f.kickoff);
+  return STATUS_LABELS[f.status?.short] || esc(f.status?.short || '');
+}
+
 function liveFixtureRow(f) {
   const live = !['NS', 'FT', 'AET', 'PEN', 'PST', 'CANC'].includes(f.status?.short);
   const saved = state.predictions[f.id];
   return `<div class="fixture"><div class="teams"><div class="team">${crest(f.home)}<span>${esc(f.home?.name)}</span></div>
   <div class="scorepick"><span class="scorebox ${live ? 'accent' : ''}" style="display:grid;place-items:center">${f.goals?.home ?? '–'}</span><span class="dash">–</span><span class="scorebox ${live ? 'accent' : ''}" style="display:grid;place-items:center">${f.goals?.away ?? '–'}</span></div>
   <div class="team away"><span>${esc(f.away?.name)}</span>${crest(f.away)}</div></div>
-  <div class="rules">${live ? `<span class="accent">${f.status?.elapsed ? f.status.elapsed + "'" : 'LIVE'}</span>` : esc(f.status?.short || '')} ${saved ? `· Your pick: ${saved.predicted_home}-${saved.predicted_away}` : ''} ${predictionBadge(saved, f)}</div></div>`;
+  <div class="rules">${live ? `<span class="accent">${f.status?.elapsed ? f.status.elapsed + "'" : 'LIVE'}</span>` : statusLabel(f)} ${saved ? `· Your pick: ${saved.predicted_home}-${saved.predicted_away}` : ''} ${predictionBadge(saved, f)}</div></div>`;
 }
 
 function renderHistory() {
