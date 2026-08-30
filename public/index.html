@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#07110d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KickPot" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <link rel="stylesheet" href="/styles.css" />
+  <title>KickPot</title>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">⚽</div><span>KickPot</span></div>
+      <button class="icon-btn" id="installBtn" hidden aria-label="Install KickPot">＋</button>
+    </header>
+
+    <main id="screen" class="screen"></main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button data-tab="gw" class="nav-item active"><span>▣</span><small>GW</small></button>
+      <button data-tab="live" class="nav-item"><span>◉</span><small>Live</small></button>
+      <button data-tab="history" class="nav-item"><span>◷</span><small>History</small></button>
+      <button data-tab="group" class="nav-item"><span>👥</span><small>Group</small></button>
+    </nav>
+  </div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
