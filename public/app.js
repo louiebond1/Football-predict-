@@ -60,8 +60,8 @@ const state = {
   tab: 'gw', supabase: null, session: null, config: null,
   groups: [], activeGroupId: null, gameweekId: null,
   fixtures: [], round: null, predictions: {}, members: [], profiles: {}, payments: {},
-  leaderboard: [], history: [], scorers: {},
-  prevRanks: {}, rankDelta: {}, lastGoal: null, seasonBoard: []
+  leaderboard: [], history: [],
+  prevRanks: {}, rankDelta: {}, lastGoal: null, prevGoals: {}, seasonBoard: []
 };
 
 function esc(s = '') { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])) }
@@ -206,11 +206,10 @@ async function loadGroupSeasonBoard() {
 
 function computeAwards(rows, history) {
   if (!rows.length) return null;
-  const totals = {}, exactTotals = {}, scorerTotals = {}, byUserGw = {};
+  const totals = {}, exactTotals = {}, byUserGw = {};
   rows.forEach(r => {
     totals[r.user_id] = (totals[r.user_id] || 0) + r.points;
     exactTotals[r.user_id] = (exactTotals[r.user_id] || 0) + (r.exact_scores || 0);
-    scorerTotals[r.user_id] = (scorerTotals[r.user_id] || 0) + (r.scorer_hits || 0);
     (byUserGw[r.user_id] ||= []).push({ gw: r.gameweek_id, points: r.points });
   });
   const weeklyWins = {};
@@ -236,50 +235,34 @@ function computeAwards(rows, history) {
 
   const topBy = obj => Object.entries(obj).sort((a, b) => b[1] - a[1])[0];
   const champion = topBy(weeklyWins);
-  const oracle = topBy(scorerTotals);
   const mostExact = topBy(exactTotals);
   const spoon = topBy(woodenSpoon);
 
   return {
-    totals, champion: champion && champion[1] > 0 ? champion : null,
-    oracle: oracle && oracle[1] > 0 ? oracle : null, climber,
+    totals, champion: champion && champion[1] > 0 ? champion : null, climber,
     mostExact: mostExact && mostExact[1] > 0 ? mostExact : null,
     spoon: spoon && spoon[1] > 0 ? spoon : null
   };
 }
 
 async function refreshLiveScores() {
-  const inPlay = state.fixtures.filter(f => !['NS', 'FT', 'AET', 'PEN', 'PST', 'CANC'].includes(f.status?.short));
-  const finishedIds = state.fixtures.filter(f => f.id).map(f => f.id);
-  let needsScorer = [];
-  if (finishedIds.length) {
-    const { data } = await state.supabase.from('fixtures').select('id')
-      .in('id', finishedIds).in('status', ['FT', 'AET', 'PEN']).is('first_scorer_player_id', null);
-    needsScorer = (data || []).map(r => ({ id: r.id }));
-  }
-  const toFetch = [...inPlay, ...needsScorer.filter(n => !inPlay.some(f => f.id === n.id))];
-  if (toFetch.length) {
-    const results = await Promise.all(toFetch.map(f => fetch(`/api/football/fixtures/${f.id}/events`).then(r => r.json()).catch(() => null)));
+  const prevGoals = state.prevGoals || {};
+  const fxRes = await fetch('/api/football/fixtures').then(r => r.json()).catch(() => null);
+  if (fxRes) {
     let latest = null;
-    results.forEach((d, i) => {
-      (d?.events || []).filter(e => e.type === 'Goal' && e.detail !== 'Missed Penalty').forEach(e => {
-        const minute = (e.time?.elapsed || 0) * 60 + (e.time?.extra || 0);
-        if (!latest || minute >= latest.minute) latest = { team: e.team?.name, player: e.player?.name, displayMinute: e.time?.elapsed, minute, own: e.detail === 'Own Goal' };
-      });
+    (fxRes.fixtures || []).forEach(f => {
+      const prev = prevGoals[f.id];
+      if (!prev || f.goals?.home == null) return;
+      if (f.goals.home > prev.home) latest = { team: f.home?.name };
+      else if (f.goals.away > prev.away) latest = { team: f.away?.name };
     });
     if (latest) state.lastGoal = latest;
-    const fxRes = await fetch('/api/football/fixtures').then(r => r.json()).catch(() => null);
-    if (fxRes) { state.fixtures = fxRes.fixtures || state.fixtures; state.round = fxRes.round; }
+    state.prevGoals = Object.fromEntries((fxRes.fixtures || []).filter(f => f.id).map(f => [f.id, { home: f.goals?.home, away: f.goals?.away }]));
+    state.fixtures = fxRes.fixtures || state.fixtures;
+    state.round = fxRes.round;
   }
   await refreshLeaderboard();
   updateBell();
-}
-
-async function scorersFor(fixtureId) {
-  if (state.scorers[fixtureId]) return state.scorers[fixtureId];
-  const d = await fetch(`/api/football/fixtures/${fixtureId}/scorers`).then(r => r.json()).catch(() => ({ players: [] }));
-  state.scorers[fixtureId] = d.players || [{ id: 0, name: 'No goalscorer', team: '' }];
-  return state.scorers[fixtureId];
 }
 
 function potMeta() {
@@ -348,15 +331,6 @@ function renderGW() {
     const pred = pickFor(id);
     row.querySelectorAll('[data-score]').forEach(inp => inp.addEventListener('input', () => { pred[inp.dataset.score] = Math.max(0, Math.min(20, Number(inp.value) || 0)); inp.value = pred[inp.dataset.score] }));
     row.querySelectorAll('[data-step]').forEach(btn => btn.addEventListener('click', () => { const [side, delta] = btn.dataset.step.split(','); pred[side] = Math.max(0, Math.min(20, pred[side] + Number(delta))); renderGW() }));
-    const sel = row.querySelector('[data-scorer]');
-    sel.addEventListener('focus', async () => {
-      if (sel.dataset.loaded) return;
-      const players = await scorersFor(id);
-      sel.innerHTML = players.map(p => `<option value="${p.id}" data-name="${esc(p.name)}">${esc(p.name)}${p.team ? ' — ' + esc(p.team) : ''}</option>`).join('');
-      sel.value = String(pred.scorerId ?? 0);
-      sel.dataset.loaded = '1';
-    });
-    sel.addEventListener('change', () => { pred.scorerId = Number(sel.value); pred.scorerName = sel.selectedOptions[0]?.dataset.name || 'No goalscorer' });
   });
 
   document.querySelector('#lockPicks')?.addEventListener('click', submitPicks);
@@ -368,8 +342,8 @@ function pickFor(fixtureId) {
   if (!draftPicks[key]) {
     const existing = state.predictions[fixtureId];
     draftPicks[key] = existing
-      ? { home: existing.predicted_home, away: existing.predicted_away, scorerId: existing.first_scorer_player_id ?? 0, scorerName: existing.first_scorer_name || 'No goalscorer' }
-      : { home: 1, away: 1, scorerId: 0, scorerName: 'No goalscorer' };
+      ? { home: existing.predicted_home, away: existing.predicted_away }
+      : { home: 1, away: 1 };
   }
   return draftPicks[key];
 }
@@ -395,10 +369,6 @@ function fixtureRow(f, groupLocked) {
       ? `<span class="scorebox" style="display:grid;place-items:center">${saved ? saved.predicted_home : '–'}</span><span class="dash">–</span><span class="scorebox" style="display:grid;place-items:center">${saved ? saved.predicted_away : '–'}</span>`
       : `<button class="step" data-step="home,-1">−</button><input class="scorebox" inputmode="numeric" value="${pred.home}" data-score="home"><span class="dash">–</span><input class="scorebox" inputmode="numeric" value="${pred.away}" data-score="away"><button class="step" data-step="away,1">＋</button>`}
     </div><div class="team away"><span>${esc(f.away?.name)}</span>${crest(f.away)}</div></div>
-    <div class="scorer-row">${locked
-      ? `<span class="row-left">${ic('user', 14)} <span class="muted">First scorer:</span> <strong class="accent">${esc(saved?.first_scorer_name || 'No goalscorer')}</strong></span>`
-      : `<span class="row-left">${ic('user', 14)} <span class="muted">First scorer:</span></span><div class="select-wrap inline"><select class="scorer-select-inline" data-scorer><option value="${pred.scorerId}">${esc(pred.scorerName)}</option></select>${ic('chevronRight', 15)}</div>`}
-    </div>
     <div class="rules">${kickoffLabel(f.kickoff)} ${locked ? `· ${ic('lock', 11)} locked` : '· locks at kick-off'} ${saved ? `· <strong class="accent">${saved.points} pts</strong>` : ''} ${predictionBadge(saved, f)}</div>
   </div>`;
 }
@@ -406,7 +376,7 @@ function fixtureRow(f, groupLocked) {
 async function submitPicks() {
   const rows = state.fixtures.filter(f => !isLocked(f.kickoff)).map(f => {
     const p = pickFor(f.id);
-    return { group_id: state.activeGroupId, fixture_id: f.id, user_id: myId(), predicted_home: p.home, predicted_away: p.away, first_scorer_player_id: p.scorerId, first_scorer_name: p.scorerName };
+    return { group_id: state.activeGroupId, fixture_id: f.id, user_id: myId(), predicted_home: p.home, predicted_away: p.away };
   });
   const statusEl = document.querySelector('#gwStatus');
   if (!rows.length) { statusEl.className = 'status warning'; statusEl.textContent = 'No open fixtures left to predict.'; return; }
@@ -430,7 +400,7 @@ function goalSwingCard() {
   const mover = state.leaderboard.find(m => (state.rankDelta[m.user_id] || 0) > 0);
   const faller = state.leaderboard.find(m => (state.rankDelta[m.user_id] || 0) < 0);
   const leader = state.leaderboard[0];
-  return `<section class="card swing"><div class="eyebrow">${ic('zap', 13)} Goal Swing</div><h2>GOAL — ${esc(g.team)}${g.own ? ' (OG)' : ''} ${g.displayMinute}'</h2>
+  return `<section class="card swing"><div class="eyebrow">${ic('zap', 13)} Goal Swing</div><h2>GOAL — ${esc(g.team)}</h2>
   <div>${mover ? `${esc(profileName(mover.user_id))} <span class="accent">${rankMove(mover.user_id)}</span>` : ''}${mover && faller ? ' · ' : ''}${faller ? `${esc(profileName(faller.user_id))} ${rankMove(faller.user_id)}` : ''}${!mover && !faller ? 'Standings unchanged so far.' : ''}</div>
   ${leader ? `<p class="muted">${esc(profileName(leader.user_id))} is now leading the pot.</p>` : ''}</section>`;
 }
@@ -499,17 +469,16 @@ function renderHistory() {
     const s = {
       points: mine.reduce((a, r) => a + r.points, 0),
       exact: mine.reduce((a, r) => a + (r.exact_scores || 0), 0),
-      scorer: mine.reduce((a, r) => a + (r.scorer_hits || 0), 0),
       wins: state.history.filter(h => h.winner_user_id === myId()).length
     };
     const statsCard = document.querySelector('#seasonStatsCard');
-    if (statsCard) statsCard.innerHTML = `<div class="card-title">${ic('climb')} Your Season Stats</div><div class="statgrid"><div class="stat"><b>${s.points}</b><small>Total points</small></div><div class="stat"><b>${s.exact}</b><small>Exact scores</small></div><div class="stat"><b>${s.scorer}</b><small>First scorers</small></div></div><div class="payment-row"><span>Gameweeks won</span><b class="accent">${s.wins}</b></div>`;
+    if (statsCard) statsCard.innerHTML = `<div class="card-title">${ic('climb')} Your Season Stats</div><div class="statgrid"><div class="stat"><b>${s.points}</b><small>Total points</small></div><div class="stat"><b>${s.exact}</b><small>Exact scores</small></div><div class="stat"><b>${s.wins}</b><small>Gameweeks won</small></div></div>`;
 
     const a = computeAwards(rows, state.history);
     const tiles = [];
     if (a?.champion) tiles.push({ icon: 'crown', label: 'Champion', name: profileName(a.champion[0]) });
     if (a?.climber) tiles.push({ icon: 'climb', label: 'Biggest Climber', name: profileName(a.climber.user_id) });
-    if (a?.oracle) tiles.push({ icon: 'star', label: 'The Oracle', name: profileName(a.oracle[0]) });
+    if (a?.mostExact) tiles.push({ icon: 'star', label: 'Sharpshooter', name: profileName(a.mostExact[0]) });
     const awardsCard = document.querySelector('#awardsCard');
     if (awardsCard) awardsCard.innerHTML = `<div class="card-title">${ic('award')} Awards</div>${tiles.length ? `<div class="award-grid">${tiles.map(t => `<div class="award-tile"><div class="award-icon">${ic(t.icon, 18)}</div><b>${esc(t.name)}</b><small>${esc(t.label)}</small></div>`).join('')}</div>` : '<div class="empty">Not enough settled Gameweeks yet.</div>'}`;
   });
@@ -531,7 +500,7 @@ function renderGroup() {
     const canConfirm = isTreasurer() && !pay?.confirmed_paid_at;
     return `<div class="payment-row"><div class="row-left">${avatar(profileName(m.user_id), 'sm')}<strong>${esc(profileName(m.user_id))}${m.user_id === myId() ? ' (you)' : ''}</strong></div><span style="display:flex;align-items:center;gap:8px"><span class="${cls}">${pay?.confirmed_paid_at ? ic('check', 15) : ''} ${status}</span>${canConfirm ? `<button class="secondary confirm-btn chip-btn" data-user="${m.user_id}">Confirm</button>` : ''}</span></div>`;
   }).join('')}</section>
-  <section class="card"><div class="card-title">${ic('clock')} This Week</div><div class="rivalry-row"><span class="row-left">${ic('trophy', 15)} Winner takes all</span></div><div class="rivalry-row"><span class="row-left">${ic('lock', 15)} Predictions lock per fixture kickoff</span></div><div class="rivalry-row"><span class="row-left">${ic('target', 15)} Exact +3 · Result +1 · Scorer +2</span></div></section>
+  <section class="card"><div class="card-title">${ic('clock')} This Week</div><div class="rivalry-row"><span class="row-left">${ic('trophy', 15)} Winner takes all</span></div><div class="rivalry-row"><span class="row-left">${ic('lock', 15)} Predictions lock per fixture kickoff</span></div><div class="rivalry-row"><span class="row-left">${ic('target', 15)} Exact score +3 · Correct result +1</span></div></section>
   <section class="card" id="rivalryCard"><div class="card-title">${ic('award')} Group Rivalry</div><div class="empty">Loading…</div></section>
   <section class="card"><div class="card-title">Join Code</div><div style="font-size:32px;font-weight:900;letter-spacing:4px;color:var(--accent);text-align:center">${esc(g.join_code)}</div><div class="rules">Share this code so friends can join the group.</div></section>
   <section class="card"><div class="card-title">${ic('landmark')} Pay the Treasurer</div><p class="muted">Money is sent separately. KickPot only records whether the Treasurer has confirmed payment.</p>
