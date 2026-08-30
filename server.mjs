@@ -228,7 +228,8 @@ async function serveStatic(req,res,url) {
     if (s.isDirectory()) file = path.join(file,'index.html');
     const data = await readFile(file);
     const ext = path.extname(file);
-    res.writeHead(200,{'Content-Type':mime[ext]||'application/octet-stream','Cache-Control':ext==='.html'?'no-cache':'public, max-age=3600'});
+    const longCache = ['.png','.ico'].includes(ext);
+    res.writeHead(200,{'Content-Type':mime[ext]||'application/octet-stream','Cache-Control':longCache?'public, max-age=86400':'no-cache'});
     res.end(data);
   } catch {
     const html = await readFile(path.join(publicDir,'index.html'));
