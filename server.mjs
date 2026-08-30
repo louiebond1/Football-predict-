@@ -56,6 +56,26 @@ async function supabaseAdmin(restPath, {method='GET', body, prefer=''}={}) {
   return text ? JSON.parse(text) : null;
 }
 
+async function inspectSchema() {
+  if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) return { error: 'SUPABASE_SECRET_KEY not configured' };
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+    headers: { apikey: SUPABASE_SECRET_KEY, Authorization: `Bearer ${SUPABASE_SECRET_KEY}`, Accept: 'application/openapi+json' }
+  });
+  if (!r.ok) return { error: `openapi fetch failed: ${r.status} ${await r.text()}` };
+  const spec = await r.json();
+  const expectedTables = ['profiles','groups','group_members','gameweeks','fixtures','group_gameweeks','payments','predictions'];
+  const expectedRpcs = ['create_group','join_group','ensure_current_gameweek','settle_gameweek','calculate_prediction_points'];
+  const tables = {};
+  for (const t of expectedTables) {
+    const def = spec.definitions?.[t];
+    tables[t] = def ? Object.keys(def.properties || {}) : null;
+  }
+  const views = { group_leaderboard: spec.definitions?.group_leaderboard ? Object.keys(spec.definitions.group_leaderboard.properties || {}) : null };
+  const rpcs = {};
+  for (const fn of expectedRpcs) rpcs[fn] = Boolean(spec.paths?.[`/rpc/${fn}`]);
+  return { tables, views, rpcs };
+}
+
 async function getCurrentRound() {
   return cached(`round:${SEASON}`, 6*60*60*1000, async () => {
     const d = await apiFootball('fixtures/rounds', { league: LEAGUE_ID, season: SEASON, current: 'true' });
@@ -145,6 +165,11 @@ async function squad(teamId) {
 async function handleApi(req, res, url) {
   try {
     if (url.pathname === '/api/health') return send(res, 200, {ok:true,app:'KickPot'});
+    if (url.pathname === '/api/debug/schema' && process.env.DEBUG_ENDPOINTS === '1') {
+      const report = await inspectSchema();
+      console.log('SCHEMA_INSPECT', JSON.stringify(report));
+      return send(res, 200, report);
+    }
     if (url.pathname === '/api/config') return send(res, 200, {
       supabaseUrl:SUPABASE_URL,
       supabasePublishableKey:SUPABASE_PUBLISHABLE_KEY,
