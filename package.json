@@ -4,10 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.mjs",
-    "check": "node --check server.mjs"
+    "start": "node start.mjs",
+    "check": "node --check server.mjs && node --check start.mjs"
   },
-  "engines": {
-    "node": ">=22"
-  }
+  "engines": {"node": ">=20"}
 }
