@@ -439,7 +439,6 @@ function renderLive() {
   <section class="card"><div class="card-title">${ic('target')} This Gameweek's Fixtures</div>${state.fixtures.map(liveFixtureRow).join('') || '<div class="empty">No fixtures yet.</div>'}</section>
   ${whatYouNeedCard()}`;
   bindGroupSwitcher();
-  refreshLiveScores().then(() => { if (state.tab === 'live') renderLive() });
 }
 
 function liveFixtureRow(f) {
@@ -603,7 +602,10 @@ function render() {
   if (!state.session) return renderAuth();
   ({ gw: renderGW, live: renderLive, history: renderHistory, group: renderGroup }[state.tab])();
   updateBell();
-  if (state.tab === 'live' && state.groups.length) liveInterval = setInterval(() => { if (state.tab === 'live') refreshLiveScores().then(renderLive) }, 30000);
+  if (state.tab === 'live' && state.groups.length) {
+    refreshLiveScores().then(() => { if (state.tab === 'live') renderLive() });
+    liveInterval = setInterval(() => { if (state.tab === 'live') refreshLiveScores().then(() => { if (state.tab === 'live') renderLive() }) }, 30000);
+  }
 }
 nav.forEach(btn => btn.addEventListener('click', () => { state.tab = btn.dataset.tab; render() }));
 userChip?.addEventListener('click', async () => { if (confirm('Sign out of KickPot?')) { await state.supabase.auth.signOut(); state.session = null; render() } });
