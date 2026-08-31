@@ -36,3 +36,41 @@
 .bottom-nav .nav-item:active{transform:none!important}
 .app-shell{padding-bottom:calc(124px + env(safe-area-inset-bottom))!important}
 .kp3-next-fixture{margin-bottom:18px!important}
+
+/* Keep the GW lock timer inside its third of the hero grid on narrow iPhones. */
+.kp3-gw .hero-meta .pill.lock{
+  min-width:0!important;
+  overflow:hidden!important;
+  padding:0 6px!important;
+  gap:3px!important;
+  font-size:0!important;
+  white-space:nowrap!important;
+}
+.kp3-gw .hero-meta .pill.lock::before{
+  content:'LOCKS IN';
+  flex:0 1 auto;
+  min-width:0;
+  color:#aeb7c7;
+  font-size:7.5px!important;
+  font-weight:800;
+  letter-spacing:.02em;
+}
+.kp3-gw .hero-meta .pill.lock svg{
+  width:11px!important;
+  height:11px!important;
+  flex:0 0 11px!important;
+}
+.kp3-gw #lockPillTime{
+  min-width:0!important;
+  color:#9b5cff!important;
+  font-size:10.5px!important;
+  line-height:1!important;
+  letter-spacing:-.45px!important;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:'tnum' 1;
+}
+@media (max-width:370px){
+  .kp3-gw .hero-meta .pill.lock svg{display:none!important}
+  .kp3-gw .hero-meta .pill.lock::before{font-size:7px!important}
+  .kp3-gw #lockPillTime{font-size:10px!important}
+}
