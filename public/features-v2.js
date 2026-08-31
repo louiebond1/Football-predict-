@@ -150,7 +150,7 @@ function rankFor(totals, userId) {
 }
 
 function buildLiveImpact(ctx) {
-  const liveFixtures = ctx.fixtures.filter(f => LIVE_EXCLUDED.has(f.status?.short) && f.goals?.home != null && f.goals?.away != null);
+  const liveFixtures = ctx.fixtures.filter(f => !LIVE_EXCLUDED.has(f.status?.short) && f.goals?.home != null && f.goals?.away != null);
   if (!liveFixtures.length || !ctx.predictions.some(p => p.user_id === ctx.session.user.id)) return null;
 
   const base = liveProjection(ctx);
@@ -212,7 +212,7 @@ function decorateLive(ctx) {
   if (!matchesView) return;
   decoratePredictionReveal(ctx);
 
-  matchesView.querySelector('.live-impact-v2')?.remove();
+  if (matchesView.querySelector('.live-impact-v2')) return;
   const impact = buildLiveImpact(ctx);
   if (impact) {
     const insight = matchesView.querySelector('.live-insight-final');
@@ -328,7 +328,7 @@ async function enhanceFeatures(force = false) {
   if (!tab) return;
   running = true;
   try {
-    const ctx = await loadContext(force || tab === 'live');
+    const ctx = await loadContext(force);
     if (!ctx) return;
     maybeShowWinnerMoment(ctx);
     if (tab === 'live') decorateLive(ctx);
