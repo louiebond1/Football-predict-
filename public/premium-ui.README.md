@@ -1,1 +1,0 @@
-Premium visual override stylesheet for KickPot. It is intentionally isolated from application logic so the redesign can be reviewed without touching `public/app.js`, `server.mjs`, or Supabase schema code. To activate, load `/premium-ui.css` after the existing main stylesheet in the app shell.
