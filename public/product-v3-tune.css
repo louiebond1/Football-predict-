@@ -74,3 +74,28 @@
   .kp3-gw .hero-meta .pill.lock::before{font-size:7px!important}
   .kp3-gw #lockPillTime{font-size:10px!important}
 }
+
+/* Installed iPhone app: keep real UI below the status bar / Dynamic Island. */
+@media (display-mode:standalone){
+  .app-shell{
+    padding-top:calc(env(safe-area-inset-top) + 2px)!important;
+    min-height:100dvh!important;
+  }
+  .topbar{
+    margin-top:0!important;
+  }
+}
+
+/* Signed-out state should feel like a login screen, not a disabled app. */
+body:has(#authEmail) .bottom-nav,
+body:has(#authEmail) #bellBtn{
+  display:none!important;
+}
+body:has(#authEmail) .app-shell{
+  padding-bottom:28px!important;
+}
+@media (display-mode:standalone){
+  body:has(#authEmail) .app-shell{
+    padding-bottom:calc(28px + env(safe-area-inset-bottom))!important;
+  }
+}
