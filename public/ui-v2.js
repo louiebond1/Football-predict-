@@ -21,6 +21,8 @@ function enhanceGW() {
   const picks = cardByTitle('Your Picks');
   if (!picks) return;
   picks.classList.add('picks-shell-v2');
+  if (picks.dataset.structuralV2 === '1') return;
+  picks.dataset.structuralV2 = '1';
 
   const fixtures = [...picks.querySelectorAll(':scope > .fixture')];
   let lastDay = '';
