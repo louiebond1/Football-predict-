@@ -358,7 +358,10 @@ function groupSwitcher() {
   return `<div class="select-wrap" style="margin-bottom:12px"><select id="groupSwitch" class="scorer-select">${state.groups.map(g => `<option value="${g.id}" ${g.id === state.activeGroupId ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select>${ic('chevronRight', 16)}</div>`;
 }
 function bindGroupSwitcher() {
-  document.querySelector('#groupSwitch')?.addEventListener('change', async e => { state.activeGroupId = e.target.value; await loadGroupData(); render() });
+  const el = document.querySelector('#groupSwitch');
+  if (!el || el.dataset.bound === '1') return;
+  el.dataset.bound = '1';
+  el.addEventListener('change', async e => { state.activeGroupId = e.target.value; await loadGroupData(); render() });
 }
 
 function paymentBanner() {

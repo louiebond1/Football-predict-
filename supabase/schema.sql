@@ -16,6 +16,9 @@ create table if not exists public.groups (
   bank_account_name text,
   bank_sort_code text,
   bank_account_number text,
+  payments_required boolean not null default true,
+  winner_prize text,
+  loser_punishment text,
   created_at timestamptz not null default now()
 );
 
@@ -293,13 +296,19 @@ begin
     select p.user_id, sum(p.points) as pts
     from public.predictions p
     join public.fixtures f on f.id=p.fixture_id
+    join public.group_members gm on gm.group_id=p.group_id and gm.user_id=p.user_id
     where p.group_id=p_group_id and f.gameweek_id=p_gameweek_id
     group by p.user_id
   ), adj_totals as (
-    select user_id, sum(delta) as pts from public.point_adjustments
-    where group_id=p_group_id and gameweek_id=p_gameweek_id
-    group by user_id
+    select pa.user_id, sum(pa.delta) as pts
+    from public.point_adjustments pa
+    join public.group_members gm on gm.group_id=pa.group_id and gm.user_id=pa.user_id
+    where pa.group_id=p_group_id and pa.gameweek_id=p_gameweek_id
+    group by pa.user_id
   )
+  -- Only counts current group_members: a removed/departed member's
+  -- historical predictions stay in the table (kept for settled Gameweeks'
+  -- records) but no longer make them eligible to win a later settlement.
   select coalesce(pt.user_id, at.user_id) into v_winner
   from pred_totals pt full outer join adj_totals at on at.user_id=pt.user_id
   order by coalesce(pt.pts,0) + coalesce(at.pts,0) desc
@@ -338,6 +347,50 @@ create policy "treasurer inserts point adjustments" on public.point_adjustments 
   and exists(select 1 from public.groups g where g.id=group_id and g.treasurer_id=(select auth.uid()))
 );
 
+-- "For fun" groups: when payments_required is off, everyone's payment
+-- counts as confirmed automatically (new rows and existing ones), so the
+-- payment-gated prediction policy never blocks anyone in such a group.
+alter table public.groups add column if not exists payments_required boolean not null default true;
+alter table public.groups add column if not exists winner_prize text;
+alter table public.groups add column if not exists loser_punishment text;
+
+create or replace function public.apply_group_payment_mode()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_required boolean;
+begin
+  select g.payments_required into v_required from public.groups g where g.id = new.group_id;
+  if v_required is false then
+    new.confirmed_paid_at := coalesce(new.confirmed_paid_at, now());
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists apply_group_payment_mode on public.payments;
+create trigger apply_group_payment_mode
+before insert on public.payments
+for each row execute function public.apply_group_payment_mode();
+
+create or replace function public.sync_group_payment_mode()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.payments_required is distinct from old.payments_required then
+    if new.payments_required is false then
+      update public.payments set confirmed_paid_at = coalesce(confirmed_paid_at, now()) where group_id = new.id;
+    else
+      update public.payments set confirmed_paid_at = null where group_id = new.id and confirmed_by is null;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists sync_group_payment_mode on public.groups;
+create trigger sync_group_payment_mode
+after update of payments_required on public.groups
+for each row execute function public.sync_group_payment_mode();
+
 create or replace function public.admin_transfer_treasurer(p_group_id uuid, p_user_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 begin
@@ -353,6 +406,10 @@ begin
 end;
 $$;
 
+-- Removing a member drops their *unsettled* predictions/payments/point
+-- adjustments (so they stop counting toward an in-progress Gameweek they
+-- can no longer be paid out for) but leaves anything tied to an already
+-- settled Gameweek untouched, preserving history/records.
 create or replace function public.admin_remove_member(p_group_id uuid, p_user_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 begin
@@ -362,20 +419,73 @@ begin
   if p_user_id = auth.uid() then
     raise exception 'transfer treasurer control before removing yourself';
   end if;
+  if not exists(select 1 from public.group_members where group_id=p_group_id and user_id=p_user_id) then
+    raise exception 'target user is not a member of this group';
+  end if;
+
+  delete from public.payments pay
+  where pay.group_id=p_group_id and pay.user_id=p_user_id
+    and not exists(
+      select 1 from public.group_gameweeks gg
+      where gg.group_id=p_group_id and gg.gameweek_id=pay.gameweek_id and gg.settled_at is not null
+    );
+
+  delete from public.predictions p
+  using public.fixtures f
+  where p.fixture_id=f.id
+    and p.group_id=p_group_id and p.user_id=p_user_id
+    and not exists(
+      select 1 from public.group_gameweeks gg
+      where gg.group_id=p_group_id and gg.gameweek_id=f.gameweek_id and gg.settled_at is not null
+    );
+
+  delete from public.point_adjustments pa
+  where pa.group_id=p_group_id and pa.user_id=p_user_id
+    and not exists(
+      select 1 from public.group_gameweeks gg
+      where gg.group_id=p_group_id and gg.gameweek_id=pa.gameweek_id and gg.settled_at is not null
+    );
+
   delete from public.group_members where group_id=p_group_id and user_id=p_user_id;
 end;
 $$;
 
 create or replace function public.leave_group(p_group_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_user uuid := auth.uid();
 begin
-  if not exists(select 1 from public.group_members where group_id=p_group_id and user_id=auth.uid()) then
+  if not exists(select 1 from public.group_members where group_id=p_group_id and user_id=v_user) then
     raise exception 'you are not a member of this group';
   end if;
-  if exists(select 1 from public.groups where id=p_group_id and treasurer_id=auth.uid()) then
+  if exists(select 1 from public.groups where id=p_group_id and treasurer_id=v_user) then
     raise exception 'transfer treasurer control to another member before leaving';
   end if;
-  delete from public.group_members where group_id=p_group_id and user_id=auth.uid();
+
+  delete from public.payments pay
+  where pay.group_id=p_group_id and pay.user_id=v_user
+    and not exists(
+      select 1 from public.group_gameweeks gg
+      where gg.group_id=p_group_id and gg.gameweek_id=pay.gameweek_id and gg.settled_at is not null
+    );
+
+  delete from public.predictions p
+  using public.fixtures f
+  where p.fixture_id=f.id
+    and p.group_id=p_group_id and p.user_id=v_user
+    and not exists(
+      select 1 from public.group_gameweeks gg
+      where gg.group_id=p_group_id and gg.gameweek_id=f.gameweek_id and gg.settled_at is not null
+    );
+
+  delete from public.point_adjustments pa
+  where pa.group_id=p_group_id and pa.user_id=v_user
+    and not exists(
+      select 1 from public.group_gameweeks gg
+      where gg.group_id=p_group_id and gg.gameweek_id=pa.gameweek_id and gg.settled_at is not null
+    );
+
+  delete from public.group_members where group_id=p_group_id and user_id=v_user;
 end;
 $$;
 
