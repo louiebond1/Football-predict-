@@ -63,11 +63,12 @@ function initials(name) {
 
 const state = {
   tab: 'gw', supabase: null, session: null, config: null,
-  groups: [], activeGroupId: null, gameweekId: null,
+  groups: [], groupsStatus: 'idle', activeGroupId: null, gameweekId: null,
   fixtures: [], round: null, predictions: {}, members: [], profiles: {}, payments: {},
   leaderboard: [], history: [],
   prevRanks: {}, rankDelta: {}, lastGoal: null, prevGoals: {}, seasonBoard: []
 };
+let sessionReadyRun = 0;
 
 function esc(s = '') { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])) }
 function gbp(pence) { return `£${(pence / 100).toFixed(pence % 100 ? 2 : 0)}` }
@@ -103,21 +104,73 @@ function updateBell() {
   bellDot.hidden = !(needsMe || needsTreasurer || settleable);
 }
 
+function resetSessionState() {
+  state.groups = [];
+  state.groupsStatus = 'idle';
+  state.activeGroupId = null;
+  state.gameweekId = null;
+  state.fixtures = [];
+  state.predictions = {};
+  state.members = [];
+  state.profiles = {};
+  state.payments = {};
+  state.leaderboard = [];
+  state.history = [];
+}
+
+function renderSessionLoading(message = 'Loading your pot…') {
+  screen.className = 'screen';
+  screen.innerHTML = `<section class="card" style="margin-top:22px;text-align:center;padding:28px 18px"><div class="eyebrow">KICKPOT</div><h1 style="margin:8px 0 6px;font-size:25px">${esc(message)}</h1><p class="muted" style="margin:0">Getting your group and Gameweek ready.</p></section>`;
+}
+
 async function boot() {
   state.config = await fetch('/api/config').then(r => r.json()).catch(() => null);
   if (!state.config?.supabaseConfigured) { renderConfigError(); return; }
   state.supabase = createClient(state.config.supabaseUrl, state.config.supabasePublishableKey);
   const { data: { session } } = await state.supabase.auth.getSession();
   state.session = session;
-  state.supabase.auth.onAuthStateChange((_evt, sess) => { state.session = sess; state.groups = []; state.activeGroupId = null; onSessionReady() });
-  onSessionReady();
+
+  state.supabase.auth.onAuthStateChange((evt, sess) => {
+    const previousUserId = state.session?.user?.id || null;
+    const nextUserId = sess?.user?.id || null;
+    state.session = sess;
+    updateUserChip();
+
+    if (!sess) {
+      resetSessionState();
+      renderAuth();
+      return;
+    }
+
+    // Supabase emits INITIAL_SESSION after getSession() and later emits
+    // TOKEN_REFRESHED for the same signed-in user. Neither event represents
+    // a new account, so never wipe group state or restart the app for them.
+    if (previousUserId === nextUserId && (evt === 'INITIAL_SESSION' || evt === 'TOKEN_REFRESHED' || evt === 'USER_UPDATED')) return;
+    if (previousUserId === nextUserId && state.groupsStatus !== 'idle') return;
+
+    onSessionReady();
+  });
+
+  await onSessionReady();
 }
 
 async function onSessionReady() {
-  if (!state.session) { renderAuth(); return; }
+  const run = ++sessionReadyRun;
+  if (!state.session) { resetSessionState(); renderAuth(); return; }
   updateUserChip();
   await ensureProfile();
-  await loadGroups();
+  if (run !== sessionReadyRun || !state.session) return;
+
+  state.groupsStatus = 'loading';
+  if (!state.groups.length) renderSessionLoading();
+  const loaded = await loadGroups();
+  if (run !== sessionReadyRun || !state.session) return;
+  if (!loaded) {
+    state.groupsStatus = 'error';
+    if (!state.groups.length) renderSessionLoading('Couldn’t load your pot');
+    return;
+  }
+  state.groupsStatus = 'loaded';
   render();
 }
 
@@ -138,12 +191,24 @@ async function ensureProfile() {
 
 async function loadGroups() {
   const { data, error } = await state.supabase.from('groups').select('*').order('created_at');
-  if (error) { toast(error.message, 'error'); return; }
-  state.groups = data || [];
-  if (!state.activeGroupId || !state.groups.some(g => g.id === state.activeGroupId)) {
-    state.activeGroupId = state.groups[0]?.id || null;
+  if (error) { toast(error.message, 'error'); return false; }
+  const nextGroups = data || [];
+  state.groups = nextGroups;
+  if (!state.activeGroupId || !nextGroups.some(g => g.id === state.activeGroupId)) {
+    state.activeGroupId = nextGroups[0]?.id || null;
   }
   if (state.activeGroupId) await loadGroupData();
+  else {
+    state.gameweekId = null;
+    state.fixtures = [];
+    state.predictions = {};
+    state.members = [];
+    state.profiles = {};
+    state.payments = {};
+    state.leaderboard = [];
+    state.history = [];
+  }
+  return true;
 }
 
 async function loadGroupData() {
@@ -317,7 +382,7 @@ function startLockTicker() {
 }
 
 function renderGW() {
-  if (!state.groups.length) return renderOnboarding();
+  if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
   const locked = !myPayment()?.confirmed_paid_at;
   screen.innerHTML = `<section class="hero"><h1>${esc(state.round || 'Gameweek')}</h1>${meta()}</section>
   ${groupSwitcher()}
@@ -428,7 +493,7 @@ function whatYouNeedCard() {
 }
 
 function renderLive() {
-  if (!state.groups.length) return renderOnboarding();
+  if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
   const inPlayCount = state.fixtures.filter(f => !['NS', 'FT', 'AET', 'PEN', 'PST', 'CANC'].includes(f.status?.short)).length;
   screen.innerHTML = `<section class="hero"><h1>Live Matchday</h1><div class="hero-meta"><span class="pill">${ic('wallet', 14)} <strong>${potMeta().pot}</strong> Pot</span><span class="pill">${ic('radio', 14)} <strong>${inPlayCount}</strong> Live</span><span class="pill">${ic('clock', 14)} ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date())}</span></div></section>
   ${groupSwitcher()}
@@ -457,7 +522,7 @@ function liveFixtureRow(f) {
 }
 
 function renderHistory() {
-  if (!state.groups.length) return renderOnboarding();
+  if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
   const allFinished = state.fixtures.length && state.fixtures.every(f => ['FT', 'AET', 'PEN'].includes(f.status?.short));
   const alreadySettled = state.history.some(h => h.gameweek_id === state.gameweekId);
   const latestWinner = state.history[0];
@@ -495,7 +560,7 @@ function renderHistory() {
 }
 
 function renderGroup() {
-  if (!state.groups.length) return renderOnboarding();
+  if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
   const g = activeGroup();
   const p = myPayment();
   const { pot, paidCount, total } = potMeta();
@@ -554,7 +619,7 @@ function renderGroup() {
     const { error } = await state.supabase.rpc('leave_group', { p_group_id: g.id });
     if (error) return toast(error.message, 'error');
     state.activeGroupId = null;
-    toast('Left the group.'); await loadGroups(); render();
+    toast('Left the group.'); await loadGroups(); state.groupsStatus = 'loaded'; render();
   });
 
   loadGroupSeasonBoard().then(rows => {
@@ -583,14 +648,14 @@ function renderOnboarding() {
     if (!name) { statusEl.className = 'status error'; statusEl.textContent = 'Give your group a name.'; return; }
     const { data, error } = await state.supabase.rpc('create_group', { p_name: name, p_stake_pence: stake });
     if (error) { statusEl.className = 'status error'; statusEl.textContent = error.message; return; }
-    state.activeGroupId = data.id; await loadGroups(); render();
+    state.activeGroupId = data.id; state.groupsStatus = 'loading'; await loadGroups(); state.groupsStatus = 'loaded'; render();
   });
   document.querySelector('#joinGroupBtn').addEventListener('click', async () => {
     const code = document.querySelector('#joinCode').value.trim();
     const statusEl = document.querySelector('#onboardStatus');
     const { data, error } = await state.supabase.rpc('join_group', { p_join_code: code });
     if (error) { statusEl.className = 'status error'; statusEl.textContent = error.message; return; }
-    state.activeGroupId = data.id; await loadGroups(); render();
+    state.activeGroupId = data.id; state.groupsStatus = 'loading'; await loadGroups(); state.groupsStatus = 'loaded'; render();
   });
 }
 
@@ -617,6 +682,8 @@ function render() {
   nav.forEach(n => n.classList.toggle('active', n.dataset.tab === state.tab));
   clearInterval(liveInterval); clearInterval(lockTickInterval);
   if (!state.session) return renderAuth();
+  if (state.groupsStatus === 'loading' && !state.groups.length) return renderSessionLoading();
+  if (state.groupsStatus === 'error' && !state.groups.length) return renderSessionLoading('Couldn’t load your pot');
   ({ gw: renderGW, live: renderLive, history: renderHistory, group: renderGroup }[state.tab])();
   updateBell();
   if (state.tab === 'live' && state.groups.length) {
@@ -625,7 +692,7 @@ function render() {
   }
 }
 nav.forEach(btn => btn.addEventListener('click', () => { state.tab = btn.dataset.tab; render() }));
-userChip?.addEventListener('click', async () => { if (confirm('Sign out of KickPot?')) { await state.supabase.auth.signOut(); state.session = null; render() } });
+userChip?.addEventListener('click', async () => { if (confirm('Sign out of KickPot?')) { await state.supabase.auth.signOut(); state.session = null; resetSessionState(); render() } });
 document.querySelector('#bellBtn')?.addEventListener('click', () => {
   const p = myPayment();
   if (p && !p.confirmed_paid_at) return toast(p.claimed_paid_at ? 'Waiting on Treasurer confirmation.' : 'You have an unpaid Gameweek stake.', 'warning');
