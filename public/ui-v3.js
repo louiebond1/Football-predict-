@@ -112,13 +112,15 @@ function upgradeScoreControls(fixture) {
 function enhanceGW() {
   screen.className = 'screen kp3-screen kp3-gw';
   const hero = screen.querySelector(':scope > .hero');
+  const switcher = screen.querySelector(':scope > .select-wrap');
+  const banner = screen.querySelector(':scope > .status');
   const picks = directCard('Your Picks');
   if (!hero || !picks || screen.querySelector(':scope > .kp3-gw-root')) return;
 
   const root = document.createElement('div');
   root.className = 'kp3-gw-root';
   screen.insertBefore(root, hero);
-  root.append(hero, picks);
+  root.append(hero, ...(switcher ? [switcher] : []), ...(banner ? [banner] : []), picks);
   hero.classList.add('kp3-page-hero');
   picks.classList.add('kp3-fixtures-card');
 
