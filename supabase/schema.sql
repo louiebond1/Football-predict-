@@ -279,12 +279,20 @@ begin
     raise exception 'not all fixtures are finished yet';
   end if;
 
-  select p.user_id into v_winner
-  from public.predictions p
-  join public.fixtures f on f.id=p.fixture_id
-  where p.group_id=p_group_id and f.gameweek_id=p_gameweek_id
-  group by p.user_id
-  order by sum(p.points) desc
+  with pred_totals as (
+    select p.user_id, sum(p.points) as pts
+    from public.predictions p
+    join public.fixtures f on f.id=p.fixture_id
+    where p.group_id=p_group_id and f.gameweek_id=p_gameweek_id
+    group by p.user_id
+  ), adj_totals as (
+    select user_id, sum(delta) as pts from public.point_adjustments
+    where group_id=p_group_id and gameweek_id=p_gameweek_id
+    group by user_id
+  )
+  select coalesce(pt.user_id, at.user_id) into v_winner
+  from pred_totals pt full outer join adj_totals at on at.user_id=pt.user_id
+  order by coalesce(pt.pts,0) + coalesce(at.pts,0) desc
   limit 1;
 
   insert into public.group_gameweeks (group_id, gameweek_id, winner_user_id, settled_at)
@@ -295,22 +303,110 @@ begin
 end;
 $$;
 
+-- Treasurer-only manual scoring corrections. Never alters the underlying
+-- prediction rows; kept as a separate, always-visible audit trail and
+-- folded into group_leaderboard/settle_gameweek at read time.
+create table if not exists public.point_adjustments (
+  id bigint generated always as identity primary key,
+  group_id uuid not null references public.groups(id) on delete cascade,
+  gameweek_id bigint not null references public.gameweeks(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  delta integer not null check (delta <> 0 and delta between -50 and 50),
+  reason text not null check (char_length(reason) >= 3),
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now()
+);
+alter table public.point_adjustments enable row level security;
+
+drop policy if exists "members see point adjustments" on public.point_adjustments;
+drop policy if exists "treasurer inserts point adjustments" on public.point_adjustments;
+create policy "members see point adjustments" on public.point_adjustments for select to authenticated using (
+  exists(select 1 from public.group_members gm where gm.group_id=group_id and gm.user_id=(select auth.uid()))
+);
+create policy "treasurer inserts point adjustments" on public.point_adjustments for insert to authenticated with check (
+  created_by=(select auth.uid())
+  and exists(select 1 from public.groups g where g.id=group_id and g.treasurer_id=(select auth.uid()))
+);
+
+create or replace function public.admin_transfer_treasurer(p_group_id uuid, p_user_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not exists(select 1 from public.groups where id=p_group_id and treasurer_id=auth.uid()) then
+    raise exception 'only the current treasurer can transfer treasurer control';
+  end if;
+  if not exists(select 1 from public.group_members where group_id=p_group_id and user_id=p_user_id) then
+    raise exception 'target user is not a member of this group';
+  end if;
+  update public.groups set treasurer_id=p_user_id where id=p_group_id;
+  update public.group_members set role='treasurer' where group_id=p_group_id and user_id=p_user_id;
+  update public.group_members set role='member' where group_id=p_group_id and user_id=auth.uid() and user_id<>p_user_id;
+end;
+$$;
+
+create or replace function public.admin_remove_member(p_group_id uuid, p_user_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not exists(select 1 from public.groups where id=p_group_id and treasurer_id=auth.uid()) then
+    raise exception 'only the treasurer can remove members';
+  end if;
+  if p_user_id = auth.uid() then
+    raise exception 'transfer treasurer control before removing yourself';
+  end if;
+  delete from public.group_members where group_id=p_group_id and user_id=p_user_id;
+end;
+$$;
+
+create or replace function public.admin_regenerate_join_code(p_group_id uuid)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  v_code text;
+begin
+  if not exists(select 1 from public.groups where id=p_group_id and treasurer_id=auth.uid()) then
+    raise exception 'only the treasurer can regenerate the invite code';
+  end if;
+  loop
+    v_code := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+    exit when not exists(select 1 from public.groups where join_code=v_code);
+  end loop;
+  update public.groups set join_code=v_code where id=p_group_id;
+  return v_code;
+end;
+$$;
+
 grant execute on function public.ensure_current_gameweek(uuid) to authenticated;
 grant execute on function public.create_group(text, integer) to authenticated;
 grant execute on function public.join_group(text) to authenticated;
 grant execute on function public.settle_gameweek(uuid, bigint) to authenticated;
+grant execute on function public.admin_transfer_treasurer(uuid, uuid) to authenticated;
+grant execute on function public.admin_remove_member(uuid, uuid) to authenticated;
+grant execute on function public.admin_regenerate_join_code(uuid) to authenticated;
 
 create or replace view public.group_leaderboard
 with (security_invoker = true) as
-select
-  p.group_id,
-  p.user_id,
-  pr.display_name,
-  f.gameweek_id,
-  sum(p.points) as points,
-  count(*) filter (where p.predicted_home = f.home_goals and p.predicted_away = f.away_goals and f.status in ('FT','AET','PEN')) as exact_scores,
-  count(*) filter (where p.first_scorer_player_id = f.first_scorer_player_id and f.status in ('FT','AET','PEN')) as scorer_hits
-from public.predictions p
-join public.fixtures f on f.id = p.fixture_id
-left join public.profiles pr on pr.id = p.user_id
-group by p.group_id, p.user_id, pr.display_name, f.gameweek_id;
+with pred_points as (
+  select
+    p.group_id, p.user_id, f.gameweek_id,
+    sum(p.points) as points,
+    count(*) filter (where p.predicted_home = f.home_goals and p.predicted_away = f.away_goals and f.status in ('FT','AET','PEN')) as exact_scores,
+    count(*) filter (where p.first_scorer_player_id = f.first_scorer_player_id and f.status in ('FT','AET','PEN')) as scorer_hits
+  from public.predictions p
+  join public.fixtures f on f.id = p.fixture_id
+  group by p.group_id, p.user_id, f.gameweek_id
+), adj as (
+  select group_id, user_id, gameweek_id, sum(delta) as total
+  from public.point_adjustments
+  group by group_id, user_id, gameweek_id
+), combined as (
+  select
+    coalesce(pp.group_id, a.group_id) as group_id,
+    coalesce(pp.user_id, a.user_id) as user_id,
+    coalesce(pp.gameweek_id, a.gameweek_id) as gameweek_id,
+    coalesce(pp.points,0) + coalesce(a.total,0) as points,
+    coalesce(pp.exact_scores,0) as exact_scores,
+    coalesce(pp.scorer_hits,0) as scorer_hits
+  from pred_points pp
+  full outer join adj a on a.group_id=pp.group_id and a.user_id=pp.user_id and a.gameweek_id=pp.gameweek_id
+)
+select c.group_id, c.user_id, pr.display_name, c.gameweek_id, c.points, c.exact_scores, c.scorer_hits
+from combined c
+left join public.profiles pr on pr.id = c.user_id;
