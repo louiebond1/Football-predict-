@@ -49,8 +49,13 @@ function avatar(name) {
   return `<span class="avatar sm">${esc((name || '?').trim().slice(0,1).toUpperCase())}</span>`;
 }
 
+function tableSignature(ctx) {
+  return `${ctx.group.id}:${ctx.gameweekId}:` + ctx.rows.map(r => `${r.user_id}:${Number(r.points || 0)}:${Number(r.picks_submitted || 0)}:${r.picks_locked ? 1 : 0}`).join('|');
+}
+
 function rebuildTable(table, ctx) {
-  if (!table || table.dataset.kpGroupStatus === `${ctx.group.id}:${ctx.gameweekId}:${ctx.rows.length}`) return;
+  const signature = tableSignature(ctx);
+  if (!table || table.dataset.kpGroupStatus === signature) return;
   const tbody = table.querySelector('tbody');
   if (!tbody) return;
   tbody.innerHTML = ctx.rows.map((row, i) => {
@@ -63,7 +68,7 @@ function rebuildTable(table, ctx) {
       <td class="pts">${Number(row.points || 0)}</td>
     </tr>`;
   }).join('');
-  table.dataset.kpGroupStatus = `${ctx.group.id}:${ctx.gameweekId}:${ctx.rows.length}`;
+  table.dataset.kpGroupStatus = signature;
 
   const card = table.closest('.kp3-table-card,.card');
   const head = card?.querySelector('.card-head');
