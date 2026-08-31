@@ -121,14 +121,14 @@ document.addEventListener('change', event => {
 }, true);
 
 function restoreGroupIfNeeded() {
-  if (restoringGroup) return false;
+  if (restoringGroup) return true;
   const wanted = sessionStorage.getItem(GROUP_KEY);
   const select = document.querySelector('#groupSwitch');
   if (!wanted || !select || select.value === wanted || ![...select.options].some(o => o.value === wanted)) return false;
   restoringGroup = true;
   select.value = wanted;
   select.dispatchEvent(new Event('change', { bubbles: true }));
-  setTimeout(() => { restoringGroup = false; }, 700);
+  setTimeout(() => { restoringGroup = false; finishInitialRestore(); }, 700);
   return true;
 }
 
