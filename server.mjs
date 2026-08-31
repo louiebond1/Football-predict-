@@ -2,6 +2,7 @@ import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomBytes } from 'node:crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, 'public');
@@ -24,6 +25,45 @@ function send(res, status, body, type='application/json; charset=utf-8', extra={
   const payload = typeof body === 'string' ? body : JSON.stringify(body);
   res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store', ...extra });
   res.end(payload);
+}
+
+async function readJson(req, maxBytes = 16 * 1024) {
+  let raw = '';
+  for await (const chunk of req) {
+    raw += chunk;
+    if (Buffer.byteLength(raw) > maxBytes) throw new Error('Request too large');
+  }
+  if (!raw) return {};
+  try { return JSON.parse(raw); }
+  catch { throw new Error('Invalid JSON'); }
+}
+
+/* ---------- one-time Safari -> installed PWA auth handoff ---------- */
+const AUTH_PAIR_TTL_MS = 10 * 60 * 1000;
+const authPairs = new Map();
+function pruneAuthPairs() {
+  const now = Date.now();
+  for (const [id, pair] of authPairs) if (pair.expiresAt <= now) authPairs.delete(id);
+  while (authPairs.size > 500) authPairs.delete(authPairs.keys().next().value);
+}
+function validPairId(value) { return typeof value === 'string' && /^[A-Za-z0-9_-]{24,80}$/.test(value); }
+async function supabaseUser(accessToken) {
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !accessToken) return null;
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${accessToken}` }
+  });
+  if (!r.ok) return null;
+  return r.json();
+}
+async function rotateSession(refreshToken) {
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !refreshToken) return null;
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken })
+  });
+  if (!r.ok) return null;
+  return r.json();
 }
 
 async function footballData(path, params={}) {
@@ -144,6 +184,41 @@ async function getFixtures(matchday) {
 async function handleApi(req, res, url) {
   try {
     if (url.pathname === '/api/health') return send(res, 200, {ok:true,app:'KickPot'});
+
+    if (url.pathname === '/api/auth/pair/start' && req.method === 'POST') {
+      pruneAuthPairs();
+      const pairId = randomBytes(24).toString('base64url');
+      authPairs.set(pairId, { expiresAt: Date.now() + AUTH_PAIR_TTL_MS, session: null });
+      return send(res, 200, { pairId, expiresIn: Math.floor(AUTH_PAIR_TTL_MS / 1000) });
+    }
+
+    if (url.pathname === '/api/auth/pair/authorize' && req.method === 'POST') {
+      pruneAuthPairs();
+      const body = await readJson(req);
+      const pairId = body.pairId;
+      const pair = validPairId(pairId) ? authPairs.get(pairId) : null;
+      if (!pair || pair.expiresAt <= Date.now()) return send(res, 404, { error:'Pairing expired' });
+      const user = await supabaseUser(body.accessToken);
+      if (!user?.id) return send(res, 401, { error:'Invalid session' });
+      const rotated = await rotateSession(body.refreshToken);
+      if (!rotated?.access_token || !rotated?.refresh_token || rotated.user?.id !== user.id) {
+        return send(res, 401, { error:'Could not transfer session' });
+      }
+      pair.session = { accessToken: rotated.access_token, refreshToken: rotated.refresh_token, userId: user.id };
+      pair.expiresAt = Date.now() + 2 * 60 * 1000;
+      return send(res, 200, { ok:true });
+    }
+
+    if (url.pathname === '/api/auth/pair/status' && req.method === 'GET') {
+      pruneAuthPairs();
+      const pairId = url.searchParams.get('id') || '';
+      const pair = validPairId(pairId) ? authPairs.get(pairId) : null;
+      if (!pair) return send(res, 404, { error:'Pairing expired' });
+      if (!pair.session) return send(res, 200, { ready:false });
+      authPairs.delete(pairId);
+      return send(res, 200, { ready:true, accessToken:pair.session.accessToken, refreshToken:pair.session.refreshToken });
+    }
+
     if (url.pathname === '/api/debug/schema' && process.env.DEBUG_ENDPOINTS === '1') {
       const report = await inspectSchema();
       console.log('SCHEMA_INSPECT', JSON.stringify(report));
