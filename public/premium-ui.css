@@ -1,0 +1,293 @@
+/* KickPot Premium UI System
+   Visual-only override layer. Intentionally avoids app logic changes. */
+
+:root {
+  --kp-bg: #06100d;
+  --kp-bg-deep: #030806;
+  --kp-surface: rgba(9, 24, 19, 0.88);
+  --kp-surface-2: rgba(13, 32, 25, 0.9);
+  --kp-surface-3: rgba(18, 42, 32, 0.86);
+  --kp-line: rgba(177, 255, 214, 0.11);
+  --kp-line-strong: rgba(177, 255, 214, 0.18);
+  --kp-text: #f7fbf8;
+  --kp-muted: #8c9b94;
+  --kp-muted-2: #627169;
+  --kp-accent: #9cff2e;
+  --kp-accent-soft: rgba(156, 255, 46, 0.12);
+  --kp-accent-glow: rgba(156, 255, 46, 0.22);
+  --kp-radius-xl: 28px;
+  --kp-radius-lg: 22px;
+  --kp-radius-md: 17px;
+  --kp-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+  --kp-shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.2);
+}
+
+html {
+  background: var(--kp-bg-deep);
+}
+
+body {
+  background:
+    radial-gradient(80% 48% at 78% 0%, rgba(23, 92, 54, 0.18), transparent 70%),
+    radial-gradient(72% 44% at 0% 18%, rgba(55, 117, 70, 0.10), transparent 72%),
+    linear-gradient(180deg, #07130f 0%, #040b08 46%, #020604 100%) !important;
+  color: var(--kp-text) !important;
+  letter-spacing: -0.01em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.17;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, #000, transparent 78%);
+}
+
+/* Type */
+h1, h2, h3, .page-title, .hero-title, .screen-title {
+  letter-spacing: -0.045em !important;
+  line-height: 0.98 !important;
+  text-wrap: balance;
+}
+
+h1, .page-title, .hero-title, .screen-title {
+  font-weight: 800 !important;
+}
+
+h2, h3, .section-title, .card-title {
+  font-weight: 750 !important;
+}
+
+/* App shell */
+header, .app-header, .topbar, .top-bar {
+  background: linear-gradient(180deg, rgba(5, 18, 13, 0.97), rgba(5, 18, 13, 0.72)) !important;
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  border-bottom: 1px solid rgba(255,255,255,0.035) !important;
+}
+
+main, .app-main, .screen, .page {
+  position: relative;
+}
+
+/* Brand */
+.logo, .brand, .brand-mark, .app-logo {
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,.22));
+}
+
+/* Universal card treatment */
+.card,
+.panel,
+.section-card,
+.stat-card,
+.fixture-card,
+.match-card,
+.group-card,
+.history-card,
+.live-card,
+.payment-card,
+.pot-card,
+.awards-card,
+.rivalry-card,
+[class*="card"] {
+  background:
+    linear-gradient(180deg, rgba(15, 35, 28, 0.86), rgba(7, 20, 16, 0.9)) !important;
+  border: 1px solid var(--kp-line) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), var(--kp-shadow-soft);
+}
+
+.card:hover,
+.fixture-card:hover,
+.match-card:hover {
+  border-color: var(--kp-line-strong) !important;
+}
+
+/* Reduce the nested-card / AI-dashboard feel */
+.card .card,
+.panel .card,
+.section-card .card,
+[class*="card"] [class*="card"] {
+  box-shadow: none;
+  background: rgba(2, 11, 8, 0.38) !important;
+}
+
+/* Chips / pills */
+.badge, .chip, .pill, .status-pill, .meta-pill, [class*="badge"], [class*="pill"] {
+  border: 1px solid rgba(255,255,255,.08) !important;
+  background: rgba(255,255,255,.035) !important;
+  color: #d9e2dd !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.badge.active, .chip.active, .pill.active,
+.status-live, .paid, .winner, [class*="active"] {
+  color: var(--kp-accent) !important;
+}
+
+/* Actions */
+button, .button, .btn, [role="button"] {
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+button:active, .button:active, .btn:active, [role="button"]:active {
+  transform: scale(.97);
+}
+
+button.primary, .btn-primary, .primary-button, .cta {
+  color: #081006 !important;
+  background: linear-gradient(180deg, #a8ff46, #8df51d) !important;
+  border-color: rgba(206,255,159,.6) !important;
+  box-shadow: 0 10px 30px rgba(129, 241, 35, .16), inset 0 1px 0 rgba(255,255,255,.45) !important;
+}
+
+/* Fixture / prediction cards */
+.fixture-card,
+.match-card,
+.fixture-row,
+.match-row {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--kp-radius-lg) !important;
+}
+
+.fixture-card::before,
+.match-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(55% 100% at 50% 0%, rgba(156,255,46,.035), transparent 72%);
+}
+
+.fixture-card img,
+.match-card img,
+.team-logo,
+.club-crest,
+.crest {
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,.28));
+}
+
+.score-input,
+.prediction-input,
+.score-box,
+.score-cell,
+[class*="score"] input {
+  background: rgba(1, 9, 6, 0.64) !important;
+  border: 1px solid rgba(156,255,46,.26) !important;
+  color: var(--kp-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+/* Live hierarchy */
+.live-indicator,
+.live-dot,
+.status-live {
+  text-shadow: 0 0 20px var(--kp-accent-glow);
+}
+
+/* Table */
+table, .leaderboard, .live-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead, .table-head {
+  color: var(--kp-muted) !important;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .74em;
+}
+
+tbody tr, .table-row {
+  border-color: rgba(255,255,255,.055) !important;
+}
+
+/* Empty states */
+.empty-state, .empty, [class*="empty"] {
+  color: var(--kp-muted) !important;
+}
+
+/* Numeric emphasis */
+.points, .pot-value, .money, .stat-value, .score, .rank, [class*="points"], [class*="pot-value"] {
+  font-variant-numeric: tabular-nums;
+}
+
+.pot-value, .money.accent, .stat-value.accent {
+  color: var(--kp-accent) !important;
+  text-shadow: 0 0 28px rgba(156,255,46,.12);
+}
+
+/* Bottom nav */
+.bottom-nav,
+.bottom-navigation,
+nav.bottom,
+.mobile-nav {
+  background: rgba(3, 11, 8, 0.92) !important;
+  border: 1px solid rgba(178,255,218,.10) !important;
+  box-shadow: 0 -8px 40px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.025) !important;
+  backdrop-filter: blur(22px) saturate(120%);
+  -webkit-backdrop-filter: blur(22px) saturate(120%);
+}
+
+.bottom-nav .active,
+.bottom-navigation .active,
+.mobile-nav .active {
+  color: var(--kp-accent) !important;
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156,255,46,.35) transparent;
+}
+
+*::-webkit-scrollbar { width: 5px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(156,255,46,.24);
+  border-radius: 999px;
+}
+
+/* Mobile polish */
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+
+  h1, .page-title, .hero-title, .screen-title {
+    font-size: clamp(2.5rem, 12vw, 4.25rem) !important;
+  }
+
+  .card,
+  .panel,
+  .section-card,
+  [class*="card"] {
+    border-radius: 22px !important;
+  }
+
+  .fixture-card,
+  .match-card,
+  .fixture-row,
+  .match-row {
+    border-radius: 20px !important;
+  }
+
+  .bottom-nav,
+  .bottom-navigation,
+  nav.bottom,
+  .mobile-nav {
+    border-radius: 25px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
