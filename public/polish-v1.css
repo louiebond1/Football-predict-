@@ -1,0 +1,15 @@
+/* Focused UX polish: member payment approval, form labels, empty-state locks */
+.member-row-final{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important}
+.member-pay-status-v2{flex:0 0 auto;min-height:30px;padding:6px 10px;border:0;border-radius:999px;font-size:10px;font-weight:850;line-height:1;letter-spacing:-.1px}
+.member-pay-status-v2.paid-v2{color:#8be1ff;background:rgba(70,198,255,.09);border:1px solid rgba(70,198,255,.17)}
+.member-pay-status-v2.claimed-v2{color:#ffd28a;background:rgba(255,190,72,.08);border:1px solid rgba(255,190,72,.17)}
+.member-pay-status-v2.unpaid-v2{color:#9994a5;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.075)}
+.member-pay-status-v2.actionable-v2{cursor:pointer}
+.member-pay-status-v2.actionable-v2:active{transform:scale(.97)}
+.member-pay-status-v2:disabled{opacity:.65}
+.approve-all-v2{width:100%;min-height:42px;margin:0 0 8px;border:1px solid rgba(95,203,255,.16);border-radius:10px;background:rgba(75,168,255,.07);color:#8bdfff;font-size:11px;font-weight:850}
+.payments-status-secondary-v2 .confirm-btn,.payments-status-secondary-v2 #confirmAllBtn{display:none!important}
+.bank-field-label-v2{display:block;margin:0 0 6px;color:#777184;font-size:9px;font-weight:850;letter-spacing:.8px;text-transform:uppercase}
+.admin-page-final .scorer-row{display:block!important}
+.history-locked-v2{opacity:.48!important;cursor:default!important}
+.history-locked-v2 svg{opacity:.4}
