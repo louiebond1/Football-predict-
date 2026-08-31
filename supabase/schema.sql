@@ -113,8 +113,18 @@ drop policy if exists "treasurer updates group" on public.groups;
 create policy "members see groups" on public.groups for select to authenticated using (exists(select 1 from public.group_members gm where gm.group_id=id and gm.user_id=(select auth.uid())));
 create policy "treasurer updates group" on public.groups for update to authenticated using (treasurer_id=(select auth.uid())) with check (treasurer_id=(select auth.uid()));
 
+-- SECURITY DEFINER breaks the RLS recursion that a plain self-referencing
+-- subquery on group_members would cause (checking the policy would require
+-- re-checking the policy). Runs as the function owner, bypassing RLS only
+-- for this internal lookup.
+create or replace function public.is_group_member(p_group_id uuid)
+returns boolean language sql security definer set search_path = public stable as $$
+  select exists(select 1 from public.group_members where group_id=p_group_id and user_id=auth.uid());
+$$;
+grant execute on function public.is_group_member(uuid) to authenticated;
+
 drop policy if exists "members see membership" on public.group_members;
-create policy "members see membership" on public.group_members for select to authenticated using (exists(select 1 from public.group_members me where me.group_id=group_id and me.user_id=(select auth.uid())));
+create policy "members see membership" on public.group_members for select to authenticated using (public.is_group_member(group_id));
 
 drop policy if exists "authenticated read gameweeks" on public.gameweeks;
 drop policy if exists "authenticated read fixtures" on public.fixtures;
