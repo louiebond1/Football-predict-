@@ -87,7 +87,7 @@ function patchLatest(row) {
     const count = winnerIds(row).length;
     if (eyebrow) eyebrow.textContent = 'Gameweek Draw';
     if (title) title.textContent = `${count}-WAY DRAW`;
-    if (muted) muted.textContent = `${round} · level after exact-score tiebreak`;
+    if (muted) muted.textContent = `${round} · level after all tiebreakers`;
   } else {
     if (eyebrow) eyebrow.textContent = 'Gameweek Settled';
     if (title) title.textContent = 'NO WINNER';
@@ -135,11 +135,11 @@ function patchRules() {
   if (!winner) return;
   const copy = winner.querySelector('.row-left') || winner;
   const icon = copy.querySelector('svg')?.outerHTML || '';
-  copy.innerHTML = `${icon} Top points win · exact scores break ties`;
+  copy.innerHTML = `${icon} Ties: points → exact scores → individual team-score hits`;
 
   const tie = document.createElement('div');
   tie.className = 'rivalry-row kp-tie-rule';
-  tie.innerHTML = '<span class="row-left">Still level? Joint winners — split the pot equally.</span>';
+  tie.innerHTML = '<span class="row-left">Still level after all three? Joint winners — split the pot equally.</span>';
   winner.after(tie);
   rules.dataset.kpTieRules = '1';
 }
