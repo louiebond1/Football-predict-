@@ -458,6 +458,7 @@ function enhanceGroup() {
   const pay = directCard('Pay the Treasurer');
   const admin = directCard('Treasurer · Bank Details');
   const rivalry = directCard('Group Rivalry');
+  const leave = directCard('Leave Group');
   if (!head || !pot) return;
   rivalry?.remove();
 
@@ -527,6 +528,7 @@ function enhanceGroup() {
     });
     settings.append(admin);
   }
+  if (leave) { leave.classList.add('kp3-leave-card'); settings.append(leave); }
   pot.remove();
   setupJoinAnother(settings);
   showView(views, subState.group);
