@@ -1,7 +1,9 @@
 {
+  "id":"/",
   "name":"KickPot Football Predictor",
   "short_name":"KickPot",
   "start_url":"/",
+  "scope":"/",
   "display":"standalone",
   "background_color":"#050a16",
   "theme_color":"#050a16",
