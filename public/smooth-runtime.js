@@ -9,7 +9,7 @@ const VALID_TABS = new Set(['gw', 'live', 'history', 'group']);
 
 let desiredTab = sessionStorage.getItem(TAB_KEY) || 'gw';
 if (!VALID_TABS.has(desiredTab)) desiredTab = 'gw';
-let initialRestoreDone = desiredTab === 'gw';
+let initialRestoreDone = false;
 let userRouteActionUntil = 0;
 let restoreTimer = 0;
 let liveSignature = '';
@@ -51,9 +51,7 @@ function routeLabel(button) {
     || '';
 }
 function normaliseLiveMarkup(html) {
-  return String(html)
-    .replace(/\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s+\d{2}:\d{2}\b/g, 'LIVE_CLOCK')
-    .replace(/\b\d{2}:\d{2}\b/g, match => match);
+  return String(html).replace(/\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s+\d{2}:\d{2}\b/g, 'LIVE_CLOCK');
 }
 
 // app.js replaces #screen.innerHTML during renders. Intercept only this one
@@ -171,14 +169,6 @@ function finishInitialRestore() {
 
   initialRestoreDone = true;
   scheduleScrollRestore(savedScroll(desiredTab));
-  document.documentElement.classList.remove('kp-restoring-route');
-}
-
-if (!initialRestoreDone) {
-  document.documentElement.classList.add('kp-restoring-route');
-  const style = document.createElement('style');
-  style.textContent = '.kp-restoring-route #screen{opacity:0}.kp-restoring-route #screen{transition:none!important}';
-  document.head.append(style);
 }
 
 const observer = new MutationObserver(() => {
@@ -188,9 +178,7 @@ const observer = new MutationObserver(() => {
   }
   // If a real background update rebuilt the current view, restore the saved
   // sub-route/scroll before the browser paints the next stable frame.
-  if (performance.now() >= userRouteActionUntil) {
-    restoreSubrouteIfNeeded();
-  }
+  if (performance.now() >= userRouteActionUntil) restoreSubrouteIfNeeded();
 });
 if (screen) observer.observe(screen, { childList: true, subtree: true });
 
