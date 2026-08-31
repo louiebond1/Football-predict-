@@ -1,0 +1,1 @@
+The premium stylesheet exists on this branch but is not yet wired into the app shell. This marker prevents anyone from mistaking the branch for a deploy-ready redesign before activation and screen-by-screen verification.
