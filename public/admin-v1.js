@@ -269,7 +269,18 @@ function scheduleEnhance() {
 }
 
 document.querySelector('.nav-item[data-tab="group"]')?.addEventListener('click', scheduleEnhance);
-document.querySelector('#groupSwitch')?.addEventListener('change', scheduleEnhance);
 window.addEventListener('load', scheduleEnhance);
 window.addEventListener('pageshow', scheduleEnhance);
 if (document.querySelector('.nav-item[data-tab="group"].active')) scheduleEnhance();
+
+// The Group tab's DOM is fully rebuilt (screen.innerHTML replaced) by any
+// app.js re-render — a payment confirm, a bank-details save, switching
+// groups, etc. — which wipes the injected Admin entry. The named event
+// listeners above only cover navigating *to* the tab, not re-renders that
+// happen while already on it, so watch #screen directly and re-run
+// whenever the treasurer's Admin row isn't present.
+if (screen) {
+  new MutationObserver(() => {
+    if (document.querySelector('.nav-item[data-tab="group"].active') && !screen.querySelector('.kp-admin-entry')) scheduleEnhance();
+  }).observe(screen, { childList: true });
+}

@@ -517,7 +517,11 @@ function renderGroup() {
   <div class="bankbox"><div class="bankline"><span>Account name</span><b>${esc(g.bank_account_name || 'Not set')}</b></div><div class="bankline"><span>Sort code</span><b>${esc(g.bank_sort_code || '••-••-••')}</b></div><div class="bankline"><span>Account no.</span><b>${esc(g.bank_account_number || '••••••••')}</b></div><div class="bankline"><span>Reference</span><b>${esc(state.round || 'GW')}-${esc((state.session.user.email || '').split('@')[0].toUpperCase())}</b></div></div>
   ${p?.claimed_paid_at ? `<div class="status warning" style="margin-top:12px">${ic('clock', 15)} Waiting on Treasurer confirmation.</div>` : `<button class="secondary" id="claimPaid" style="margin-top:12px">I've Paid</button>`}
   </section>
-  ${isTreasurer() ? `<section class="card"><div class="card-title">${ic('landmark')} Treasurer · Bank Details</div><div class="scorer-row"><input class="scorer-select" id="bankName" placeholder="Account name" value="${esc(g.bank_account_name || '')}"></div><div class="scorer-row"><input class="scorer-select" id="bankSort" placeholder="Sort code" value="${esc(g.bank_sort_code || '')}"></div><div class="scorer-row"><input class="scorer-select" id="bankAcc" placeholder="Account number" value="${esc(g.bank_account_number || '')}"></div><button class="secondary" id="saveBankBtn" style="margin-top:8px">Save Bank Details</button></section>` : ''}`;
+  ${isTreasurer() ? `<section class="card"><div class="card-title">${ic('landmark')} Treasurer · Bank Details</div><div class="scorer-row"><input class="scorer-select" id="bankName" placeholder="Account name" value="${esc(g.bank_account_name || '')}"></div><div class="scorer-row"><input class="scorer-select" id="bankSort" placeholder="Sort code" value="${esc(g.bank_sort_code || '')}"></div><div class="scorer-row"><input class="scorer-select" id="bankAcc" placeholder="Account number" value="${esc(g.bank_account_number || '')}"></div><button class="secondary" id="saveBankBtn" style="margin-top:8px">Save Bank Details</button></section>` : ''}
+  <section class="card"><div class="card-title">Leave Group</div>${isTreasurer()
+    ? `<p class="muted">You're the Treasurer — transfer control to another member (via Admin → Member administration) before you can leave.</p>`
+    : `<p class="muted">You'll lose access to this group's predictions and history.</p><button class="secondary" id="leaveGroupBtn" style="margin-top:8px;border-color:#6f3535;color:#ff9d9d">Leave Group</button>`}
+  </section>`;
 
   bindGroupSwitcher();
   document.querySelector('#claimPaid')?.addEventListener('click', async () => {
@@ -544,6 +548,13 @@ function renderGroup() {
     }).eq('id', g.id);
     if (error) return toast(error.message, 'error');
     toast('Bank details saved.'); await loadGroups(); render();
+  });
+  document.querySelector('#leaveGroupBtn')?.addEventListener('click', async () => {
+    if (!confirm(`Leave ${g.name}? You'll lose access to its predictions and history.`)) return;
+    const { error } = await state.supabase.rpc('leave_group', { p_group_id: g.id });
+    if (error) return toast(error.message, 'error');
+    state.activeGroupId = null;
+    toast('Left the group.'); await loadGroups(); render();
   });
 
   loadGroupSeasonBoard().then(rows => {

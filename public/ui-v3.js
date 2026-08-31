@@ -420,20 +420,6 @@ function improvePaymentCard(pay, mePaid) {
   }
 }
 
-async function addNextFixture(overview) {
-  if (overview.querySelector('.kp3-next-fixture')) return;
-  const data = await fetch('/api/football/fixtures', { cache: 'no-store' }).then(r => r.json()).catch(() => null);
-  if (!data || !document.body.contains(overview)) return;
-  const upcoming = (data.fixtures || []).find(f => f.status?.short === 'NS' && new Date(f.kickoff).getTime() > Date.now()) || (data.fixtures || []).find(f => f.status?.short === 'NS');
-  if (!upcoming) return;
-  const when = new Intl.DateTimeFormat('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }).format(new Date(upcoming.kickoff));
-  const card = document.createElement('section'); card.className = 'kp3-next-fixture';
-  const crest = t => t?.logo ? `<img src="${esc(t.logo)}" alt="">` : `<span>${esc((t?.name || '?')[0])}</span>`;
-  card.innerHTML = `<div class="kp3-section-head"><small>NEXT GAMEWEEK</small><span>${esc(data.round || '')}</span></div><div class="kp3-next-match"><div>${crest(upcoming.home)}<strong>${esc(upcoming.home?.name || '')}</strong></div><section><b>${esc(when)}</b><small>Premier League</small><button type="button">View fixtures</button></section><div>${crest(upcoming.away)}<strong>${esc(upcoming.away?.name || '')}</strong></div></div>`;
-  card.querySelector('button').addEventListener('click', () => document.querySelector('.nav-item[data-tab="gw"]')?.click());
-  overview.append(card);
-}
-
 async function setupJoinAnother(container) {
   const button = container.querySelector('.kp3-join-another');
   if (!button || button.dataset.bound === '1') return;
@@ -506,7 +492,6 @@ function enhanceGroup() {
   p.querySelector('.kp3-nav-meta').textContent = paymentBadge;
   nav.append(m, p, makeNavRow('Rules', 'Scoring & lock times', 'shield', () => go('rules')), makeNavRow('Group settings', 'Invite code & admin', 'settings', () => go('settings')));
   overview.append(nav);
-  addNextFixture(overview).catch(() => {});
 
   members.append(makeBackHeader('Members', `${memberCount} in this group`, () => go('overview')), buildMembers(payments));
   const invite = document.createElement('button'); invite.type = 'button'; invite.className = 'kp3-primary-small'; invite.textContent = 'Invite members'; invite.addEventListener('click', () => go('settings')); members.append(invite);

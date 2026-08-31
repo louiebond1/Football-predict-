@@ -366,6 +366,19 @@ begin
 end;
 $$;
 
+create or replace function public.leave_group(p_group_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not exists(select 1 from public.group_members where group_id=p_group_id and user_id=auth.uid()) then
+    raise exception 'you are not a member of this group';
+  end if;
+  if exists(select 1 from public.groups where id=p_group_id and treasurer_id=auth.uid()) then
+    raise exception 'transfer treasurer control to another member before leaving';
+  end if;
+  delete from public.group_members where group_id=p_group_id and user_id=auth.uid();
+end;
+$$;
+
 create or replace function public.admin_regenerate_join_code(p_group_id uuid)
 returns text language plpgsql security definer set search_path = public as $$
 declare
@@ -390,6 +403,7 @@ grant execute on function public.settle_gameweek(uuid, bigint) to authenticated;
 grant execute on function public.admin_transfer_treasurer(uuid, uuid) to authenticated;
 grant execute on function public.admin_remove_member(uuid, uuid) to authenticated;
 grant execute on function public.admin_regenerate_join_code(uuid) to authenticated;
+grant execute on function public.leave_group(uuid) to authenticated;
 
 create or replace view public.group_leaderboard
 with (security_invoker = true) as
