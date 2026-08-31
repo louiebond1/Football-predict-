@@ -434,3 +434,198 @@ with pred_points as (
 select c.group_id, c.user_id, pr.display_name, c.gameweek_id, c.points, c.exact_scores, c.scorer_hits
 from combined c
 left join public.profiles pr on pr.id = c.user_id;
+
+-- -----------------------------------------------------------------------------
+-- Audit hardening postlude. Keep this at the END of the file so a full rerun
+-- always finishes in the secure canonical state even on projects with legacy
+-- policy names/triggers from earlier KickPot builds.
+-- -----------------------------------------------------------------------------
+
+create or replace function public.is_group_treasurer(p_group_id uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(
+    select 1 from public.groups g
+    where g.id=p_group_id and g.treasurer_id=auth.uid()
+  );
+$$;
+
+create or replace function public.same_group_user(p_other_user uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(
+    select 1
+    from public.group_members me
+    join public.group_members them on them.group_id=me.group_id
+    where me.user_id=auth.uid() and them.user_id=p_other_user
+  );
+$$;
+
+grant execute on function public.is_group_treasurer(uuid) to authenticated;
+grant execute on function public.same_group_user(uuid) to authenticated;
+
+drop policy if exists "profiles group members read" on public.profiles;
+create policy "profiles group members read" on public.profiles for select to authenticated
+using (public.same_group_user(public.profiles.id));
+
+drop policy if exists "members see group gameweeks" on public.group_gameweeks;
+create policy "members see group gameweeks" on public.group_gameweeks for select to authenticated
+using (public.is_group_member(public.group_gameweeks.group_id));
+
+drop policy if exists "members see payments" on public.payments;
+create policy "members see payments" on public.payments for select to authenticated
+using (public.is_group_member(public.payments.group_id));
+
+drop policy if exists "treasurer confirms payments" on public.payments;
+drop policy if exists "treasurer confirms payment" on public.payments;
+create policy "treasurer confirms payment" on public.payments for update to authenticated
+using (public.is_group_treasurer(public.payments.group_id))
+with check (public.is_group_treasurer(public.payments.group_id));
+
+drop policy if exists "user claims own payment" on public.payments;
+create policy "user claims own payment" on public.payments for update to authenticated
+using (
+  public.payments.user_id=(select auth.uid())
+  and public.is_group_member(public.payments.group_id)
+)
+with check (
+  public.payments.user_id=(select auth.uid())
+  and public.is_group_member(public.payments.group_id)
+);
+
+create or replace function public.guard_payment_update()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then return new; end if;
+  if public.is_group_treasurer(old.group_id) then return new; end if;
+  if old.user_id is distinct from auth.uid() then
+    raise exception 'cannot update another member payment';
+  end if;
+  if new.group_id is distinct from old.group_id
+     or new.gameweek_id is distinct from old.gameweek_id
+     or new.user_id is distinct from old.user_id
+     or new.amount_pence is distinct from old.amount_pence
+     or new.confirmed_paid_at is distinct from old.confirmed_paid_at
+     or new.confirmed_by is distinct from old.confirmed_by then
+    raise exception 'members can only change their own payment claim';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists guard_payment_update on public.payments;
+create trigger guard_payment_update before update on public.payments
+for each row execute function public.guard_payment_update();
+
+drop policy if exists "members see predictions after kickoff or own" on public.predictions;
+create policy "members see predictions after kickoff or own" on public.predictions for select to authenticated
+using (
+  public.is_group_member(public.predictions.group_id)
+  and (
+    public.predictions.user_id=(select auth.uid())
+    or exists(
+      select 1 from public.fixtures f
+      where f.id=public.predictions.fixture_id and now()>=f.kickoff
+    )
+  )
+);
+
+drop policy if exists "paid users insert own prediction" on public.predictions;
+drop policy if exists "paid users update own unlocked prediction" on public.predictions;
+drop policy if exists "users insert own prediction" on public.predictions;
+drop policy if exists "users update own unlocked prediction" on public.predictions;
+
+create policy "users insert own prediction" on public.predictions for insert to authenticated
+with check (
+  public.predictions.user_id=(select auth.uid())
+  and public.is_group_member(public.predictions.group_id)
+  and exists(
+    select 1 from public.fixtures f
+    where f.id=public.predictions.fixture_id and now()<f.kickoff
+  )
+  and exists(
+    select 1
+    from public.fixtures f2
+    join public.payments pay
+      on pay.group_id=public.predictions.group_id
+     and pay.gameweek_id=f2.gameweek_id
+     and pay.user_id=(select auth.uid())
+    where f2.id=public.predictions.fixture_id and pay.confirmed_paid_at is not null
+  )
+);
+
+create policy "users update own unlocked prediction" on public.predictions for update to authenticated
+using (
+  public.predictions.user_id=(select auth.uid())
+  and public.is_group_member(public.predictions.group_id)
+  and exists(
+    select 1 from public.fixtures f
+    where f.id=public.predictions.fixture_id and now()<f.kickoff
+  )
+)
+with check (
+  public.predictions.user_id=(select auth.uid())
+  and public.is_group_member(public.predictions.group_id)
+  and exists(
+    select 1
+    from public.fixtures f2
+    join public.payments pay
+      on pay.group_id=public.predictions.group_id
+     and pay.gameweek_id=f2.gameweek_id
+     and pay.user_id=(select auth.uid())
+    where f2.id=public.predictions.fixture_id and pay.confirmed_paid_at is not null
+  )
+);
+
+drop policy if exists "members see point adjustments" on public.point_adjustments;
+drop policy if exists "treasurer adds point adjustments" on public.point_adjustments;
+drop policy if exists "treasurer inserts point adjustments" on public.point_adjustments;
+create policy "members see point adjustments" on public.point_adjustments for select to authenticated
+using (public.is_group_member(public.point_adjustments.group_id));
+create policy "treasurer inserts point adjustments" on public.point_adjustments for insert to authenticated
+with check (
+  public.point_adjustments.created_by=(select auth.uid())
+  and public.is_group_treasurer(public.point_adjustments.group_id)
+  and exists(
+    select 1 from public.group_members gm
+    where gm.group_id=public.point_adjustments.group_id
+      and gm.user_id=public.point_adjustments.user_id
+  )
+);
+
+drop trigger if exists score_predictions_on_fixture_update on public.fixtures;
+
+revoke all on table public.profiles, public.groups, public.group_members, public.gameweeks,
+  public.fixtures, public.group_gameweeks, public.payments, public.predictions,
+  public.point_adjustments from anon;
+revoke all on table public.profiles, public.groups, public.group_members, public.gameweeks,
+  public.fixtures, public.group_gameweeks, public.payments, public.predictions,
+  public.point_adjustments from authenticated;
+
+grant select, insert, update on public.profiles to authenticated;
+grant select, update on public.groups to authenticated;
+grant select on public.group_members to authenticated;
+grant select on public.gameweeks to authenticated;
+grant select on public.fixtures to authenticated;
+grant select on public.group_gameweeks to authenticated;
+grant select, update on public.payments to authenticated;
+grant select, insert, update on public.predictions to authenticated;
+grant select, insert on public.point_adjustments to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+grant select on public.group_leaderboard to authenticated;
+
+revoke execute on function public.ensure_current_gameweek(uuid) from public, anon;
+revoke execute on function public.create_group(text, integer) from public, anon;
+revoke execute on function public.join_group(text) from public, anon;
+revoke execute on function public.settle_gameweek(uuid, bigint) from public, anon;
+revoke execute on function public.admin_transfer_treasurer(uuid, uuid) from public, anon;
+revoke execute on function public.admin_remove_member(uuid, uuid) from public, anon;
+revoke execute on function public.admin_regenerate_join_code(uuid) from public, anon;
+revoke execute on function public.leave_group(uuid) from public, anon;
+
+grant execute on function public.ensure_current_gameweek(uuid) to authenticated;
+grant execute on function public.create_group(text, integer) to authenticated;
+grant execute on function public.join_group(text) to authenticated;
+grant execute on function public.settle_gameweek(uuid, bigint) to authenticated;
+grant execute on function public.admin_transfer_treasurer(uuid, uuid) to authenticated;
+grant execute on function public.admin_remove_member(uuid, uuid) to authenticated;
+grant execute on function public.admin_regenerate_join_code(uuid) to authenticated;
+grant execute on function public.leave_group(uuid) to authenticated;
