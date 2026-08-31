@@ -1,4 +1,4 @@
-const CACHE='kickpot-v31';
+const CACHE='kickpot-v32';
 const CORE=[
   '/',
   '/styles.css',
@@ -19,7 +19,7 @@ const CORE=[
   '/live-status.js?v=2',
   '/admin-v1.js?v=1',
   '/settings-v2.js?v=1',
-  '/account-password.js?v=1',
+  '/account-password.js?v=2',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
