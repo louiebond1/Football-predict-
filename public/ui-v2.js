@@ -29,6 +29,76 @@ function showOnly(map, key) {
   });
 }
 
+function clampScore(value) {
+  return Math.max(0, Math.min(20, Number(value) || 0));
+}
+
+function buildScoreStepper(input, side, teamName) {
+  const wrap = document.createElement('div');
+  wrap.className = `team-score-stepper team-score-${side}`;
+
+  input.readOnly = true;
+  input.setAttribute('inputmode', 'none');
+  input.setAttribute('aria-label', `${teamName} predicted goals`);
+
+  const minus = document.createElement('button');
+  minus.type = 'button';
+  minus.className = 'score-step-btn score-minus';
+  minus.textContent = '−';
+  minus.setAttribute('aria-label', `Decrease ${teamName} score`);
+
+  const plus = document.createElement('button');
+  plus.type = 'button';
+  plus.className = 'score-step-btn score-plus';
+  plus.textContent = '+';
+  plus.setAttribute('aria-label', `Increase ${teamName} score`);
+
+  const change = delta => {
+    const next = clampScore(Number(input.value) + delta);
+    if (String(next) === String(input.value)) return;
+    input.value = String(next);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  minus.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    change(-1);
+  });
+  plus.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    change(1);
+  });
+
+  wrap.append(minus, input, plus);
+  return wrap;
+}
+
+function upgradeFixtureScoreControls(fixture) {
+  const scorepick = fixture.querySelector('.scorepick');
+  const homeInput = scorepick?.querySelector('[data-score="home"]');
+  const awayInput = scorepick?.querySelector('[data-score="away"]');
+  if (!scorepick || !homeInput || !awayInput || scorepick.dataset.stepperV2 === '1') return;
+
+  scorepick.dataset.stepperV2 = '1';
+  const teams = fixture.querySelectorAll('.team');
+  const homeName = teams[0]?.textContent?.trim() || 'Home team';
+  const awayName = teams[1]?.textContent?.trim() || 'Away team';
+
+  scorepick.querySelectorAll('.step').forEach(btn => btn.remove());
+  scorepick.querySelectorAll('.dash').forEach(el => el.remove());
+
+  const home = buildScoreStepper(homeInput, 'home', homeName);
+  const divider = document.createElement('span');
+  divider.className = 'score-versus';
+  divider.textContent = '–';
+  divider.setAttribute('aria-hidden', 'true');
+  const away = buildScoreStepper(awayInput, 'away', awayName);
+
+  scorepick.replaceChildren(home, divider, away);
+}
+
 function enhanceGW() {
   screen.className = 'screen screen-gw-pro';
   const hero = screen.querySelector(':scope > .hero');
@@ -39,7 +109,10 @@ function enhanceGW() {
   picks.classList.add('fixtures-list-pro');
 
   const fixtures = [...picks.querySelectorAll(':scope > .fixture')];
-  fixtures.forEach(f => f.classList.add('fixture-line-pro'));
+  fixtures.forEach(f => {
+    f.classList.add('fixture-line-pro');
+    upgradeFixtureScoreControls(f);
+  });
 
   let lastDay = '';
   fixtures.forEach(fixture => {
@@ -53,6 +126,12 @@ function enhanceGW() {
       lastDay = day;
     }
   });
+
+  const status = picks.querySelector('#gwStatus');
+  if (status) {
+    status.classList.add('gw-privacy-note');
+    status.textContent = "Picks stay private until each fixture kicks off.";
+  }
 }
 
 function enhanceLive() {
