@@ -1,13 +1,14 @@
-const CACHE='kickpot-v25';
+const CACHE='kickpot-v26';
 const CORE=[
   '/',
   '/styles.css',
   '/premium-ui.css?v=8',
   '/product-v3.css?v=1',
-  '/product-v3-tune.css?v=3',
+  '/product-v3-tune.css?v=4',
   '/admin-v1.css?v=1',
   '/admin-v1-fix.css?v=1',
   '/settings-v1.css?v=3',
+  '/supabase-singleton.js?v=1',
   '/smooth-runtime.js?v=1',
   '/auth-ux.js?v=1',
   '/app.js?v=2',
