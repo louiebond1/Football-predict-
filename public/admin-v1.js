@@ -103,13 +103,28 @@ function adminHeader(onBack) {
 function section(title, subtitle = '') {
   const el = document.createElement('section');
   el.className = 'kp-admin-section';
-  el.innerHTML = `<div class="kp-admin-section-head"><div><strong>${esc(title)}</strong>${subtitle ? `<small>${esc(subtitle)}</small>` : ''}</div></div>`;
+  el.innerHTML = `<div class="kp-admin-section-head"><div>${title ? `<strong>${esc(title)}</strong>` : ''}${subtitle ? `<small>${esc(subtitle)}</small>` : ''}</div></div>`;
   return el;
 }
 
-async function renderAdmin(view, root, overview) {
+function adminNavRow(label, meta, iconName) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'kp3-nav-row kp-admin-nav-row';
+  button.innerHTML = `<span class="kp3-nav-icon">${icons[iconName] || ''}</span><span class="kp3-nav-copy"><strong>${esc(label)}</strong></span><span class="kp3-nav-meta">${esc(meta || '')}</span><span class="kp3-nav-chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>`;
+  return button;
+}
+
+function adminSubHeader(title, onBack) {
+  const header = document.createElement('section');
+  header.className = 'kp3-drill-header kp-admin-header';
+  header.innerHTML = `<button type="button" class="kp3-back" aria-label="Back">${icons.back}</button><div><h1>${esc(title)}</h1></div>`;
+  header.querySelector('button').addEventListener('click', onBack);
+  return header;
+}
+
+async function renderAdmin(view, root, overview, startPage = 'menu') {
   view.innerHTML = '';
-  view.append(adminHeader(() => setGroupView(root, overview)));
   const loading = document.createElement('div'); loading.className = 'kp-admin-loading'; loading.textContent = 'Loading admin controls…'; view.append(loading);
 
   let data;
@@ -123,11 +138,34 @@ async function renderAdmin(view, root, overview) {
   const pending = members.filter(m => paymentStatus(paymentMap.get(m.user_id)) === 'pending').length;
   const unpaid = members.length - paid - pending;
 
+  const menuPage = document.createElement('div'); menuPage.className = 'kp-admin-page';
+  const paymentsPage = document.createElement('div'); paymentsPage.className = 'kp-admin-page'; paymentsPage.hidden = true;
+  const scoringPage = document.createElement('div'); scoringPage.className = 'kp-admin-page'; scoringPage.hidden = true;
+  const membersPage = document.createElement('div'); membersPage.className = 'kp-admin-page'; membersPage.hidden = true;
+  const groupPage = document.createElement('div'); groupPage.className = 'kp-admin-page'; groupPage.hidden = true;
+  const pages = { menu: menuPage, payments: paymentsPage, scoring: scoringPage, members: membersPage, group: groupPage };
+  view.append(menuPage, paymentsPage, scoringPage, membersPage, groupPage);
+  const goAdmin = key => { Object.entries(pages).forEach(([k, el]) => { el.hidden = k !== key }); window.scrollTo({ top: 0, behavior: 'auto' }); };
+
+  menuPage.append(adminHeader(() => setGroupView(root, overview)));
   const summary = document.createElement('section'); summary.className = 'kp-admin-summary';
   summary.innerHTML = `<div><small>PAID</small><strong>${paid}/${members.length}</strong></div><div><small>NEEDS APPROVAL</small><strong>${pending}</strong></div><div><small>UNPAID</small><strong>${unpaid}</strong></div>`;
-  view.append(summary);
+  menuPage.append(summary);
 
-  const payments = section('Payment control', 'Tap a member to correct their payment state');
+  const paymentsNav = adminNavRow('Payment control', `${paid}/${members.length} paid`, 'card');
+  paymentsNav.addEventListener('click', () => goAdmin('payments'));
+  const scoringNav = adminNavRow('Scoring adjustments', adjustments.length ? `${adjustments.length} on record` : 'Emergency corrections', 'points');
+  scoringNav.addEventListener('click', () => goAdmin('scoring'));
+  const membersNav = adminNavRow('Member administration', `${members.length} member${members.length === 1 ? '' : 's'}`, 'users');
+  membersNav.addEventListener('click', () => goAdmin('members'));
+  const groupNav = adminNavRow('Group & invite', 'Name, stake, invite code, bank details', 'settings');
+  groupNav.addEventListener('click', () => goAdmin('group'));
+  const menuList = document.createElement('div'); menuList.className = 'kp3-group-menu kp-admin-menu';
+  menuList.append(paymentsNav, scoringNav, membersNav, groupNav);
+  menuPage.append(menuList);
+
+  paymentsPage.append(adminSubHeader('Payment control', () => goAdmin('menu')));
+  const payments = section('', 'Tap a member to correct their payment state');
   const paymentList = document.createElement('div'); paymentList.className = 'kp-admin-list';
   members.forEach(member => {
     const p = paymentMap.get(member.user_id);
@@ -144,12 +182,13 @@ async function renderAdmin(view, root, overview) {
         : { claimed_paid_at: null, confirmed_paid_at: null, confirmed_by: null };
       const { error } = await sb.from('payments').update(patch).eq('group_id', group.id).eq('gameweek_id', gameweekId).eq('user_id', member.user_id);
       if (error) { row.disabled = false; row.querySelector('small').textContent = error.message; return; }
-      await renderAdmin(view, root, overview);
+      await renderAdmin(view, root, overview, 'payments');
     });
     paymentList.append(row);
   });
-  payments.append(paymentList); view.append(payments);
+  payments.append(paymentList); paymentsPage.append(payments);
 
+  groupPage.append(adminSubHeader('Group & invite', () => goAdmin('menu')));
   const details = section('Group details', 'Renaming is immediate; stake changes apply to future Gameweeks');
   details.innerHTML += `<div class="kp-admin-form"><label>Group name<input id="kpAdminGroupName" value="${esc(group.name)}" maxlength="40"></label><label>Weekly stake (£)<input id="kpAdminStake" type="number" min="0" max="1000" step="1" value="${Number(group.stake_pence || 0) / 100}"></label><button type="button" id="kpAdminSaveGroup">Save group details</button><small id="kpAdminGroupStatus"></small></div>`;
   details.querySelector('#kpAdminSaveGroup').addEventListener('click', async () => {
@@ -164,8 +203,9 @@ async function renderAdmin(view, root, overview) {
     const opt = document.querySelector(`#groupSwitch option[value="${CSS.escape(group.id)}"]`); if (opt) opt.textContent = name;
     button.disabled = false;
   });
-  view.append(details);
+  groupPage.append(details);
 
+  scoringPage.append(adminSubHeader('Scoring adjustments', () => goAdmin('menu')));
   const points = section('Adjust points', 'Emergency correction only · original predictions are never changed');
   const gwOptions = [{ id: gameweekId, label: 'Current Gameweek' }];
   history.forEach(h => { if (!gwOptions.some(x => Number(x.id) === Number(h.gameweek_id))) gwOptions.push({ id: h.gameweek_id, label: h.gameweeks?.round_name || `Gameweek ${h.gameweek_id}` }); });
@@ -181,9 +221,9 @@ async function renderAdmin(view, root, overview) {
     const { error } = await sb.from('point_adjustments').insert({ group_id: group.id, gameweek_id: gw, user_id: userId, delta, reason, created_by: session.user.id });
     if (error) { button.disabled = false; status.textContent = error.message; return; }
     status.textContent = 'Applied ✓';
-    await renderAdmin(view, root, overview);
+    await renderAdmin(view, root, overview, 'scoring');
   });
-  view.append(points);
+  scoringPage.append(points);
 
   const audit = section('Point adjustment history', adjustments.length ? 'Latest corrections' : 'No manual point changes');
   const auditList = document.createElement('div'); auditList.className = 'kp-admin-audit';
@@ -194,9 +234,10 @@ async function renderAdmin(view, root, overview) {
     row.innerHTML = `<span><b>${esc(names.get(a.user_id) || 'Player')}</b><small>${esc(gw?.label || `GW ${a.gameweek_id}`)} · ${esc(a.reason)}</small></span><strong class="${a.delta > 0 ? 'plus' : 'minus'}">${a.delta > 0 ? '+' : ''}${a.delta}</strong>`;
     auditList.append(row);
   });
-  audit.append(auditList); view.append(audit);
+  audit.append(auditList); scoringPage.append(audit);
 
-  const membersAdmin = section('Member administration', 'Remove members or hand over treasurer control');
+  membersPage.append(adminSubHeader('Member administration', () => goAdmin('menu')));
+  const membersAdmin = section('', 'Remove members or hand over treasurer control');
   membersAdmin.innerHTML += `<div class="kp-admin-form"><label>Member<select id="kpAdminMemberSelect">${members.filter(m => m.user_id !== session.user.id).map(m => `<option value="${m.user_id}">${esc(names.get(m.user_id) || 'Player')}</option>`).join('')}</select></label><div class="kp-admin-split"><button type="button" id="kpAdminTransfer">Make treasurer</button><button type="button" id="kpAdminRemove" class="danger">Remove member</button></div><small id="kpAdminMemberStatus">You cannot remove yourself until treasurer control is transferred.</small></div>`;
   const targetSelect = membersAdmin.querySelector('#kpAdminMemberSelect');
   if (!targetSelect?.options.length) membersAdmin.querySelectorAll('#kpAdminTransfer,#kpAdminRemove').forEach(b => b.disabled = true);
@@ -214,7 +255,7 @@ async function renderAdmin(view, root, overview) {
     if (error) { membersAdmin.querySelector('#kpAdminMemberStatus').textContent = error.message; return; }
     location.reload();
   });
-  view.append(membersAdmin);
+  membersPage.append(membersAdmin);
 
   const access = section('Invite access', 'Regenerate the code if it has been shared somewhere it should not be');
   access.innerHTML += `<div class="kp-admin-code"><span><small>Current code</small><strong id="kpAdminCode">${esc(group.join_code)}</strong></span><button type="button" id="kpAdminRegenerate">Regenerate</button></div><small id="kpAdminCodeStatus"></small>`;
@@ -225,13 +266,15 @@ async function renderAdmin(view, root, overview) {
     if (error) { button.disabled = false; access.querySelector('#kpAdminCodeStatus').textContent = error.message; return; }
     access.querySelector('#kpAdminCode').textContent = newCode; access.querySelector('#kpAdminCodeStatus').textContent = 'New invite code active ✓'; button.disabled = false;
   });
-  view.append(access);
+  groupPage.append(access);
 
   const bank = screen.querySelector('.kp3-admin-card');
   if (bank) {
     const bankWrap = section('Treasurer bank details', 'Shown to members on the payment page');
-    bankWrap.append(bank); view.append(bankWrap);
+    bankWrap.append(bank); groupPage.append(bankWrap);
   }
+
+  goAdmin(startPage);
 }
 
 async function enhanceAdmin() {
