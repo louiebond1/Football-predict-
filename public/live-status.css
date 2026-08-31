@@ -1,0 +1,14 @@
+.kp-live-player{align-items:center!important;gap:10px!important}
+.kp-live-player-copy{min-width:0;display:block;line-height:1.15}
+.kp-live-player-copy>strong{font-size:13px}
+.kp-live-lock{display:block;margin-top:5px;font-size:8.5px;font-weight:800;letter-spacing:.02em;white-space:nowrap}
+.kp-live-lock.is-locked{color:#63d7a8}
+.kp-live-lock.is-partial{color:#c3a1ff}
+.kp-live-lock.is-missing{color:#7d8799}
+.kp-live-summary{margin-left:auto;color:#9b5cff;font-size:9px;font-weight:850;white-space:nowrap}
+.kp3-table-card .table tbody tr{min-height:58px}
+.kp3-table-card .table td{padding-top:12px!important;padding-bottom:12px!important}
+@media(max-width:390px){
+  .kp-live-lock{font-size:8px}
+  .kp-live-player-copy>strong{font-size:12.5px}
+}
