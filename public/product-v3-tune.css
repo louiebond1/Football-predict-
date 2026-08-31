@@ -1,0 +1,8 @@
+.kp3-latest-winner{padding:16px 17px!important;min-height:0!important}
+.kp3-latest-winner .trophy{width:34px!important;height:34px!important;margin:0 0 9px!important;display:grid!important;place-items:center!important;border-radius:50%!important;background:rgba(155,92,255,.07)!important;color:#a66cff!important}
+.kp3-latest-winner .eyebrow{font-size:8px!important;letter-spacing:1.15px!important;color:#9b5cff!important}
+.kp3-latest-winner h1{margin:5px 0 2px!important;font-size:20px!important;line-height:1!important;letter-spacing:-.6px!important}
+.kp3-latest-winner .muted{font-size:9.5px!important}
+.kp3-records-card>.card-title{display:none!important}
+.kp3-records-card .empty{padding:22px 14px!important}
+.kp3-history-overview>.card:not(.kp3-latest-winner):not(.kp3-history-empty):not(.kp3-season-stats){border-radius:14px!important;box-shadow:none!important}
