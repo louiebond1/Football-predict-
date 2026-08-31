@@ -1,0 +1,174 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const GROUP_KEY = 'kp-active-group-v1';
+let client = null;
+let cache = null;
+let cacheAt = 0;
+let cacheGroup = '';
+let busy = false;
+
+async function getClient() {
+  if (client) return client;
+  const cfg = await fetch('/api/config', { cache:'no-store' }).then(r => r.json()).catch(() => null);
+  if (!cfg?.supabaseConfigured) return null;
+  client = createClient(cfg.supabaseUrl, cfg.supabasePublishableKey);
+  return client;
+}
+
+function activeHistoryTab() {
+  return document.querySelector('.nav-item.active')?.dataset?.tab === 'history';
+}
+
+function winnerIds(row) {
+  if (Array.isArray(row?.winner_user_ids) && row.winner_user_ids.length) return row.winner_user_ids;
+  return row?.winner_user_id ? [row.winner_user_id] : [];
+}
+
+function settlementKind(row) {
+  if (row?.settlement_kind && row.settlement_kind !== 'pending') return row.settlement_kind;
+  const ids = winnerIds(row);
+  if (ids.length > 1) return 'draw';
+  if (ids.length === 1) return 'winner';
+  return row?.settled_at ? 'no_winner' : 'pending';
+}
+
+function drawLabel(row) {
+  const count = winnerIds(row).length;
+  if (settlementKind(row) === 'draw') return `${count}-way draw`;
+  if (settlementKind(row) === 'no_winner') return 'No winner';
+  return '';
+}
+
+async function loadContext(force = false) {
+  const sb = await getClient();
+  if (!sb) return null;
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return null;
+
+  const { data: groups } = await sb.from('groups').select('id,name,stake_pence,payments_required').order('created_at');
+  const selected = document.querySelector('#groupSwitch')?.value || sessionStorage.getItem(GROUP_KEY) || '';
+  const group = (groups || []).find(g => g.id === selected) || (groups || [])[0] || null;
+  if (!group) return null;
+
+  if (!force && cache && cacheGroup === group.id && Date.now() - cacheAt < 8000) return cache;
+
+  const { data: history, error } = await sb.from('group_gameweeks')
+    .select('group_id,gameweek_id,winner_user_id,winner_user_ids,settlement_kind,settled_at,gameweeks(round_name)')
+    .eq('group_id', group.id)
+    .not('settled_at', 'is', null)
+    .order('settled_at', { ascending:false });
+  if (error) return null;
+
+  cache = { sb, session, group, history:history || [] };
+  cacheGroup = group.id;
+  cacheAt = Date.now();
+  return cache;
+}
+
+function patchSettleButton() {
+  const button = document.querySelector('#settleBtn');
+  if (button && /crown winner/i.test(button.textContent || '')) button.textContent = 'Settle Gameweek';
+}
+
+function patchLatest(row) {
+  if (!row) return;
+  const kind = settlementKind(row);
+  if (kind !== 'draw' && kind !== 'no_winner') return;
+
+  const card = document.querySelector('.kp3-latest-winner, .card.winner');
+  if (!card) return;
+  const eyebrow = card.querySelector('.eyebrow');
+  const title = card.querySelector('h1');
+  const muted = card.querySelector('.muted');
+  const round = row.gameweeks?.round_name || 'Gameweek';
+
+  card.classList.toggle('kp-settlement-draw', kind === 'draw');
+  if (kind === 'draw') {
+    const count = winnerIds(row).length;
+    if (eyebrow) eyebrow.textContent = 'Gameweek Draw';
+    if (title) title.textContent = `${count}-WAY DRAW`;
+    if (muted) muted.textContent = `${round} · level after exact-score tiebreak`;
+  } else {
+    if (eyebrow) eyebrow.textContent = 'Gameweek Settled';
+    if (title) title.textContent = 'NO WINNER';
+    if (muted) muted.textContent = round;
+  }
+}
+
+function patchRows(container, history) {
+  if (!container) return;
+  const rows = [...container.querySelectorAll('.payment-row')];
+  rows.forEach((node, index) => {
+    const result = history[index];
+    if (!result) return;
+    const label = drawLabel(result);
+    if (!label) return;
+    const value = node.querySelector('b');
+    if (value) value.textContent = label;
+  });
+}
+
+function patchGameweekLists(history) {
+  patchRows(document.querySelector('.kp3-history-preview'), history.slice(0, 3));
+  patchRows(document.querySelector('.kp3-gameweeks-list'), history);
+
+  const basePast = [...document.querySelectorAll('section.card')].find(card =>
+    /past gameweeks/i.test(card.querySelector('.card-title')?.textContent || '')
+  );
+  patchRows(basePast, history);
+}
+
+function patchMyWins(ctx) {
+  const stats = document.querySelector('.kp3-season-stats .statgrid') || document.querySelector('#seasonStatsCard .statgrid');
+  const tiles = stats ? [...stats.querySelectorAll('.stat')] : [];
+  if (tiles.length < 3) return;
+  const count = ctx.history.filter(row => winnerIds(row).includes(ctx.session.user.id)).length;
+  const value = tiles[2].querySelector('b');
+  if (value) value.textContent = String(count);
+}
+
+function patchRules() {
+  const rules = document.querySelector('.kp3-rules-card');
+  if (!rules || rules.dataset.kpTieRules === '1') return;
+  const rows = [...rules.querySelectorAll('.rivalry-row')];
+  const winner = rows.find(row => /winner takes all/i.test(row.textContent || ''));
+  if (!winner) return;
+  const copy = winner.querySelector('.row-left') || winner;
+  const icon = copy.querySelector('svg')?.outerHTML || '';
+  copy.innerHTML = `${icon} Top points win · exact scores break ties`;
+
+  const tie = document.createElement('div');
+  tie.className = 'rivalry-row kp-tie-rule';
+  tie.innerHTML = '<span class="row-left">Still level? Joint winners — split the pot equally.</span>';
+  winner.after(tie);
+  rules.dataset.kpTieRules = '1';
+}
+
+async function enhance() {
+  patchSettleButton();
+  patchRules();
+  if (!activeHistoryTab() || busy) return;
+  busy = true;
+  try {
+    const ctx = await loadContext();
+    if (!ctx) return;
+    patchLatest(ctx.history[0]);
+    patchGameweekLists(ctx.history);
+    patchMyWins(ctx);
+  } finally {
+    busy = false;
+  }
+}
+
+document.addEventListener('click', event => {
+  if (event.target.closest('[data-tab="history"], [data-tab="group"], #settleBtn, .kp3-back')) {
+    cache = null;
+    cacheAt = 0;
+    setTimeout(enhance, 80);
+    setTimeout(enhance, 500);
+  }
+});
+window.addEventListener('pageshow', () => setTimeout(enhance, 120));
+window.addEventListener('focus', () => { cache = null; cacheAt = 0; setTimeout(enhance, 120); });
+setInterval(enhance, 900);
+setTimeout(enhance, 150);
