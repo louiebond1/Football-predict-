@@ -481,6 +481,8 @@ function enhanceGroup() {
   if (subtitle) subtitle.textContent = subtitle.textContent.replace(/\b1 members\b/i, '1 member');
   overview.append(head);
 
+  if (switcher) { switcher.classList.add('kp3-group-switch-top'); overview.append(switcher); }
+
   const potHero = document.createElement('section'); potHero.className = 'kp3-pot-hero';
   potHero.innerHTML = `<div><small>CURRENT POT</small><strong>${esc(amount)}</strong><span>${esc(paymentBadge)} ✓</span></div><div class="kp3-ball-art" aria-hidden="true"></div>`;
   overview.append(potHero);
@@ -513,7 +515,6 @@ function enhanceGroup() {
     row.addEventListener('click', async () => { try { await navigator.clipboard.writeText(code); row.querySelector('em').textContent = 'Copied'; setTimeout(() => row.querySelector('em').textContent = 'Copy', 1300); } catch {} });
     settingsList.append(row); join.remove();
   }
-  if (switcher) { switcher.classList.add('kp3-group-switch'); settingsList.append(switcher); }
   const joinAnother = document.createElement('button'); joinAnother.type = 'button'; joinAnother.className = 'kp3-setting-row kp3-join-another'; joinAnother.innerHTML = `<span>${icon('plus')}<strong>Join another group</strong></span>${chevron()}`;
   settingsList.append(joinAnother);
   const form = document.createElement('div'); form.className = 'kp3-join-form'; form.hidden = true; form.innerHTML = `<input type="text" maxlength="6" placeholder="6-character join code" autocomplete="off"><button type="button" class="kp3-join-submit">Join group</button><small class="kp3-join-status"></small>`;
