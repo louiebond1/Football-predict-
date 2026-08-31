@@ -64,7 +64,7 @@ async function inspectSchema() {
   if (!r.ok) return { error: `openapi fetch failed: ${r.status} ${await r.text()}` };
   const spec = await r.json();
   const expectedTables = ['profiles','groups','group_members','gameweeks','fixtures','group_gameweeks','payments','predictions','point_adjustments'];
-  const expectedRpcs = ['create_group','join_group','ensure_current_gameweek','settle_gameweek','calculate_prediction_points','admin_transfer_treasurer','admin_remove_member','admin_regenerate_join_code'];
+  const expectedRpcs = ['create_group','join_group','leave_group','ensure_current_gameweek','settle_gameweek','calculate_prediction_points','admin_transfer_treasurer','admin_remove_member','admin_regenerate_join_code'];
   const tables = {};
   for (const t of expectedTables) {
     const def = spec.definitions?.[t];
@@ -131,7 +131,9 @@ async function syncFixtures(matchday, rawMatches) {
 async function getFixtures(matchday) {
   const md = matchday || await getCurrentMatchday();
   if (!md) return [];
-  return cached(`fixtures:${COMPETITION}:${md}`, 5*60*1000, async () => {
+  // Live screens poll every 30s. Cache once server-side for the same interval so
+  // ten users still produce roughly one provider request, not ten requests.
+  return cached(`fixtures:${COMPETITION}:${md}`, 30*1000, async () => {
     const d = await footballData(`competitions/${COMPETITION}/matches`, { matchday: md });
     const raw = d.matches || [];
     await syncFixtures(md, raw).catch(err => console.error(err.message));
