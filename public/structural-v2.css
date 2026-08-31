@@ -49,31 +49,34 @@ body:before{display:none!important}
 .card-title{font-size:15px!important;font-weight:820!important;letter-spacing:-.25px!important;color:#fff!important}
 .card-head{margin-bottom:10px!important}
 
-/* segmented navigation replaces cascading sections */
 .kp-subnav{display:flex;gap:2px;margin:8px -2px 20px;padding:3px;background:rgba(255,255,255,.045);border-radius:13px}
 .kp-subnav button{flex:1;min-height:36px;border:0;border-radius:10px;background:transparent;color:#878298;font-size:11px;font-weight:800;padding:0 8px;box-shadow:none}
 .kp-subnav button.active{background:#fff;color:#120c27;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 [hidden]{display:none!important}
 
-/* GW: deliberately scrollable, but no nested card stack */
+/* GW */
 .gw-hero-pro{margin-bottom:20px!important}
 .fixtures-list-pro{padding:0!important}
 .fixtures-list-pro>.card-head{display:flex;align-items:center;padding:0 0 9px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:0!important}
 .fixture-date-pro{font-size:10px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;color:#716d83;padding:20px 0 8px}
 .fixture-line-pro{margin:0!important;padding:16px 0!important;border:0!important;border-bottom:1px solid rgba(255,255,255,.07)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 .fixture-line-pro:last-of-type{border-bottom:0!important}
-.fixture-line-pro .teams{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;gap:10px!important}
-.fixture-line-pro .team{font-size:13px!important;font-weight:780!important;gap:9px!important}
-.fixture-line-pro .crest,.fixture-line-pro .crest-fallback{width:34px!important;height:34px!important;flex-basis:34px!important}
-.fixture-line-pro .scorepick{gap:5px!important}
-.fixture-line-pro .scorebox,.fixture-line-pro .step{width:40px!important;height:40px!important;border-radius:8px!important;background:#120e29!important;border:1px solid rgba(255,255,255,.11)!important;box-shadow:none!important}
-.fixture-line-pro .scorebox{border-color:rgba(70,198,255,.24)!important;color:#fff!important}
-.fixture-line-pro .step{background:transparent!important;color:#aaa5b9!important}
-.fixture-line-pro .dash{color:#5f5a6f!important}
+.fixture-line-pro .teams{grid-template-columns:minmax(76px,1fr) auto minmax(76px,1fr)!important;gap:8px!important;align-items:center!important}
+.fixture-line-pro .team{font-size:12.5px!important;font-weight:780!important;gap:8px!important}
+.fixture-line-pro .crest,.fixture-line-pro .crest-fallback{width:33px!important;height:33px!important;flex-basis:33px!important}
+.fixture-line-pro .scorepick{display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;min-width:158px!important}
+.fixture-line-pro .scorebox{width:32px!important;height:36px!important;border-radius:8px!important;background:#120e29!important;border:1px solid rgba(70,198,255,.28)!important;box-shadow:none!important;color:#fff!important;font-size:17px!important;font-weight:850!important;padding:0!important}
 .fixture-line-pro .rules{margin-top:8px!important;text-align:center!important;color:#777285!important;font-size:10px!important}
-.fixtures-list-pro>.primary{position:sticky;bottom:68px;z-index:3;margin:18px 0 2px!important;border-radius:12px!important;background:linear-gradient(90deg,#5b5cf0,#2698e8)!important;color:#fff!important;box-shadow:0 14px 34px rgba(34,98,207,.25)!important}
 
-/* Live: one focused view at a time */
+.team-score-stepper{display:grid;grid-template-columns:24px 32px 24px;align-items:center;gap:2px;padding:2px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.075)}
+.score-step-btn{width:24px;height:32px;padding:0;border:0!important;border-radius:7px!important;background:transparent!important;color:#b8b3c4!important;font-size:17px!important;font-weight:700!important;line-height:1!important;box-shadow:none!important;display:grid;place-items:center}
+.score-step-btn:active{background:rgba(109,98,255,.16)!important;color:#fff!important;transform:scale(.94)!important}
+.score-versus{color:#5f5a6f;font-size:12px;font-weight:800;padding:0 1px}
+
+.fixtures-list-pro>.primary{position:relative!important;bottom:auto!important;z-index:1!important;margin:20px 0 0!important;border-radius:12px!important;background:linear-gradient(90deg,#5b5cf0,#2698e8)!important;color:#fff!important;box-shadow:none!important}
+.gw-privacy-note{display:block!important;margin:10px 0 88px!important;padding:0 4px!important;text-align:center!important;color:#777285!important;font-size:10.5px!important;line-height:1.45!important;white-space:normal!important;overflow:visible!important}
+
+/* Live */
 .screen-live-pro .live-panel-pro,.screen-live-pro .live-swing-pro{padding:4px 0!important}
 .live-panel-pro .table{margin-top:4px}
 .live-panel-pro .table th{color:#6f6a7e!important}
@@ -82,7 +85,7 @@ body:before{display:none!important}
 .live-swing-pro{border-left:2px solid #ff3f9a!important;padding-left:14px!important;margin-top:12px!important;background:transparent!important}
 .live-swing-pro h2{font-size:22px!important}
 
-/* History: no long feed. Each tab is a contained page. */
+/* History */
 .history-hero-pro{min-height:205px!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;border-top:1px solid rgba(255,255,255,.08)!important;border-bottom:1px solid rgba(255,255,255,.08)!important}
 .history-hero-pro .empty{padding:0!important;color:#d5d1df!important;font-size:17px!important;font-weight:780!important}
 .history-panel-pro{padding:6px 0!important}
@@ -95,7 +98,7 @@ body:before{display:none!important}
 .award-grid{gap:0!important}
 .award-tile{background:transparent!important;border:0!important;border-bottom:1px solid rgba(255,255,255,.08)!important;border-radius:0!important;padding:14px 0!important}
 
-/* Group: app-like pages, no cascade */
+/* Group */
 .group-hero-pro{margin:6px 0 12px;padding:0 0 18px;border-bottom:1px solid rgba(255,255,255,.09)}
 .group-hero-pro .group-head{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;gap:13px!important;margin:0 0 18px!important;align-items:center!important}
 .group-hero-pro .group-emblem{width:46px!important;height:46px!important;border-radius:50%!important;background:linear-gradient(145deg,#45256f,#1a1640)!important;border:1px solid rgba(255,255,255,.14)!important;color:#fff!important;font-size:10px!important;box-shadow:none!important}
@@ -134,7 +137,6 @@ body:before{display:none!important}
 .status.warning{color:#ffd38a!important;background:rgba(255,185,80,.07)!important;border-color:rgba(255,185,80,.16)!important}
 .status.error{color:#ff96ad!important;background:rgba(255,80,125,.07)!important;border-color:rgba(255,80,125,.16)!important}
 
-/* Bottom nav: fixed system bar, not floating AI pill */
 .bottom-nav{left:0!important;right:0!important;bottom:0!important;transform:none!important;width:100%!important;height:64px!important;padding:5px 18px max(5px,env(safe-area-inset-bottom))!important;border-radius:0!important;background:rgba(8,6,18,.94)!important;border:0!important;border-top:1px solid rgba(255,255,255,.08)!important;box-shadow:0 -8px 28px rgba(0,0,0,.2)!important;backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important}
 .nav-item{border-radius:0!important;color:#6f6a7e!important;background:transparent!important}
 .nav-item.active{color:#6fd3ff!important;background:transparent!important}
@@ -146,4 +148,11 @@ body:before{display:none!important}
   .app-shell{padding-left:16px!important;padding-right:16px!important}
   .group-summary-pro strong{font-size:22px}
   .kp-subnav button{font-size:10px}
+  .fixture-line-pro .teams{grid-template-columns:minmax(68px,1fr) auto minmax(68px,1fr)!important;gap:5px!important}
+  .fixture-line-pro .team{font-size:11.5px!important;gap:6px!important}
+  .fixture-line-pro .crest,.fixture-line-pro .crest-fallback{width:29px!important;height:29px!important;flex-basis:29px!important}
+  .fixture-line-pro .scorepick{min-width:146px!important;gap:3px!important}
+  .team-score-stepper{grid-template-columns:22px 30px 22px;gap:1px}
+  .score-step-btn{width:22px;height:30px;font-size:16px!important}
+  .fixture-line-pro .scorebox{width:30px!important;height:34px!important;font-size:16px!important}
 }
