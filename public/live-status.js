@@ -50,18 +50,30 @@ function avatar(name) {
   return `<span class="avatar sm">${esc((name || '?').trim().slice(0,1).toUpperCase())}</span>`;
 }
 
+function points(row) { return Number(row?.points || 0); }
+function exacts(row) { return Number(row?.exact_scores || 0); }
+function teamHits(row) { return Number(row?.team_score_hits || 0); }
+function sameRank(a, b) {
+  return points(a) === points(b) && exacts(a) === exacts(b) && teamHits(a) === teamHits(b);
+}
+function ranksAbove(a, b) {
+  if (points(a) !== points(b)) return points(a) > points(b);
+  if (exacts(a) !== exacts(b)) return exacts(a) > exacts(b);
+  return teamHits(a) > teamHits(b);
+}
+
 function tableSignature(ctx) {
-  return `${ctx.group.id}:${ctx.gameweekId}:` + ctx.rows.map(r => `${r.user_id}:${Number(r.points || 0)}:${Number(r.picks_submitted || 0)}:${Number(r.fixtures_total || 0)}:${r.picks_locked ? 1 : 0}`).join('|');
+  return `${ctx.group.id}:${ctx.gameweekId}:` + ctx.rows.map(r => `${r.user_id}:${points(r)}:${exacts(r)}:${teamHits(r)}:${Number(r.picks_submitted || 0)}:${Number(r.fixtures_total || 0)}:${r.picks_locked ? 1 : 0}`).join('|');
 }
 
 function competitionRank(rows, index) {
-  const points = Number(rows[index]?.points || 0);
-  return 1 + rows.slice(0, index).filter(r => Number(r.points || 0) > points).length;
+  const mine = rows[index];
+  return 1 + rows.filter(r => ranksAbove(r, mine)).length;
 }
 
 function isSharedRank(rows, index) {
-  const points = Number(rows[index]?.points || 0);
-  return rows.filter(r => Number(r.points || 0) === points).length > 1;
+  const mine = rows[index];
+  return rows.filter(r => sameRank(r, mine)).length > 1;
 }
 
 function ordinal(n) {
@@ -71,10 +83,6 @@ function ordinal(n) {
   if (n % 10 === 2) return `${n}nd`;
   if (n % 10 === 3) return `${n}rd`;
   return `${n}th`;
-}
-
-function playerNames(rows, currentId) {
-  return rows.filter(r => r.user_id !== currentId).map(r => r.display_name || 'Player');
 }
 
 function naturalList(names) {
@@ -90,30 +98,42 @@ function tieAwareNeedMessage(ctx) {
   if (mineIndex < 0 || !rows.length) return '';
 
   const mine = rows[mineIndex];
-  const minePoints = Number(mine.points || 0);
-  const topPoints = Number(rows[0]?.points || 0);
-  const sameAsMine = rows.filter(r => Number(r.points || 0) === minePoints);
-  const allLevel = sameAsMine.length === rows.length;
+  const top = rows[0];
+  const minePoints = points(mine);
+  const topPoints = points(top);
+  const rank = competitionRank(rows, mineIndex);
+  const sameStanding = rows.filter(r => sameRank(r, mine));
+  const samePoints = rows.filter(r => points(r) === minePoints);
+  const allLevel = rows.every(r => sameRank(r, mine));
   const unit = value => `pt${Number(value) === 1 ? '' : 's'}`;
 
   if (allLevel && rows.length > 1) {
-    return `All ${rows.length} players are level on ${minePoints} ${unit(minePoints)}.`;
+    return `All ${rows.length} players are level on ${minePoints} ${unit(minePoints)} after all tiebreakers.`;
   }
 
-  if (minePoints === topPoints) {
-    if (sameAsMine.length > 1) {
-      const others = naturalList(playerNames(sameAsMine, mine.user_id));
-      return `You're level at the top with ${esc(others)} on ${minePoints} ${unit(minePoints)}.`;
+  if (rank === 1) {
+    if (sameStanding.length > 1) {
+      const others = naturalList(sameStanding.filter(r => r.user_id !== mine.user_id).map(r => r.display_name || 'Player'));
+      return `You're level at the top with ${esc(others)} on ${minePoints} ${unit(minePoints)} after all tiebreakers.`;
     }
-    const secondPoints = rows.find(r => Number(r.points || 0) < minePoints);
-    if (!secondPoints) return "You're leading the group.";
-    const gap = minePoints - Number(secondPoints.points || 0);
+    if (samePoints.length > 1) {
+      const rivals = samePoints.filter(r => r.user_id !== mine.user_id);
+      const bestRivalExact = Math.max(...rivals.map(exacts));
+      if (exacts(mine) > bestRivalExact) return `You're leading on exact-score tiebreak with ${minePoints} ${unit(minePoints)}.`;
+      return `You're leading on individual team-score hits with ${minePoints} ${unit(minePoints)}.`;
+    }
+    const second = rows.find(r => points(r) < minePoints);
+    if (!second) return "You're leading the group.";
+    const gap = minePoints - points(second);
     return `You're leading by ${gap} ${unit(gap)}.`;
   }
 
-  const rank = competitionRank(rows, mineIndex);
+  if (minePoints === topPoints) {
+    return `You're level on ${minePoints} ${unit(minePoints)}, but ${ordinal(rank)} on the tiebreakers.`;
+  }
+
   const gap = topPoints - minePoints;
-  if (sameAsMine.length > 1) {
+  if (sameStanding.length > 1) {
     return `You're tied for ${ordinal(rank)} on ${minePoints} ${unit(minePoints)}, ${gap} ${unit(gap)} off the lead.`;
   }
   return `You're ${ordinal(rank)}, ${gap} ${unit(gap)} off the lead.`;
@@ -141,7 +161,7 @@ function rebuildTable(table, ctx) {
       <td><span class="rank-move same">–</span></td>
       <td class="rank">${rankLabel}</td>
       <td><div class="row-left kp-live-player">${avatar(name)}<span class="kp-live-player-copy"><strong>${esc(name)}</strong>${mine ? ' <span class="muted">(you)</span>' : ''}${statusText(row)}</span></div></td>
-      <td class="pts">${Number(row.points || 0)}</td>
+      <td class="pts">${points(row)}</td>
     </tr>`;
   }).join('');
   table.dataset.kpGroupStatus = signature;
@@ -205,8 +225,6 @@ async function enhance() {
   }
 }
 
-// Deliberately lightweight: no broad MutationObserver. We only check while Live exists,
-// and the RPC result is cached. This avoids fighting the app's own render cycle.
 setInterval(enhance, 1000);
 document.addEventListener('click', event => {
   if (event.target.closest('[data-tab="live"], .kp3-feature-row, .kp3-back')) setTimeout(enhance, 80);
