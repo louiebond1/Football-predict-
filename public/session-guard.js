@@ -4,7 +4,7 @@ const screen = document.querySelector('#screen');
 const userChip = document.querySelector('#userChip');
 let client = null;
 let checking = false;
-let confirmedEmpty = 0;
+let recoveryTimer = null;
 let lastRecoveryReload = Number(sessionStorage.getItem('kp-last-group-recovery') || 0);
 
 function isLoggedInUI() {
@@ -53,11 +53,21 @@ async function getClient() {
   return client;
 }
 
+function scheduleRecoveryReload() {
+  const now = Date.now();
+  const cooldown = 30000;
+  const wait = Math.max(0, cooldown - (now - lastRecoveryReload));
+  clearTimeout(recoveryTimer);
+  recoveryTimer = setTimeout(() => {
+    lastRecoveryReload = Date.now();
+    sessionStorage.setItem('kp-last-group-recovery', String(lastRecoveryReload));
+    location.reload();
+  }, wait + 120);
+}
+
 async function recoverIfNeeded() {
   if (!screen || checking || !isLoggedInUI() || !isOnboardingVisible()) return;
   checking = true;
-  installStyles();
-  showLoading();
 
   try {
     const sb = await getClient();
@@ -68,27 +78,17 @@ async function recoverIfNeeded() {
       return;
     }
 
-    const { data, error } = await sb.from('groups').select('id').limit(2);
+    // Do not replace onboarding until an authenticated query proves this
+    // account already belongs to a group. A genuine zero-group account must
+    // be able to use Create / Join immediately.
+    const { data, error } = await sb.from('groups').select('id').limit(1);
     if (error) throw error;
 
-    if ((data || []).length > 0) {
-      confirmedEmpty = 0;
-      const now = Date.now();
-      if (now - lastRecoveryReload > 30000) {
-        lastRecoveryReload = now;
-        sessionStorage.setItem('kp-last-group-recovery', String(now));
-        setTimeout(() => location.reload(), 250);
-      }
-      return;
-    }
+    if (!(data || []).length) return;
 
-    confirmedEmpty += 1;
-    if (confirmedEmpty >= 2) {
-      // A successful authenticated query twice confirmed this account truly has no groups.
-      // Reload once without the guard intervening so the normal Create / Join onboarding can render.
-      sessionStorage.setItem('kp-allow-onboarding-once', '1');
-      location.reload();
-    }
+    installStyles();
+    showLoading();
+    scheduleRecoveryReload();
   } catch (err) {
     console.warn('KickPot group recovery:', err);
   } finally {
@@ -98,14 +98,10 @@ async function recoverIfNeeded() {
 
 function tick() {
   if (!screen) return;
-  if (sessionStorage.getItem('kp-allow-onboarding-once') === '1') {
-    if (isOnboardingVisible()) sessionStorage.removeItem('kp-allow-onboarding-once');
-    return;
-  }
   recoverIfNeeded();
 }
 
 window.addEventListener('pageshow', () => setTimeout(tick, 80));
 window.addEventListener('focus', () => setTimeout(tick, 80));
-setInterval(tick, 700);
+setInterval(tick, 900);
 setTimeout(tick, 150);
