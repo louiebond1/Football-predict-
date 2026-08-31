@@ -63,8 +63,8 @@ async function inspectSchema() {
   });
   if (!r.ok) return { error: `openapi fetch failed: ${r.status} ${await r.text()}` };
   const spec = await r.json();
-  const expectedTables = ['profiles','groups','group_members','gameweeks','fixtures','group_gameweeks','payments','predictions'];
-  const expectedRpcs = ['create_group','join_group','ensure_current_gameweek','settle_gameweek','calculate_prediction_points'];
+  const expectedTables = ['profiles','groups','group_members','gameweeks','fixtures','group_gameweeks','payments','predictions','point_adjustments'];
+  const expectedRpcs = ['create_group','join_group','ensure_current_gameweek','settle_gameweek','calculate_prediction_points','admin_transfer_treasurer','admin_remove_member','admin_regenerate_join_code'];
   const tables = {};
   for (const t of expectedTables) {
     const def = spec.definitions?.[t];
