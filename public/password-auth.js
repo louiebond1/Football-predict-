@@ -43,20 +43,35 @@ function setBusy(value) {
 }
 function renderMode() {
   const invite = inviteCode();
-  if (!invite && mode === 'register') mode = 'login';
-  document.querySelector('#kpAuthLoginTab')?.classList.toggle('active', mode === 'login');
-  document.querySelector('#kpAuthRegisterTab')?.classList.toggle('active', mode === 'register');
+  const isRegister = mode === 'register';
+  document.querySelector('#kpAuthLoginTab')?.classList.toggle('active', !isRegister);
+  document.querySelector('#kpAuthRegisterTab')?.classList.toggle('active', isRegister);
+
+  const displayField = document.querySelector('#kpAuthDisplayField');
+  if (displayField) displayField.hidden = !isRegister;
+  const password = document.querySelector('#authPassword');
+  if (password) password.setAttribute('autocomplete', isRegister ? 'new-password' : 'current-password');
+
   const submit = document.querySelector('#kpPasswordSubmit');
   const hint = document.querySelector('#kpAuthHint');
   const title = document.querySelector('.hero h1');
   const sub = document.querySelector('.hero .hero-sub');
-  if (submit) submit.textContent = mode === 'register' ? 'Create Account & Join' : (invite ? 'Log In & Join' : 'Log In');
-  if (hint) hint.textContent = mode === 'register'
-    ? 'Your invite authorises this signup. No verification email is sent.'
-    : invite ? 'Already have KickPot? Log in and you’ll join this group automatically.' : 'Your session stays saved on this device until you sign out.';
-  if (title) title.textContent = mode === 'register' ? 'Join. Predict. Compete.' : 'Welcome back.';
-  if (sub) sub.textContent = mode === 'register'
-    ? 'Create your account with a password — no email link needed.'
+
+  if (submit) submit.textContent = isRegister
+    ? (invite ? 'Create Account & Join' : 'Create Account')
+    : (invite ? 'Log In & Join' : 'Log In');
+
+  if (hint) hint.textContent = isRegister
+    ? (invite
+      ? 'Create your account and you’ll join the invited group automatically.'
+      : 'Create your account now. You can create a group or enter an invite code next.')
+    : (invite
+      ? 'Already have KickPot? Log in and you’ll join this group automatically.'
+      : 'Your session stays saved on this device until you sign out.');
+
+  if (title) title.textContent = isRegister ? 'Create your KickPot account.' : 'Welcome back.';
+  if (sub) sub.textContent = isRegister
+    ? 'Sign up with your email and a password — no email link needed.'
     : 'Log in with your email and password.';
 }
 function ensurePasswordUI() {
@@ -69,12 +84,13 @@ function ensurePasswordUI() {
   card.dataset.kpPasswordAuth = '1';
   card.classList.add('kp-auth-card');
   card.innerHTML = `
-    <div class="kp-auth-tabs">
-      <button type="button" id="kpAuthLoginTab">Log in</button>
-      ${invite ? '<button type="button" id="kpAuthRegisterTab">Create account</button>' : ''}
+    <div class="kp-auth-tabs" role="tablist" aria-label="KickPot account">
+      <button type="button" id="kpAuthLoginTab" role="tab">Log in</button>
+      <button type="button" id="kpAuthRegisterTab" role="tab">Sign up</button>
     </div>
+    <label class="kp-auth-field" id="kpAuthDisplayField" hidden><span>Display name</span><input class="scorer-select" id="authDisplayName" type="text" autocomplete="nickname" maxlength="40" placeholder="What your friends will see"></label>
     <label class="kp-auth-field"><span>Email</span><input class="scorer-select" id="authEmail" type="email" autocomplete="email" placeholder="you@email.com" value="${currentEmail.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></label>
-    <label class="kp-auth-field"><span>Password</span><input class="scorer-select" id="authPassword" type="password" autocomplete="${invite ? 'new-password' : 'current-password'}" placeholder="10+ characters"></label>
+    <label class="kp-auth-field"><span>Password</span><input class="scorer-select" id="authPassword" type="password" autocomplete="current-password" placeholder="10+ characters"></label>
     <div class="kp-auth-hint" id="kpAuthHint"></div>
     <button type="button" class="primary" id="kpPasswordSubmit"></button>
     <div id="authStatus"></div>
@@ -85,14 +101,14 @@ function ensurePasswordUI() {
     </div>`;
   renderMode();
 }
-async function edgeAuth(action, email, password, invite) {
+async function edgeAuth(action, email, password, invite, displayName = '') {
   config = config || await fetch('/api/config', { cache:'no-store' }).then(r => r.json()).catch(() => null);
   if (!config?.supabaseUrl) throw new Error('KickPot authentication is unavailable.');
   const endpoint = `${config.supabaseUrl}/functions/v1/invite-password-auth`;
   const response = await fetch(endpoint, {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
-    body:JSON.stringify({ action, email, password, inviteCode:invite || '' }),
+    body:JSON.stringify({ action, email, password, inviteCode:invite || '', displayName }),
     cache:'no-store'
   });
   const data = await response.json().catch(() => ({}));
@@ -107,15 +123,17 @@ async function submitPassword() {
   if (busy) return;
   const email = document.querySelector('#authEmail')?.value?.trim().toLowerCase() || '';
   const password = document.querySelector('#authPassword')?.value || '';
+  const displayName = document.querySelector('#authDisplayName')?.value?.trim() || '';
   const invite = inviteCode();
   if (!/^\S+@\S+\.\S+$/.test(email)) return authStatus('error', 'Enter a valid email address.');
+  if (mode === 'register' && !displayName) return authStatus('error', 'Choose a display name.');
+  if (mode === 'register' && displayName.length > 40) return authStatus('error', 'Display name must be 40 characters or fewer.');
   if (password.length < 10) return authStatus('error', 'Password must be at least 10 characters.');
-  if (mode === 'register' && !invite) return authStatus('error', 'Open the invite link your group admin sent you.');
 
   setBusy(true);
   authStatus('', mode === 'register' ? 'Creating your KickPot account…' : 'Signing you in…');
   try {
-    const result = await edgeAuth(mode === 'register' ? 'register' : 'login', email, password, invite);
+    const result = await edgeAuth(mode === 'register' ? 'register' : 'login', email, password, invite, displayName);
     const sb = await getClient();
     if (!sb) throw new Error('KickPot authentication is unavailable.');
     const { error } = await sb.auth.setSession({ access_token: result.accessToken, refresh_token: result.refreshToken });
@@ -128,11 +146,14 @@ async function submitPassword() {
         history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
       }
     } catch {}
-    authStatus('success', mode === 'register' ? 'Account created — welcome to the group ✓' : 'Signed in ✓');
+    authStatus('success', mode === 'register'
+      ? (invite ? 'Account created — welcome to the group ✓' : 'Account created ✓')
+      : 'Signed in ✓');
   } catch (error) {
     authStatus('error', error?.message || 'KickPot could not sign you in.');
     if (error?.code === 'account_exists' || error?.code === 'existing_magic_account') {
-      mode = 'login'; renderMode();
+      mode = 'login';
+      renderMode();
     }
   } finally {
     setBusy(false);
@@ -149,7 +170,7 @@ document.addEventListener('click', event => {
   }
 });
 document.addEventListener('keydown', event => {
-  if (event.key === 'Enter' && document.querySelector('#authPassword') && (event.target?.id === 'authPassword' || event.target?.id === 'authEmail')) submitPassword();
+  if (event.key === 'Enter' && document.querySelector('#authPassword') && ['authPassword','authEmail','authDisplayName'].includes(event.target?.id)) submitPassword();
 });
 
 setInterval(ensurePasswordUI, 350);
