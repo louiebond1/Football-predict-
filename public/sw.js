@@ -1,10 +1,10 @@
-const CACHE='kickpot-v21';
+const CACHE='kickpot-v22';
 const CORE=[
   '/',
   '/styles.css',
   '/premium-ui.css?v=8',
   '/product-v3.css?v=1',
-  '/product-v3-tune.css?v=2',
+  '/product-v3-tune.css?v=3',
   '/admin-v1.css?v=1',
   '/admin-v1-fix.css?v=1',
   '/settings-v1.css?v=3',
@@ -13,7 +13,7 @@ const CORE=[
   '/ui-v3.js?v=1',
   '/admin-v1.js?v=1',
   '/session-guard.js?v=2',
-  '/settings-v1.js?v=1',
+  '/settings-v2.js?v=1',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
