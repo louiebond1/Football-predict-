@@ -1,4 +1,4 @@
-const CACHE='kickpot-v19';
+const CACHE='kickpot-v20';
 const CORE=[
   '/',
   '/styles.css',
@@ -7,11 +7,13 @@ const CORE=[
   '/product-v3-tune.css?v=2',
   '/admin-v1.css?v=1',
   '/admin-v1-fix.css?v=1',
+  '/settings-v1.css?v=2',
   '/smooth-runtime.js?v=1',
   '/app.js',
   '/ui-v3.js?v=1',
   '/admin-v1.js?v=1',
   '/session-guard.js?v=2',
+  '/settings-v1.js?v=1',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
@@ -23,7 +25,7 @@ self.addEventListener('install',e=>{
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([
   self.clients.claim(),
   caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
-])));
+]));
 self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET'||new URL(e.request.url).pathname.startsWith('/api/')) return;
   e.respondWith(
