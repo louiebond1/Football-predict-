@@ -1,158 +1,186 @@
 const screen = document.querySelector('#screen');
 
-function textIncludes(el, text) {
+function hasText(el, text) {
   return (el?.textContent || '').toLowerCase().includes(text.toLowerCase());
 }
 
-function cardByTitle(title) {
-  return [...screen.querySelectorAll(':scope > .card')].find(card => textIncludes(card.querySelector('.card-title'), title));
+function directCard(title) {
+  return [...screen.querySelectorAll(':scope > .card')].find(card => hasText(card.querySelector('.card-title'), title));
 }
 
-function smoothTarget(button, target) {
-  if (!button || !target) return;
-  button.addEventListener('click', () => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+function makeTabs(items, active, onChange) {
+  const nav = document.createElement('div');
+  nav.className = 'kp-subnav';
+  nav.innerHTML = items.map(item => `<button type="button" data-view="${item.id}" class="${item.id === active ? 'active' : ''}">${item.label}</button>`).join('');
+  nav.addEventListener('click', e => {
+    const btn = e.target.closest('[data-view]');
+    if (!btn) return;
+    nav.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+    onChange(btn.dataset.view);
+  });
+  return nav;
+}
+
+function showOnly(map, key) {
+  Object.entries(map).forEach(([name, nodes]) => {
+    (Array.isArray(nodes) ? nodes : [nodes]).forEach(node => {
+      if (node) node.hidden = name !== key;
+    });
+  });
 }
 
 function enhanceGW() {
-  screen.classList.add('screen-gw-v2');
+  screen.className = 'screen screen-gw-pro';
   const hero = screen.querySelector(':scope > .hero');
-  hero?.classList.add('matchday-hero-v2');
-
-  const picks = cardByTitle('Your Picks');
-  if (!picks) return;
-  picks.classList.add('picks-shell-v2');
-  if (picks.dataset.structuralV2 === '1') return;
-  picks.dataset.structuralV2 = '1';
+  const picks = directCard('Your Picks');
+  if (!picks || picks.dataset.pro === '1') return;
+  picks.dataset.pro = '1';
+  hero?.classList.add('gw-hero-pro');
+  picks.classList.add('fixtures-list-pro');
 
   const fixtures = [...picks.querySelectorAll(':scope > .fixture')];
+  fixtures.forEach(f => f.classList.add('fixture-line-pro'));
+
   let lastDay = '';
-  fixtures.forEach((fixture) => {
-    fixture.classList.add('fixture-v2');
-    const rules = fixture.querySelector('.rules')?.textContent?.trim() || '';
-    const day = rules.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/)?.[1] || '';
+  fixtures.forEach(fixture => {
+    const txt = fixture.querySelector('.rules')?.textContent?.trim() || '';
+    const day = txt.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/)?.[1] || '';
     if (day && day !== lastDay) {
-      const divider = document.createElement('div');
-      divider.className = 'fixture-day-v2';
-      divider.textContent = day === 'Sat' || day === 'Sun' ? `${day} fixtures` : day;
-      picks.insertBefore(divider, fixture);
+      const label = document.createElement('div');
+      label.className = 'fixture-date-pro';
+      label.textContent = day === 'Sat' ? 'Saturday' : day === 'Sun' ? 'Sunday' : day;
+      picks.insertBefore(label, fixture);
       lastDay = day;
     }
   });
 }
 
 function enhanceLive() {
-  screen.classList.add('screen-live-v2');
-  screen.querySelector(':scope > .hero')?.classList.add('live-hero-v2');
-  const liveTable = cardByTitle('Live Table');
-  const fixtures = cardByTitle("This Gameweek's Fixtures");
-  const need = cardByTitle('What You Need');
-  liveTable?.classList.add('live-table-v2');
-  fixtures?.classList.add('live-fixtures-v2');
-  need?.classList.add('what-you-need-v2');
-  fixtures?.querySelectorAll('.fixture').forEach(f => f.classList.add('fixture-v2'));
+  screen.className = 'screen screen-live-pro';
+  const hero = screen.querySelector(':scope > .hero');
+  const table = directCard('Live Table');
+  const fixtures = directCard("This Gameweek's Fixtures");
+  const need = directCard('What You Need');
+  const swing = [...screen.querySelectorAll(':scope > .card')].find(c => c.classList.contains('swing'));
+  if (!hero || !table || !fixtures || hero.dataset.pro === '1') return;
+  hero.dataset.pro = '1';
+  hero.classList.add('live-hero-pro');
+  table.classList.add('live-panel-pro');
+  fixtures.classList.add('live-panel-pro');
+  need?.classList.add('live-panel-pro');
+  swing?.classList.add('live-swing-pro');
+  fixtures.querySelectorAll('.fixture').forEach(f => f.classList.add('fixture-line-pro'));
+
+  const tabs = makeTabs([
+    { id: 'matches', label: 'Matches' },
+    { id: 'table', label: 'Table' },
+    ...(need ? [{ id: 'you', label: 'You' }] : [])
+  ], 'matches', key => showOnly({ matches: [fixtures, swing], table, you: need }, key));
+  hero.after(tabs);
+  showOnly({ matches: [fixtures, swing], table, you: need }, 'matches');
 }
 
 function enhanceHistory() {
-  screen.classList.add('screen-history-v2');
+  screen.className = 'screen screen-history-pro';
   const first = screen.querySelector(':scope > .card');
-  if (first && textIncludes(first, 'No Gameweeks settled yet')) first.classList.add('history-empty-hero-v2');
-  cardByTitle('Past Gameweeks')?.classList.add('history-past-v2');
-  cardByTitle('Your Season Stats')?.classList.add('history-stats-v2');
-  cardByTitle('Awards')?.classList.add('history-awards-v2');
+  const past = directCard('Past Gameweeks');
+  const stats = directCard('Your Season Stats');
+  const awards = directCard('Awards');
+  if (!first || !past || !stats || first.dataset.pro === '1') return;
+  first.dataset.pro = '1';
+
+  const header = document.createElement('section');
+  header.className = 'section-heading-pro';
+  header.innerHTML = '<div class="section-kicker-pro">SEASON</div><h1>History</h1><p>Your record, results and awards.</p>';
+  screen.insertBefore(header, first);
+
+  first.classList.add('history-hero-pro');
+  past.classList.add('history-panel-pro');
+  stats.classList.add('history-panel-pro');
+  awards?.classList.add('history-panel-pro');
+
+  const tabs = makeTabs([
+    { id: 'overview', label: 'Overview' },
+    { id: 'gameweeks', label: 'Gameweeks' },
+    { id: 'awards', label: 'Awards' }
+  ], 'overview', key => showOnly({ overview: [first, stats], gameweeks: past, awards }, key));
+  header.after(tabs);
+  showOnly({ overview: [first, stats], gameweeks: past, awards }, 'overview');
 }
 
 function enhanceGroup() {
-  screen.classList.add('screen-group-v2');
+  screen.className = 'screen screen-group-pro';
   const head = screen.querySelector(':scope > .group-head');
-  const joinPill = [...screen.querySelectorAll(':scope > .pill')].find(el => textIncludes(el, 'Join code'));
+  const join = [...screen.querySelectorAll(':scope > .pill')].find(el => hasText(el, 'Join code'));
   const switcher = screen.querySelector(':scope > .select-wrap');
-  const pot = cardByTitle('Pot');
-  const payments = cardByTitle('Member Payments');
-  const week = cardByTitle('This Week');
-  const rivalry = cardByTitle('Group Rivalry');
-  const pay = cardByTitle('Pay the Treasurer');
-  const admin = cardByTitle('Treasurer · Bank Details');
+  const pot = directCard('Pot');
+  const payments = directCard('Member Payments');
+  const week = directCard('This Week');
+  const rivalry = directCard('Group Rivalry');
+  const pay = directCard('Pay the Treasurer');
+  const admin = directCard('Treasurer · Bank Details');
+  if (!head || !pot || head.dataset.pro === '1') return;
+  head.dataset.pro = '1';
 
-  if (!head || !pot) return;
+  const dashboard = document.createElement('section');
+  dashboard.className = 'group-hero-pro';
+  screen.insertBefore(dashboard, head);
+  dashboard.append(head, pot);
 
-  head.classList.add('group-head-v2');
-  pot.classList.add('group-pot-v2');
-  payments?.classList.add('group-payments-v2');
-  week?.classList.add('group-week-v2');
-  rivalry?.classList.add('group-rivalry-v2');
+  const badge = pot.querySelector('.badge')?.textContent?.trim() || '';
+  const amount = pot.querySelector('.pot-amount')?.textContent?.trim() || '';
+  const summary = document.createElement('div');
+  summary.className = 'group-summary-pro';
+  summary.innerHTML = `<span><small>Current pot</small><strong>${amount}</strong></span><span><small>Payments</small><strong>${badge}</strong></span>`;
+  dashboard.append(summary);
 
-  const hero = document.createElement('section');
-  hero.className = 'group-dashboard-v2';
-  screen.insertBefore(hero, head);
-  hero.append(head, pot);
+  pot.querySelector('.pot-hero')?.remove();
+  pot.querySelector('.badge')?.remove();
+  pot.classList.add('group-pot-hidden-pro');
 
-  const badgeText = pot.querySelector('.badge')?.textContent?.trim() || '0/0 paid';
-  const match = badgeText.match(/(\d+)\/(\d+)/);
-  const paid = Number(match?.[1] || 0);
-  const total = Math.max(1, Number(match?.[2] || 1));
-  const pct = Math.round((paid / total) * 100);
-
-  const progress = document.createElement('div');
-  progress.className = 'group-progress-v2';
-  progress.innerHTML = `<div class="group-progress-copy"><span>Weekly pot ready</span><strong>${paid}/${total} paid</strong></div><div class="group-progress-track"><i style="width:${pct}%"></i></div>`;
-  hero.append(progress);
-
-  const quick = document.createElement('div');
-  quick.className = 'group-quick-v2';
-  quick.innerHTML = `
-    <button type="button" data-go="payments"><span>Members</span><small>payments</small></button>
-    <button type="button" data-go="week"><span>This week</span><small>rules</small></button>
-    <button type="button" data-go="rivalry"><span>Rivalry</span><small>stats</small></button>`;
-  hero.after(quick);
-  smoothTarget(quick.querySelector('[data-go="payments"]'), payments);
-  smoothTarget(quick.querySelector('[data-go="week"]'), week);
-  smoothTarget(quick.querySelector('[data-go="rivalry"]'), rivalry);
-
-  if (payments && week) {
-    const core = document.createElement('section');
-    core.className = 'group-core-v2';
-    quick.after(core);
-    core.append(payments, week);
-  }
-
-  if (rivalry) {
-    rivalry.classList.add('group-feature-v2');
-    const heading = rivalry.querySelector('.card-title');
-    if (heading) heading.insertAdjacentHTML('beforeend', '<span class="group-feature-tag">Season</span>');
-  }
-
-  const details = document.createElement('details');
-  details.className = 'group-tools-v2';
-  details.innerHTML = `<summary><div><strong>Group tools</strong><span>Invite, payment details & settings</span></div><span class="group-tools-chevron">›</span></summary><div class="group-tools-body"></div>`;
-  const body = details.querySelector('.group-tools-body');
-
-  if (joinPill) {
+  const settings = document.createElement('section');
+  settings.className = 'group-settings-pro';
+  if (join) {
     const invite = document.createElement('div');
-    invite.className = 'group-invite-v2';
-    invite.innerHTML = `<span>Invite code</span><strong>${joinPill.querySelector('strong')?.textContent || ''}</strong>`;
-    body.append(invite);
-    joinPill.remove();
+    invite.className = 'setting-line-pro';
+    invite.innerHTML = `<span><small>Invite code</small><strong>${join.querySelector('strong')?.textContent || ''}</strong></span>`;
+    settings.append(invite);
+    join.remove();
   }
-  if (switcher) body.append(switcher);
-  if (pay) body.append(pay);
-  if (admin) body.append(admin);
+  if (switcher) settings.append(switcher);
+  if (pay) settings.append(pay);
+  if (admin) settings.append(admin);
 
-  screen.append(details);
+  payments?.classList.add('group-panel-pro');
+  week?.classList.add('group-panel-pro');
+  rivalry?.classList.add('group-panel-pro', 'rivalry-pro');
+
+  const tabs = makeTabs([
+    { id: 'home', label: 'Overview' },
+    { id: 'members', label: 'Members' },
+    { id: 'rivalry', label: 'Rivalry' },
+    { id: 'settings', label: 'Settings' }
+  ], 'home', key => showOnly({ home: week, members: payments, rivalry, settings }, key));
+  dashboard.after(tabs);
+  tabs.after(settings);
+  if (rivalry) settings.after(rivalry);
+  if (payments) rivalry?.after(payments);
+  if (week) payments?.after(week);
+  showOnly({ home: week, members: payments, rivalry, settings }, 'home');
 }
 
-let enhancing = false;
+let busy = false;
 function enhance() {
-  if (enhancing || !screen || !screen.children.length) return;
-  enhancing = true;
+  if (busy || !screen || !screen.children.length) return;
+  busy = true;
   try {
-    screen.classList.remove('screen-gw-v2', 'screen-live-v2', 'screen-history-v2', 'screen-group-v2');
     const tab = document.querySelector('.nav-item.active')?.dataset?.tab;
     if (tab === 'gw') enhanceGW();
     if (tab === 'live') enhanceLive();
     if (tab === 'history') enhanceHistory();
     if (tab === 'group') enhanceGroup();
   } finally {
-    enhancing = false;
+    busy = false;
   }
 }
 
