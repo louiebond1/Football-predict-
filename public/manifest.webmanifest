@@ -3,8 +3,8 @@
   "short_name":"KickPot",
   "start_url":"/",
   "display":"standalone",
-  "background_color":"#07110d",
-  "theme_color":"#07110d",
+  "background_color":"#050a16",
+  "theme_color":"#050a16",
   "orientation":"portrait-primary",
   "icons":[
     {"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png"},
