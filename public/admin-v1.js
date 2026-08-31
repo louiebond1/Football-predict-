@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const screen = document.querySelector('#screen');
 let client = null;
 let attemptToken = 0;
+let injecting = false;
 
 const svg = (body, size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
 const icons = {
@@ -238,20 +239,27 @@ async function enhanceAdmin() {
   const root = screen?.querySelector(':scope > .kp3-group-root');
   const overview = root?.querySelector(':scope > .kp3-group-overview');
   const menu = overview?.querySelector('.kp3-group-menu');
-  if (!root || !overview || !menu || menu.querySelector('.kp-admin-entry')) return;
+  if (!root || !overview || !menu || menu.querySelector('.kp-admin-entry') || injecting) return;
+  injecting = true;
 
-  let data;
-  try { data = await loadAdminData(); } catch { return; }
-  if (!data?.isAdmin) return;
+  try {
+    let data;
+    try { data = await loadAdminData(); } catch { return; }
+    if (!data?.isAdmin) return;
+    // Re-check after the async gap: another overlapping call (triggered by
+    // the same burst of DOM mutations this one was) may have already
+    // appended the entry while this one was awaiting loadAdminData().
+    if (menu.querySelector('.kp-admin-entry')) return;
 
-  const settingsRow = [...menu.querySelectorAll('.kp3-nav-row')].find(r => /^Group settings/i.test(r.textContent.trim()));
-  const settingsSmall = settingsRow?.querySelector('.kp3-nav-copy small'); if (settingsSmall) settingsSmall.textContent = 'Invite code & group access';
+    const settingsRow = [...menu.querySelectorAll('.kp3-nav-row')].find(r => /^Group settings/i.test(r.textContent.trim()));
+    const settingsSmall = settingsRow?.querySelector('.kp3-nav-copy small'); if (settingsSmall) settingsSmall.textContent = 'Invite code & group access';
 
-  const view = document.createElement('section'); view.className = 'kp3-view kp-admin-view'; view.hidden = true; root.append(view);
-  const entry = document.createElement('button'); entry.type = 'button'; entry.className = 'kp3-nav-row kp-admin-entry';
-  entry.innerHTML = `<span class="kp3-nav-icon">${icons.admin}</span><span class="kp3-nav-copy"><strong>Admin</strong><small>Payments, members & scoring controls</small></span><span class="kp3-nav-meta">Treasurer</span><span class="kp3-nav-chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>`;
-  entry.addEventListener('click', async () => { setGroupView(root, view); await renderAdmin(view, root, overview); });
-  menu.append(entry);
+    const view = document.createElement('section'); view.className = 'kp3-view kp-admin-view'; view.hidden = true; root.append(view);
+    const entry = document.createElement('button'); entry.type = 'button'; entry.className = 'kp3-nav-row kp-admin-entry';
+    entry.innerHTML = `<span class="kp3-nav-icon">${icons.admin}</span><span class="kp3-nav-copy"><strong>Admin</strong><small>Payments, members & scoring controls</small></span><span class="kp3-nav-meta">Treasurer</span><span class="kp3-nav-chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>`;
+    entry.addEventListener('click', async () => { setGroupView(root, view); await renderAdmin(view, root, overview); });
+    menu.append(entry);
+  } finally { injecting = false; }
 
   const bank = screen.querySelector('.kp3-admin-card');
   if (bank) bank.hidden = true;
