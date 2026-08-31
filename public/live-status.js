@@ -54,6 +54,79 @@ function tableSignature(ctx) {
   return `${ctx.group.id}:${ctx.gameweekId}:` + ctx.rows.map(r => `${r.user_id}:${Number(r.points || 0)}:${Number(r.picks_submitted || 0)}:${Number(r.fixtures_total || 0)}:${r.picks_locked ? 1 : 0}`).join('|');
 }
 
+function competitionRank(rows, index) {
+  const points = Number(rows[index]?.points || 0);
+  return 1 + rows.slice(0, index).filter(r => Number(r.points || 0) > points).length;
+}
+
+function isSharedRank(rows, index) {
+  const points = Number(rows[index]?.points || 0);
+  return rows.filter(r => Number(r.points || 0) === points).length > 1;
+}
+
+function ordinal(n) {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  if (n % 10 === 1) return `${n}st`;
+  if (n % 10 === 2) return `${n}nd`;
+  if (n % 10 === 3) return `${n}rd`;
+  return `${n}th`;
+}
+
+function playerNames(rows, currentId) {
+  return rows.filter(r => r.user_id !== currentId).map(r => r.display_name || 'Player');
+}
+
+function naturalList(names) {
+  if (!names.length) return '';
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+function tieAwareNeedMessage(ctx) {
+  const rows = ctx.rows || [];
+  const mineIndex = rows.findIndex(r => r.user_id === ctx.session.user.id);
+  if (mineIndex < 0 || !rows.length) return '';
+
+  const mine = rows[mineIndex];
+  const minePoints = Number(mine.points || 0);
+  const topPoints = Number(rows[0]?.points || 0);
+  const sameAsMine = rows.filter(r => Number(r.points || 0) === minePoints);
+  const allLevel = sameAsMine.length === rows.length;
+  const unit = value => `pt${Number(value) === 1 ? '' : 's'}`;
+
+  if (allLevel && rows.length > 1) {
+    return `All ${rows.length} players are level on ${minePoints} ${unit(minePoints)}.`;
+  }
+
+  if (minePoints === topPoints) {
+    if (sameAsMine.length > 1) {
+      const others = naturalList(playerNames(sameAsMine, mine.user_id));
+      return `You're level at the top with ${esc(others)} on ${minePoints} ${unit(minePoints)}.`;
+    }
+    const secondPoints = rows.find(r => Number(r.points || 0) < minePoints);
+    if (!secondPoints) return "You're leading the group.";
+    const gap = minePoints - Number(secondPoints.points || 0);
+    return `You're leading by ${gap} ${unit(gap)}.`;
+  }
+
+  const rank = competitionRank(rows, mineIndex);
+  const gap = topPoints - minePoints;
+  if (sameAsMine.length > 1) {
+    return `You're tied for ${ordinal(rank)} on ${minePoints} ${unit(minePoints)}, ${gap} ${unit(gap)} off the lead.`;
+  }
+  return `You're ${ordinal(rank)}, ${gap} ${unit(gap)} off the lead.`;
+}
+
+function updateWhatYouNeed(ctx) {
+  const card = document.querySelector('.kp3-live .kp3-need');
+  const text = card?.querySelector('p');
+  if (!text) return;
+  const msg = tieAwareNeedMessage(ctx);
+  if (msg) text.textContent = msg;
+}
+
 function rebuildTable(table, ctx) {
   const signature = tableSignature(ctx);
   if (!table || table.dataset.kpGroupStatus === signature) return;
@@ -62,9 +135,11 @@ function rebuildTable(table, ctx) {
   tbody.innerHTML = ctx.rows.map((row, i) => {
     const name = row.display_name || 'Player';
     const mine = row.user_id === ctx.session.user.id;
+    const rank = competitionRank(ctx.rows, i);
+    const rankLabel = isSharedRank(ctx.rows, i) ? `=${rank}` : String(rank);
     return `<tr data-kp-user="${esc(row.user_id)}">
       <td><span class="rank-move same">–</span></td>
-      <td class="rank">${i + 1}</td>
+      <td class="rank">${rankLabel}</td>
       <td><div class="row-left kp-live-player">${avatar(name)}<span class="kp-live-player-copy"><strong>${esc(name)}</strong>${mine ? ' <span class="muted">(you)</span>' : ''}${statusText(row)}</span></div></td>
       <td class="pts">${Number(row.points || 0)}</td>
     </tr>`;
@@ -123,6 +198,7 @@ async function enhance() {
     const ctx = await loadStatus();
     if (!ctx) return;
     if (table) rebuildTable(table, ctx);
+    updateWhatYouNeed(ctx);
     await revealStartedPicks(ctx);
   } finally {
     busy = false;
