@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const PROMPT_KEY = 'kp-password-setup-prompt-v2';
+const PROMPT_KEY = 'kp-pin-setup-prompt-v1';
 let client = null;
 let promptBusy = false;
 
@@ -13,7 +13,7 @@ function addStyles() {
     .kp-account-password>strong{font-size:17px;color:#f8fafc}
     .kp-account-password>p{margin:-5px 0 2px;color:#8f9aad;font-size:13px;line-height:1.45}
     .kp-account-password label{display:grid;gap:7px;color:#919bad;font-size:12px;font-weight:700}
-    .kp-account-password input{width:100%;box-sizing:border-box;border:1px solid rgba(148,163,184,.18);background:#0c1626;color:#fff;border-radius:13px;padding:13px 14px;font:600 15px/1.2 system-ui,-apple-system,sans-serif;outline:none}
+    .kp-account-password input{width:100%;box-sizing:border-box;border:1px solid rgba(148,163,184,.18);background:#0c1626;color:#fff;border-radius:13px;padding:13px 14px;font:700 18px/1.2 system-ui,-apple-system,sans-serif;letter-spacing:.28em;outline:none}
     .kp-account-password input:focus{border-color:rgba(142,92,255,.75);box-shadow:0 0 0 3px rgba(142,92,255,.10)}
     .kp-account-password button{border:0;border-radius:13px;padding:14px 16px;background:linear-gradient(100deg,#7047ff,#a054ff);color:white;font:800 14px/1 system-ui,-apple-system,sans-serif}
     .kp-account-password small{min-height:16px;color:#9aa5b7;font-size:12px}
@@ -23,7 +23,7 @@ function addStyles() {
     .kp-password-prompt h2{font-size:28px;line-height:1.02;margin:8px 0 8px;letter-spacing:-.035em}
     .kp-password-prompt p{color:#98a4b7;font-size:14px;line-height:1.5;margin:0 0 18px}
     .kp-password-prompt label{display:grid;gap:7px;color:#a1aabd;font-size:12px;font-weight:800;margin-top:11px}
-    .kp-password-prompt input{width:100%;box-sizing:border-box;border:1px solid rgba(148,163,184,.20);background:#0d1728;color:#fff;border-radius:14px;padding:14px;font:600 16px/1.2 system-ui,-apple-system,sans-serif;outline:none}
+    .kp-password-prompt input{width:100%;box-sizing:border-box;border:1px solid rgba(148,163,184,.20);background:#0d1728;color:#fff;border-radius:14px;padding:14px;font:800 20px/1.2 system-ui,-apple-system,sans-serif;letter-spacing:.32em;outline:none}
     .kp-password-prompt input:focus{border-color:#8d5cff;box-shadow:0 0 0 3px rgba(141,92,255,.12)}
     .kp-password-prompt .kp-prompt-save{width:100%;margin-top:17px;border:0;border-radius:14px;padding:15px;background:linear-gradient(100deg,#7047ff,#a054ff);color:#fff;font:900 15px/1 system-ui,-apple-system,sans-serif}
     .kp-password-prompt .kp-prompt-later{width:100%;margin-top:9px;border:0;background:transparent;color:#8f9aad;padding:11px;font:700 13px/1 system-ui,-apple-system,sans-serif}
@@ -41,14 +41,18 @@ async function getClient() {
   return client;
 }
 
-function passwordMarkup(prefix = 'kpAccount') {
-  return `<label>New password<input type="password" id="${prefix}NewPassword" autocomplete="new-password" placeholder="10+ characters"></label>
-    <label>Confirm password<input type="password" id="${prefix}ConfirmPassword" autocomplete="new-password" placeholder="Repeat password"></label>`;
+function pinMarkup(prefix = 'kpAccount') {
+  return `<label>New 6-digit PIN<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="${prefix}NewPassword" autocomplete="new-password" placeholder="••••••"></label>
+    <label>Confirm PIN<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="${prefix}ConfirmPassword" autocomplete="new-password" placeholder="••••••"></label>`;
+}
+function cleanPinInput(input) {
+  if (!input) return;
+  input.value = input.value.replace(/\D/g, '').slice(0, 6);
 }
 
-async function savePassword(password, confirm, status, button) {
-  if (password.length < 10) { status.textContent = 'Use at least 10 characters.'; return false; }
-  if (password !== confirm) { status.textContent = 'Passwords do not match.'; return false; }
+async function savePin(pin, confirm, status, button) {
+  if (!/^\d{6}$/.test(pin)) { status.textContent = 'Choose exactly 6 digits.'; return false; }
+  if (pin !== confirm) { status.textContent = 'PINs do not match.'; return false; }
   const sb = await getClient();
   if (!sb) { status.textContent = 'KickPot authentication is unavailable.'; return false; }
   button.disabled = true;
@@ -56,15 +60,19 @@ async function savePassword(password, confirm, status, button) {
   const { data:{ session } } = await sb.auth.getSession();
   if (!session) {
     button.disabled = false;
-    status.textContent = 'Your session expired. Log in once more, then set your password.';
+    status.textContent = 'Your session expired. Log in once more, then choose your PIN.';
     return false;
   }
-  const { error } = await sb.auth.updateUser({ password });
+  const { error } = await sb.auth.updateUser({ password: pin, data: { kickpot_pin: true } });
   button.disabled = false;
-  if (error) { status.textContent = error.message || 'Could not save password.'; return false; }
-  status.textContent = 'Password saved ✓';
+  if (error) { status.textContent = error.message || 'Could not save PIN.'; return false; }
+  status.textContent = 'PIN saved ✓';
   localStorage.setItem(PROMPT_KEY, 'done');
   return true;
+}
+
+function bindPinInputs(root) {
+  root.querySelectorAll('input[inputmode="numeric"]').forEach(input => input.addEventListener('input', () => cleanPinInput(input)));
 }
 
 function injectPasswordControls() {
@@ -75,17 +83,18 @@ function injectPasswordControls() {
 
   const block = document.createElement('div');
   block.className = 'kp-account-password';
-  block.innerHTML = `<strong>Password</strong><p>Set this once, then use email + password to sign in without waiting for an email link.</p>
-    ${passwordMarkup('kpAccount')}
-    <button type="button" id="kpAccountSavePassword">Set / change password</button><small id="kpAccountPasswordStatus"></small>`;
+  block.innerHTML = `<strong>Login PIN</strong><p>Use a simple 6-digit PIN if KickPot ever needs you to sign in again. This replaces your old password.</p>
+    ${pinMarkup('kpAccount')}
+    <button type="button" id="kpAccountSavePassword">Set / change PIN</button><small id="kpAccountPasswordStatus"></small>`;
   form.append(block);
+  bindPinInputs(block);
 
   block.querySelector('#kpAccountSavePassword').addEventListener('click', async () => {
-    const password = block.querySelector('#kpAccountNewPassword').value;
+    const pin = block.querySelector('#kpAccountNewPassword').value;
     const confirm = block.querySelector('#kpAccountConfirmPassword').value;
     const status = block.querySelector('#kpAccountPasswordStatus');
     const button = block.querySelector('#kpAccountSavePassword');
-    if (await savePassword(password, confirm, status, button)) {
+    if (await savePin(pin, confirm, status, button)) {
       block.querySelector('#kpAccountNewPassword').value = '';
       block.querySelector('#kpAccountConfirmPassword').value = '';
     }
@@ -103,24 +112,23 @@ async function maybeShowOneTimePrompt() {
   addStyles();
   const overlay = document.createElement('div');
   overlay.className = 'kp-password-prompt-overlay';
-  overlay.innerHTML = `<section class="kp-password-prompt" role="dialog" aria-modal="true" aria-label="Create your KickPot password">
+  overlay.innerHTML = `<section class="kp-password-prompt" role="dialog" aria-modal="true" aria-label="Choose your KickPot PIN">
     <div class="kp-prompt-kicker">ONE-TIME SETUP</div>
-    <h2>Create your KickPot password</h2>
-    <p>Do this once on this account. Afterward you can sign in directly with your email and password and the Home Screen app will keep you signed in.</p>
-    ${passwordMarkup('kpPrompt')}
-    <button type="button" class="kp-prompt-save">Save password</button>
+    <h2>Choose your 6-digit PIN</h2>
+    <p>Much easier than a password. KickPot stays signed in on this device, so you should only need the PIN occasionally.</p>
+    ${pinMarkup('kpPrompt')}
+    <button type="button" class="kp-prompt-save">Save PIN</button>
     <button type="button" class="kp-prompt-later">Do this later</button>
     <small class="kp-prompt-status"></small>
   </section>`;
   document.body.append(overlay);
+  bindPinInputs(overlay);
   const status = overlay.querySelector('.kp-prompt-status');
   const save = overlay.querySelector('.kp-prompt-save');
   save.addEventListener('click', async () => {
-    const password = overlay.querySelector('#kpPromptNewPassword').value;
+    const pin = overlay.querySelector('#kpPromptNewPassword').value;
     const confirm = overlay.querySelector('#kpPromptConfirmPassword').value;
-    if (await savePassword(password, confirm, status, save)) {
-      setTimeout(() => overlay.remove(), 450);
-    }
+    if (await savePin(pin, confirm, status, save)) setTimeout(() => overlay.remove(), 450);
   });
   overlay.querySelector('.kp-prompt-later').addEventListener('click', () => {
     localStorage.setItem(PROMPT_KEY, 'done');
@@ -129,8 +137,6 @@ async function maybeShowOneTimePrompt() {
   promptBusy = false;
 }
 
-// Account sheet is appended asynchronously. Check briefly after an Account tap,
-// and keep a very light fallback check so the control cannot silently disappear.
 document.addEventListener('click', event => {
   if (!event.target.closest('#userChip')) return;
   [60,180,400,800,1400].forEach(ms => setTimeout(injectPasswordControls, ms));
