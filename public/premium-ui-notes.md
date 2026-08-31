@@ -1,0 +1,1 @@
+Design target: premium football product, closer to FotMob × Revolut × Nike Football than a generic SaaS dashboard. Keep lime as a scarce accent, reduce nested bordered cards, strengthen fixture hierarchy, tighten header/nav, and preserve all existing real data wiring.
