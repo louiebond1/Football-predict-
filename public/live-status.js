@@ -40,6 +40,7 @@ async function loadStatus(force = false) {
 function statusText(row) {
   const submitted = Number(row.picks_submitted || 0);
   const total = Number(row.fixtures_total || 0);
+  if (total === 0) return '<span class="kp-live-lock is-locked">✓ All available picks locked</span>';
   if (row.picks_locked) return `<span class="kp-live-lock is-locked">✓ ${submitted}/${total} picks locked</span>`;
   if (submitted > 0) return `<span class="kp-live-lock is-partial">${submitted}/${total} picks saved</span>`;
   return '<span class="kp-live-lock is-missing">Not submitted</span>';
@@ -50,7 +51,7 @@ function avatar(name) {
 }
 
 function tableSignature(ctx) {
-  return `${ctx.group.id}:${ctx.gameweekId}:` + ctx.rows.map(r => `${r.user_id}:${Number(r.points || 0)}:${Number(r.picks_submitted || 0)}:${r.picks_locked ? 1 : 0}`).join('|');
+  return `${ctx.group.id}:${ctx.gameweekId}:` + ctx.rows.map(r => `${r.user_id}:${Number(r.points || 0)}:${Number(r.picks_submitted || 0)}:${Number(r.fixtures_total || 0)}:${r.picks_locked ? 1 : 0}`).join('|');
 }
 
 function rebuildTable(table, ctx) {
