@@ -1,0 +1,90 @@
+/* Four launch fixes only: tab transition, Matchday spacing/copy support, group rename. */
+.kp-tab-transition{
+  position:fixed;
+  z-index:80;
+  pointer-events:none;
+  overflow:hidden;
+  padding:8px 0 20px;
+  background:linear-gradient(180deg,#07101f 0%,#050a16 58%,#030711 100%);
+  opacity:1;
+  transition:opacity .10s ease;
+}
+.kp-tab-transition.is-ready{opacity:0}
+.kp-tab-transition-title{
+  margin:0 0 18px;
+  color:#f7f8fc;
+  font-size:36px;
+  line-height:1;
+  letter-spacing:-1.6px;
+  font-weight:920;
+}
+.kp-tab-skeleton{
+  height:74px;
+  margin:0 0 12px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;
+  background:linear-gradient(100deg,rgba(255,255,255,.025),rgba(155,92,255,.045),rgba(255,255,255,.025));
+}
+.kp-tab-skeleton-wide{height:104px}
+
+/* The rollover heading was sitting too tight under the app header on iPhone. */
+.kp3-gw .kp3-page-hero,
+.kp-rollover-screen .kp3-page-hero{
+  margin-top:12px!important;
+  padding-top:4px!important;
+  overflow:visible!important;
+}
+.kp3-gw .kp3-page-hero h1,
+.kp-rollover-screen .kp3-page-hero h1{
+  overflow:visible!important;
+}
+
+.kp-group-rename{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:end;
+  padding:14px 14px 13px;
+  border-bottom:1px solid rgba(255,255,255,.095);
+}
+.kp-group-rename label{display:grid;gap:7px;min-width:0}
+.kp-group-rename label>span{
+  color:#8e97a8;
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.kp-group-rename input{
+  width:100%;
+  height:42px;
+  padding:0 11px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;
+  outline:none;
+  background:#0d1728;
+  color:#fff;
+  font:750 13px/1 system-ui,-apple-system,sans-serif;
+}
+.kp-group-rename input:focus{border-color:rgba(155,92,255,.58);box-shadow:0 0 0 3px rgba(155,92,255,.08)}
+.kp-group-rename button{
+  height:42px;
+  padding:0 13px;
+  border:1px solid rgba(155,92,255,.38);
+  border-radius:10px;
+  background:rgba(155,92,255,.09);
+  color:#d8c5ff;
+  font:850 11px/1 system-ui,-apple-system,sans-serif;
+  white-space:nowrap;
+}
+.kp-group-rename small{
+  grid-column:1/-1;
+  min-height:12px;
+  color:#8e97a8;
+  font-size:9.5px;
+}
+@media(max-width:390px){
+  .kp-tab-transition-title{font-size:32px}
+  .kp-group-rename{grid-template-columns:1fr}
+  .kp-group-rename button{width:100%}
+}
