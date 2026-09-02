@@ -95,7 +95,7 @@ Deno.serve(async (req: Request) => {
     return data || null
   }
   async function aliasFor(loginEmail: string) {
-    const { data } = await admin.from('login_aliases').select('user_id,auth_email').ilike('login_email', loginEmail).maybeSingle()
+    const { data } = await admin.from('login_aliases').select('user_id,auth_email').eq('login_email', loginEmail).maybeSingle()
     return data || null
   }
   async function joinWithSession(accessToken: string, code: string) {
