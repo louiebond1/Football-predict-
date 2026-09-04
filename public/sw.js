@@ -1,4 +1,4 @@
-const CACHE='kickpot-v56';
+const CACHE='kickpot-v57';
 const CORE=[
   '/',
   '/styles.css',
@@ -18,6 +18,7 @@ const CORE=[
   '/same-tab-scroll.js?v=4',
   '/auth-ux.js?v=3',
   '/app.js?v=2',
+  '/prewarm-ui.js?v=1',
   '/password-auth.js?v=3',
   '/passkey-auth.js?v=1',
   '/ui-v3.js?v=1',
