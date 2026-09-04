@@ -1,0 +1,122 @@
+/* KickPot Studio compatibility reset.
+   Neutralises presentation residue from the pre-Studio base stylesheet while
+   retaining the class hooks used by the existing working feature scripts. */
+
+body::before,.card::after,.fixture::before,.winner::before{display:none!important;content:none!important}
+
+/* Base form chrome used a decorative pawn and double containers. */
+.scorer-row{display:block!important;padding-top:0!important;border-top:0!important}
+.scorer-row::before{display:none!important;content:none!important}
+#groupSwitch{margin:0!important}
+
+/* Small contextual actions must not inherit the base full-width button rule. */
+.chip-btn,.confirm-btn{
+  width:auto!important;
+  min-width:64px!important;
+  min-height:36px!important;
+  padding:0 10px!important;
+  border:1px solid var(--kp-line-strong)!important;
+  border-radius:7px!important;
+  background:transparent!important;
+  color:var(--kp-text-soft)!important;
+  box-shadow:none!important;
+  font-size:10px!important;
+  font-weight:700!important;
+}
+
+/* Avatars are identity markers, not decorative gradient badges. */
+.avatar{
+  width:32px!important;
+  height:32px!important;
+  flex:0 0 32px!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid var(--kp-line)!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  color:var(--kp-text-soft)!important;
+  box-shadow:none!important;
+  font-size:11px!important;
+  font-weight:720!important;
+}
+.avatar.sm{width:28px!important;height:28px!important;flex-basis:28px!important;font-size:10px!important}
+
+/* Live status colour is functional only; no neon dot/glow. */
+.live-dot{
+  width:7px!important;
+  height:7px!important;
+  margin-right:7px!important;
+  border-radius:50%!important;
+  background:var(--kp-live)!important;
+  box-shadow:none!important;
+}
+.kp-live-lock.is-locked{color:var(--kp-live)!important}
+.kp-live-lock.is-partial{color:var(--kp-accent-2)!important}
+.kp-live-lock.is-missing{color:var(--kp-muted)!important}
+.kp-live-summary{color:var(--kp-muted)!important}
+
+/* Keep fixture names readable without forcing horizontal geometry. */
+.kp3-live-fixture .team span{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+
+/* Payment/member rows should remain scan lines rather than wrapping chips. */
+.payment-row,.rivalry-row{flex-wrap:nowrap!important}
+
+/* Admin status text used to be rendered as miniature pills. */
+.kp-admin-member-action em{
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.kp-admin-member-action em.paid{background:transparent!important}
+.kp-admin-member-action em.pending{background:transparent!important}
+.kp-admin-member-action em.unpaid{background:transparent!important}
+.kp-admin-code button{
+  min-height:40px!important;
+  padding:0 11px!important;
+  border:1px solid var(--kp-line-strong)!important;
+  border-radius:7px!important;
+  background:transparent!important;
+  color:var(--kp-text)!important;
+  box-shadow:none!important;
+}
+
+/* The late group-rename enhancement follows the same form language. */
+.kp-group-rename{
+  padding:16px 0!important;
+  border-bottom:1px solid var(--kp-line)!important;
+}
+.kp-group-rename label>span{color:var(--kp-muted)!important;font-size:9px!important;font-weight:700!important}
+.kp-group-rename input{
+  height:44px!important;
+  padding:0!important;
+  border:0!important;
+  border-bottom:1px solid var(--kp-line-strong)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:var(--kp-text)!important;
+  box-shadow:none!important;
+}
+.kp-group-rename input:focus{border-bottom-color:var(--kp-accent-2)!important;box-shadow:none!important}
+.kp-group-rename button{
+  height:44px!important;
+  padding:0 12px!important;
+  border:1px solid var(--kp-line-strong)!important;
+  border-radius:7px!important;
+  background:transparent!important;
+  color:var(--kp-text)!important;
+  box-shadow:none!important;
+}
+.kp-group-rename small{color:var(--kp-muted)!important}
+
+/* Remove decorative filtering that was applied to real club crests. */
+.crest{filter:none!important}
+
+@media(max-width:390px){
+  .kp-group-rename{grid-template-columns:1fr!important}
+  .kp-group-rename button{width:100%!important}
+}
