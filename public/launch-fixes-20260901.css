@@ -1,31 +1,4 @@
-/* Four launch fixes only: tab transition, Matchday spacing/copy support, group rename. */
-.kp-tab-transition{
-  position:fixed;
-  z-index:80;
-  pointer-events:none;
-  overflow:hidden;
-  padding:8px 0 20px;
-  background:linear-gradient(180deg,#07101f 0%,#050a16 58%,#030711 100%);
-  opacity:1;
-  transition:opacity .10s ease;
-}
-.kp-tab-transition.is-ready{opacity:0}
-.kp-tab-transition-title{
-  margin:0 0 18px;
-  color:#f7f8fc;
-  font-size:36px;
-  line-height:1;
-  letter-spacing:-1.6px;
-  font-weight:920;
-}
-.kp-tab-skeleton{
-  height:74px;
-  margin:0 0 12px;
-  border:1px solid rgba(255,255,255,.07);
-  border-radius:16px;
-  background:linear-gradient(100deg,rgba(255,255,255,.025),rgba(155,92,255,.045),rgba(255,255,255,.025));
-}
-.kp-tab-skeleton-wide{height:104px}
+/* Launch fixes: Matchday spacing/copy support and group rename. */
 
 /* The rollover heading was sitting too tight under the app header on iPhone. */
 .kp3-gw .kp3-page-hero,
@@ -84,7 +57,6 @@
   font-size:9.5px;
 }
 @media(max-width:390px){
-  .kp-tab-transition-title{font-size:32px}
   .kp-group-rename{grid-template-columns:1fr}
   .kp-group-rename button{width:100%}
 }
