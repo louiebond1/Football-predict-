@@ -57,7 +57,7 @@ function repairFutureRow(row, fixture, now) {
 }
 
 function repairLiveSummary(actualLive) {
-  const hero = screen?.querySelector('.kp3-live .kp3-page-hero, .kp3-live .hero, :scope > .hero');
+  const hero = screen?.querySelector('.kp3-page-hero, .hero');
   const pills = hero ? [...hero.querySelectorAll('.pill')] : [];
   const livePill = pills.find(p => /\bLive\b/i.test(p.textContent || ''));
   const strong = livePill?.querySelector('strong');
