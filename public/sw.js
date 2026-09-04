@@ -1,4 +1,4 @@
-const CACHE='kickpot-v41';
+const CACHE='kickpot-v42';
 const CORE=[
   '/',
   '/styles.css',
