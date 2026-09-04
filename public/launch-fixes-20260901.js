@@ -2,10 +2,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const screen = document.querySelector('#screen');
 const GROUP_KEY = 'kp-active-group-v1';
-const tabTitles = { gw: 'Matchday', live: 'Live', history: 'History', group: 'Group' };
-const readySelectors = { gw: '.kp3-gw-root', live: '.kp3-live-root', history: '.kp3-history-root', group: '.kp3-group-root' };
-let transition = null;
-let transitionToken = 0;
 let client = null;
 let groupContext = null;
 let groupContextAt = 0;
@@ -34,52 +30,6 @@ function normaliseVisibleCopy(root = screen) {
 function setNavCopy() {
   const label = document.querySelector('.nav-item[data-tab="gw"] small');
   if (label && label.textContent !== 'Matchday') label.textContent = 'Matchday';
-}
-
-function removeTransition(token) {
-  if (!transition || token !== transitionToken) return;
-  const node = transition;
-  transition = null;
-  node.classList.add('is-ready');
-  setTimeout(() => node.remove(), 110);
-}
-
-function waitForTab(tab, token) {
-  const start = performance.now();
-  const check = () => {
-    if (token !== transitionToken || !transition) return;
-    const active = document.querySelector('.nav-item.active')?.dataset.tab;
-    const ready = active === tab && Boolean(screen?.querySelector(readySelectors[tab]));
-    if (ready) {
-      requestAnimationFrame(() => removeTransition(token));
-      return;
-    }
-    if (performance.now() - start > 2200) {
-      removeTransition(token);
-      return;
-    }
-    requestAnimationFrame(check);
-  };
-  requestAnimationFrame(check);
-}
-
-function showTransition(tab) {
-  const current = document.querySelector('.nav-item.active')?.dataset.tab;
-  if (!screen || !tab || tab === current || !screen.children.length) return;
-  transition?.remove();
-  const rect = screen.getBoundingClientRect();
-  const token = ++transitionToken;
-  const node = document.createElement('div');
-  node.className = 'kp-tab-transition';
-  node.setAttribute('aria-hidden', 'true');
-  node.style.left = `${Math.max(0, rect.left)}px`;
-  node.style.top = `${Math.max(0, rect.top)}px`;
-  node.style.width = `${Math.max(1, rect.width)}px`;
-  node.style.height = `${Math.max(180, Math.min(window.innerHeight - Math.max(0, rect.top) - 74, rect.height || window.innerHeight))}px`;
-  node.innerHTML = `<div class="kp-tab-transition-title">${tabTitles[tab] || ''}</div><div class="kp-tab-skeleton kp-tab-skeleton-wide"></div><div class="kp-tab-skeleton"></div><div class="kp-tab-skeleton"></div>`;
-  document.body.append(node);
-  transition = node;
-  waitForTab(tab, token);
 }
 
 async function getClient() {
@@ -142,11 +92,6 @@ async function injectRename() {
 
 setNavCopy();
 normaliseVisibleCopy();
-
-document.addEventListener('pointerdown', event => {
-  const nav = event.target.closest('.nav-item[data-tab]');
-  if (nav) showTransition(nav.dataset.tab);
-}, true);
 
 document.addEventListener('click', event => {
   const groupSettings = event.target.closest('.kp3-nav-row');
