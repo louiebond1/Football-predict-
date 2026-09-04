@@ -1,7 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const GROUP_KEY = 'kp-active-group-v1';
-const screen = document.querySelector('#screen');
 let client = null;
 let cache = null;
 let cacheAt = 0;
@@ -40,6 +39,10 @@ function drawLabel(row) {
   return '';
 }
 
+function setText(node, value) {
+  if (node && node.textContent !== value) node.textContent = value;
+}
+
 async function loadContext(force = false) {
   const sb = await getClient();
   if (!sb) return null;
@@ -68,7 +71,7 @@ async function loadContext(force = false) {
 
 function patchSettleButton() {
   const button = document.querySelector('#settleBtn');
-  if (button && /crown winner/i.test(button.textContent || '')) button.textContent = 'Settle Gameweek';
+  if (button && /crown winner/i.test(button.textContent || '')) setText(button, 'Settle Gameweek');
 }
 
 function patchLatest(row) {
@@ -86,13 +89,13 @@ function patchLatest(row) {
   card.classList.toggle('kp-settlement-draw', kind === 'draw');
   if (kind === 'draw') {
     const count = winnerIds(row).length;
-    if (eyebrow) eyebrow.textContent = 'Gameweek Draw';
-    if (title) title.textContent = `${count}-WAY DRAW`;
-    if (muted) muted.textContent = `${round} · level after all tiebreakers`;
+    setText(eyebrow, 'Gameweek Draw');
+    setText(title, `${count}-WAY DRAW`);
+    setText(muted, `${round} · level after all tiebreakers`);
   } else {
-    if (eyebrow) eyebrow.textContent = 'Gameweek Settled';
-    if (title) title.textContent = 'NO WINNER';
-    if (muted) muted.textContent = round;
+    setText(eyebrow, 'Gameweek Settled');
+    setText(title, 'NO WINNER');
+    setText(muted, round);
   }
 }
 
@@ -104,8 +107,7 @@ function patchRows(container, history) {
     if (!result) return;
     const label = drawLabel(result);
     if (!label) return;
-    const value = node.querySelector('b');
-    if (value) value.textContent = label;
+    setText(node.querySelector('b'), label);
   });
 }
 
@@ -124,8 +126,7 @@ function patchMyWins(ctx) {
   const tiles = stats ? [...stats.querySelectorAll('.stat')] : [];
   if (tiles.length < 3) return;
   const count = ctx.history.filter(row => winnerIds(row).includes(ctx.session.user.id)).length;
-  const value = tiles[2].querySelector('b');
-  if (value) value.textContent = String(count);
+  setText(tiles[2].querySelector('b'), String(count));
 }
 
 function patchRules() {
@@ -172,23 +173,14 @@ async function enhance(force = false) {
   }
 }
 
-// Preload settlement metadata while the user is on another tab. Then, when
-// History renders, the MutationObserver can correct draw/no-winner copy in the
-// same microtask instead of showing "PLAYER WINS" for a visible frame first.
+// Warm the settlement cache without observing and rewriting the entire screen.
+// The previous MutationObserver could trigger itself indefinitely on History.
 setTimeout(() => loadContext().catch(() => null), 80);
-
-const observer = new MutationObserver(() => {
-  if (!activeHistoryTab()) {
-    patchRules();
-    return;
-  }
-  if (!patchFromCache()) queueMicrotask(() => enhance());
-});
-if (screen) observer.observe(screen, { childList:true, subtree:true });
 
 document.addEventListener('click', event => {
   if (event.target.closest('[data-tab="history"], .kp3-back')) {
-    queueMicrotask(() => enhance());
+    setTimeout(() => enhance(), 0);
+    setTimeout(() => enhance(), 120);
     return;
   }
   if (event.target.closest('#settleBtn')) {
