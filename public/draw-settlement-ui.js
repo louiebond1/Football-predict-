@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const GROUP_KEY = 'kp-active-group-v1';
+const screen = document.querySelector('#screen');
 let client = null;
 let cache = null;
 let cacheAt = 0;
@@ -50,7 +51,7 @@ async function loadContext(force = false) {
   const group = (groups || []).find(g => g.id === selected) || (groups || [])[0] || null;
   if (!group) return null;
 
-  if (!force && cache && cacheGroup === group.id && Date.now() - cacheAt < 8000) return cache;
+  if (!force && cache && cacheGroup === group.id && Date.now() - cacheAt < 30000) return cache;
 
   const { data: history, error } = await sb.from('group_gameweeks')
     .select('group_id,gameweek_id,winner_user_id,winner_user_ids,settlement_kind,settled_at,gameweeks(round_name)')
@@ -144,14 +145,25 @@ function patchRules() {
   rules.dataset.kpTieRules = '1';
 }
 
-async function enhance() {
+function patchFromCache() {
+  patchSettleButton();
+  patchRules();
+  if (!activeHistoryTab() || !cache) return false;
+  patchLatest(cache.history[0]);
+  patchGameweekLists(cache.history);
+  patchMyWins(cache);
+  return true;
+}
+
+async function enhance(force = false) {
   patchSettleButton();
   patchRules();
   if (!activeHistoryTab() || busy) return;
+  if (!force && patchFromCache()) return;
   busy = true;
   try {
-    const ctx = await loadContext();
-    if (!ctx) return;
+    const ctx = await loadContext(force);
+    if (!ctx || !activeHistoryTab()) return;
     patchLatest(ctx.history[0]);
     patchGameweekLists(ctx.history);
     patchMyWins(ctx);
@@ -160,15 +172,42 @@ async function enhance() {
   }
 }
 
+// Preload settlement metadata while the user is on another tab. Then, when
+// History renders, the MutationObserver can correct draw/no-winner copy in the
+// same microtask instead of showing "PLAYER WINS" for a visible frame first.
+setTimeout(() => loadContext().catch(() => null), 80);
+
+const observer = new MutationObserver(() => {
+  if (!activeHistoryTab()) {
+    patchRules();
+    return;
+  }
+  if (!patchFromCache()) queueMicrotask(() => enhance());
+});
+if (screen) observer.observe(screen, { childList:true, subtree:true });
+
 document.addEventListener('click', event => {
-  if (event.target.closest('[data-tab="history"], [data-tab="group"], #settleBtn, .kp3-back')) {
+  if (event.target.closest('[data-tab="history"], .kp3-back')) {
+    queueMicrotask(() => enhance());
+    return;
+  }
+  if (event.target.closest('#settleBtn')) {
     cache = null;
     cacheAt = 0;
-    setTimeout(enhance, 80);
-    setTimeout(enhance, 500);
+    setTimeout(() => enhance(true), 120);
   }
 });
-window.addEventListener('pageshow', () => setTimeout(enhance, 120));
-window.addEventListener('focus', () => { cache = null; cacheAt = 0; setTimeout(enhance, 120); });
-setInterval(enhance, 900);
-setTimeout(enhance, 150);
+
+document.addEventListener('change', event => {
+  if (event.target?.id === 'groupSwitch') {
+    cache = null;
+    cacheAt = 0;
+    cacheGroup = '';
+    setTimeout(() => loadContext(true).then(() => patchFromCache()), 80);
+  }
+}, true);
+
+window.addEventListener('pageshow', () => setTimeout(() => enhance(), 120));
+window.addEventListener('focus', () => setTimeout(() => enhance(), 120));
+setInterval(() => enhance(), 1500);
+setTimeout(() => enhance(), 150);
