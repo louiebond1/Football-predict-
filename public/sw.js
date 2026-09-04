@@ -1,4 +1,4 @@
-const CACHE='kickpot-v57-studio';
+const CACHE='kickpot-v58-studio';
 const CORE=[
   '/',
   '/styles.css',
@@ -10,6 +10,7 @@ const CORE=[
   '/gameweek-rollover.css?v=1',
   '/launch-fixes-20260901.css?v=2',
   '/studio-v1.css?v=1',
+  '/studio-v1-compat.css?v=1',
   '/supabase-singleton.js?v=3',
   '/smooth-runtime.js?v=1',
   '/render-stability.js?v=1',
