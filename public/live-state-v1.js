@@ -61,11 +61,13 @@ function repairLiveSummary(actualLive) {
   const pills = hero ? [...hero.querySelectorAll('.pill')] : [];
   const livePill = pills.find(p => /\bLive\b/i.test(p.textContent || ''));
   const strong = livePill?.querySelector('strong');
-  if (strong) strong.textContent = String(actualLive);
+  const nextCount = String(actualLive);
+  if (strong && strong.textContent !== nextCount) strong.textContent = nextCount;
 
   screen?.querySelectorAll('.kp3-table-card .badge, .card .card-head .badge').forEach(badge => {
     if (!/^LIVE$/i.test(badge.textContent?.trim() || '')) return;
-    badge.hidden = actualLive === 0;
+    const shouldHide = actualLive === 0;
+    if (badge.hidden !== shouldHide) badge.hidden = shouldHide;
   });
 
   if (actualLive === 0) screen?.querySelector('.kp3-live-impact')?.remove();
