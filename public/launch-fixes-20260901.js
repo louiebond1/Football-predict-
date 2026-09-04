@@ -93,14 +93,25 @@ async function injectRename() {
 setNavCopy();
 normaliseVisibleCopy();
 
+// Warm the Treasurer/group identity while the user is still on another tab so
+// Group settings can paint the rename control on its first visible frame.
+setTimeout(() => getActiveGroupContext().catch(() => null), 80);
+
 document.addEventListener('click', event => {
   const groupSettings = event.target.closest('.kp3-nav-row');
   const label = groupSettings?.querySelector('.kp3-nav-copy strong')?.textContent?.trim() || '';
-  if (/^Group settings$/i.test(label)) [40,140,360].forEach(ms => setTimeout(injectRename, ms));
+  if (/^Group settings$/i.test(label)) {
+    queueMicrotask(() => injectRename().catch(() => {}));
+    [100,300].forEach(ms => setTimeout(() => injectRename().catch(() => {}), ms));
+  }
 }, true);
 
 document.addEventListener('change', event => {
-  if (event.target?.id === 'groupSwitch') { groupContext = null; groupContextAt = 0; }
+  if (event.target?.id === 'groupSwitch') {
+    groupContext = null;
+    groupContextAt = 0;
+    setTimeout(() => getActiveGroupContext(true).catch(() => null), 0);
+  }
 }, true);
 
 const copyObserver = new MutationObserver(() => {
@@ -113,5 +124,6 @@ if (screen) copyObserver.observe(screen, { childList: true, subtree: true });
 window.addEventListener('pageshow', () => {
   setNavCopy();
   normaliseVisibleCopy();
-  setTimeout(() => injectRename().catch(() => {}), 250);
+  getActiveGroupContext().catch(() => null);
+  setTimeout(() => injectRename().catch(() => {}), 120);
 });
