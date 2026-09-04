@@ -8,6 +8,8 @@
 .kp-live-summary{margin-left:auto;color:#9b5cff;font-size:9px;font-weight:850;white-space:nowrap}
 .kp3-table-card .table tbody tr{min-height:58px}
 .kp3-table-card .table td{padding-top:12px!important;padding-bottom:12px!important}
+.kp3-pick-chip.is-missing{opacity:.55}
+.kp3-pick-chip.is-missing em{color:#7d8799}
 @media(max-width:390px){
   .kp-live-lock{font-size:8px}
   .kp-live-player-copy>strong{font-size:12.5px}
