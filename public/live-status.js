@@ -180,31 +180,63 @@ function rebuildTable(table, ctx) {
   }
 }
 
+function normaliseTeamName(value = '') {
+  return String(value).trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function fixtureForRow(row, fixtures) {
+  const home = normaliseTeamName(row.querySelector('.team:not(.away) > span:last-child')?.textContent || '');
+  const away = normaliseTeamName(row.querySelector('.team.away > span:first-child')?.textContent || '');
+  if (!home || !away) return null;
+  return fixtures.find(f => normaliseTeamName(f.home?.name) === home && normaliseTeamName(f.away?.name) === away) || null;
+}
+
 async function revealStartedPicks(ctx) {
   const matches = document.querySelector('.kp3-live-matches');
   if (!matches) return;
   const fixtureRows = [...matches.querySelectorAll('.kp3-live-fixture')];
   if (!fixtureRows.length) return;
+
   const football = await fetch('/api/football/fixtures', { cache:'no-store' }).then(r => r.json()).catch(() => null);
   const fixtures = football?.fixtures || [];
-  const started = fixtures.filter(f => Date.now() >= new Date(f.kickoff).getTime()).map(f => f.id).filter(Boolean);
-  if (!started.length) return;
-  const { data: predictions } = await ctx.sb.from('predictions')
+  const startedFixtures = fixtures.filter(f => Date.now() >= new Date(f.kickoff).getTime());
+  const startedIds = startedFixtures.map(f => f.id).filter(Boolean);
+  if (!startedIds.length) return;
+
+  const { data: predictions, error } = await ctx.sb.from('predictions')
     .select('fixture_id,user_id,predicted_home,predicted_away')
     .eq('group_id', ctx.group.id)
-    .in('fixture_id', started);
-  const names = new Map(ctx.rows.map(r => [r.user_id, r.display_name || 'Player']));
+    .in('fixture_id', startedIds);
+  if (error) return;
 
-  fixtureRows.forEach((row, index) => {
-    const fixture = fixtures[index];
+  const picks = predictions || [];
+  const members = ctx.rows || [];
+
+  fixtureRows.forEach(row => {
+    const fixture = fixtureForRow(row, startedFixtures);
     if (!fixture || Date.now() < new Date(fixture.kickoff).getTime()) return;
-    const picks = (predictions || []).filter(p => Number(p.fixture_id) === Number(fixture.id));
-    row.querySelector('.kp3-reveal')?.remove();
-    if (!picks.length) return;
-    const reveal = document.createElement('div');
-    reveal.className = 'kp3-reveal';
-    reveal.innerHTML = `<div><small>PICKS REVEALED</small><span>${picks.length}/${ctx.rows.length}</span></div><div class="kp3-reveal-scroll">${picks.map(p => `<span class="kp3-pick-chip${p.user_id === ctx.session.user.id ? ' mine' : ''}"><b>${esc(names.get(p.user_id) || 'Player')}</b><em>${p.predicted_home}–${p.predicted_away}</em></span>`).join('')}</div>`;
-    row.append(reveal);
+
+    const fixturePicks = picks.filter(p => Number(p.fixture_id) === Number(fixture.id));
+    const byUser = new Map(fixturePicks.map(p => [p.user_id, p]));
+    const signature = members.map(member => {
+      const pick = byUser.get(member.user_id);
+      return `${member.user_id}:${pick ? `${pick.predicted_home}-${pick.predicted_away}` : 'none'}`;
+    }).join('|');
+
+    let reveal = row.querySelector('.kp3-reveal');
+    if (reveal?.dataset.kpRevealSignature === signature) return;
+    if (!reveal) {
+      reveal = document.createElement('div');
+      reveal.className = 'kp3-reveal';
+      row.append(reveal);
+    }
+    reveal.dataset.kpRevealSignature = signature;
+    reveal.innerHTML = `<div><small>GROUP PICKS · REVEALED AT KICK-OFF</small><span>${fixturePicks.length}/${members.length}</span></div><div class="kp3-reveal-scroll">${members.map(member => {
+      const pick = byUser.get(member.user_id);
+      const name = member.display_name || 'Player';
+      const mine = member.user_id === ctx.session.user.id;
+      return `<span class="kp3-pick-chip${mine ? ' mine' : ''}${pick ? '' : ' is-missing'}"><b>${esc(name)}${mine ? ' · you' : ''}</b><em>${pick ? `${pick.predicted_home}–${pick.predicted_away}` : 'No pick'}</em></span>`;
+    }).join('')}</div>`;
   });
 }
 
