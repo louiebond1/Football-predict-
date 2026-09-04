@@ -23,6 +23,10 @@ function icon(name, size = 18) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths[name] || ''}</svg>`;
 }
 
+function avatar(name) {
+  return `<span class="avatar sm">${esc((name || '?').trim().slice(0,1).toUpperCase())}</span>`;
+}
+
 async function getClient() {
   if (client) return client;
   if (window.__kickpotSupabase) {
@@ -89,27 +93,43 @@ function computeAwards(rows, history) {
   };
 }
 
+function points(row) { return Number(row?.points || 0); }
+function exacts(row) { return Number(row?.exact_scores || 0); }
+function teamHits(row) { return Number(row?.team_score_hits || 0); }
+function sameRank(a, b) { return points(a) === points(b) && exacts(a) === exacts(b) && teamHits(a) === teamHits(b); }
+function ranksAbove(a, b) {
+  if (points(a) !== points(b)) return points(a) > points(b);
+  if (exacts(a) !== exacts(b)) return exacts(a) > exacts(b);
+  return teamHits(a) > teamHits(b);
+}
+function competitionRank(rows, index) {
+  const mine = rows[index];
+  return 1 + rows.filter(r => ranksAbove(r, mine)).length;
+}
+function isSharedRank(rows, index) {
+  const mine = rows[index];
+  return rows.filter(r => sameRank(r, mine)).length > 1;
+}
+
 function statusText(row) {
   const submitted = Number(row?.picks_submitted || 0);
   const total = Number(row?.fixtures_total || 0);
-  if (total === 0) return '✓ All available picks locked';
-  if (row?.picks_locked) return `✓ ${submitted}/${total} picks locked`;
-  if (submitted > 0) return `${submitted}/${total} picks saved`;
-  return 'Not submitted';
+  if (total === 0) return '<span class="kp-live-lock is-locked">✓ All available picks locked</span>';
+  if (row?.picks_locked) return `<span class="kp-live-lock is-locked">✓ ${submitted}/${total} picks locked</span>`;
+  if (submitted > 0) return `<span class="kp-live-lock is-partial">${submitted}/${total} picks saved</span>`;
+  return '<span class="kp-live-lock is-missing">Not submitted</span>';
 }
 
-function statusClass(row) {
-  if (row?.picks_locked || Number(row?.fixtures_total || 0) === 0) return 'is-locked';
-  if (Number(row?.picks_submitted || 0) > 0) return 'is-partial';
-  return 'is-missing';
+function liveSignature(ctx) {
+  return `${ctx.gid}:${ctx.gameweekId}:` + ctx.liveRows.map(r => `${r.user_id}:${points(r)}:${exacts(r)}:${teamHits(r)}:${Number(r.picks_submitted || 0)}:${Number(r.fixtures_total || 0)}:${r.picks_locked ? 1 : 0}`).join('|');
 }
 
 function buildHistoryMarkup(ctx) {
   const mine = ctx.seasonRows.filter(r => r.user_id === ctx.session.user.id);
-  const points = mine.reduce((sum,r) => sum + Number(r.points || 0), 0);
+  const pointsTotal = mine.reduce((sum,r) => sum + Number(r.points || 0), 0);
   const exact = mine.reduce((sum,r) => sum + Number(r.exact_scores || 0), 0);
   const wins = ctx.history.filter(h => winnerIds(h).includes(ctx.session.user.id)).length;
-  const stats = `<div class="card-title">${icon('climb')} Your Season Stats</div><div class="statgrid"><div class="stat"><b>${points}</b><small>Total points</small></div><div class="stat"><b>${exact}</b><small>Exact scores</small></div><div class="stat"><b>${wins}</b><small>Matchdays won</small></div></div>`;
+  const stats = `<div class="card-title">${icon('climb')} Your Season Stats</div><div class="statgrid"><div class="stat"><b>${pointsTotal}</b><small>Total points</small></div><div class="stat"><b>${exact}</b><small>Exact scores</small></div><div class="stat"><b>${wins}</b><small>Matchdays won</small></div></div>`;
 
   const awards = computeAwards(ctx.seasonRows, ctx.history);
   const tiles = [];
@@ -156,7 +176,7 @@ async function prewarm(force = false) {
     names.set(session.user.id, names.get(session.user.id) || session.user.email?.split('@')[0] || 'You');
 
     const ctx = {
-      at:Date.now(), gid, session,
+      at:Date.now(), gid, gameweekId, session,
       liveRows:liveRes.data || [],
       seasonRows:seasonRes.data || [],
       history:historyRes.data || [],
@@ -182,25 +202,41 @@ function applyHistory(ctx) {
 }
 
 function applyLive(ctx) {
-  if (!screen?.querySelector('.kp3-live, .kp3-live-root')) return;
-  const rows = [...screen.querySelectorAll('table tbody tr')];
-  if (!rows.length || !ctx.liveRows.length) return;
+  if (!screen?.classList.contains('kp3-live')) return;
+  const table = screen.querySelector('.kp3-table-card table, table.table');
+  const tbody = table?.querySelector('tbody');
+  if (!table || !tbody || !ctx.liveRows.length) return;
 
-  ctx.liveRows.forEach(status => {
-    const name = String(status.display_name || '').trim().toLowerCase();
-    if (!name) return;
-    const tr = rows.find(row => {
-      const strong = row.querySelector('.row-left strong, .kp-live-player strong');
-      return String(strong?.textContent || '').replace(/\(you\)/gi,'').trim().toLowerCase() === name;
-    });
-    if (!tr || tr.querySelector('.kp-live-lock')) return;
-    const strong = tr.querySelector('.row-left strong, .kp-live-player strong');
-    if (!strong) return;
-    const lock = document.createElement('span');
-    lock.className = `kp-live-lock ${statusClass(status)}`;
-    lock.textContent = statusText(status);
-    strong.insertAdjacentElement('afterend', lock);
-  });
+  const signature = liveSignature(ctx);
+  if (table.dataset.kpGroupStatus === signature) return;
+
+  tbody.innerHTML = ctx.liveRows.map((row, index) => {
+    const name = row.display_name || ctx.names.get(row.user_id) || 'Player';
+    const mine = row.user_id === ctx.session.user.id;
+    const rank = competitionRank(ctx.liveRows, index);
+    const rankLabel = isSharedRank(ctx.liveRows, index) ? `=${rank}` : String(rank);
+    return `<tr data-kp-user="${esc(row.user_id)}">
+      <td><span class="rank-move same">–</span></td>
+      <td class="rank">${rankLabel}</td>
+      <td><div class="row-left kp-live-player">${avatar(name)}<span class="kp-live-player-copy"><strong>${esc(name)}</strong>${mine ? ' <span class="muted">(you)</span>' : ''}${statusText(row)}</span></div></td>
+      <td class="pts">${points(row)}</td>
+    </tr>`;
+  }).join('');
+  table.dataset.kpGroupStatus = signature;
+
+  const card = table.closest('.kp3-table-card,.card');
+  const head = card?.querySelector('.card-head');
+  if (head) {
+    let summary = head.querySelector('.kp-live-summary');
+    if (!summary) {
+      summary = document.createElement('span');
+      summary.className = 'kp-live-summary';
+      head.append(summary);
+    }
+    const locked = ctx.liveRows.filter(r => r.picks_locked).length;
+    const nextSummary = `${locked}/${ctx.liveRows.length} locked`;
+    if (summary.textContent !== nextSummary) summary.textContent = nextSummary;
+  }
 }
 
 function applyCached(ctx = caches.get(lastGroupId)) {
