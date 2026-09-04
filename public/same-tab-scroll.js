@@ -1,14 +1,12 @@
 const ROUTE_PREFIX = 'kp-route-v1:';
 const SCROLL_PREFIX = 'kp-scroll-v1:';
-const screen = document.querySelector('#screen');
 const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
 
 let running = false;
 let targetButton = null;
 let bypass = false;
-let transitionToken = 0;
-let exitAnimation = null;
-let arrivalAnimation = null;
+let waitFrame = 0;
+let waitToken = 0;
 
 function resetTabRoot(tab) {
   if (!tab) return;
@@ -18,92 +16,75 @@ function resetTabRoot(tab) {
   } catch {}
 }
 
-function cancelAnimation(animation) {
-  try { animation?.cancel(); } catch {}
-}
-
-function animateArrival() {
-  cancelAnimation(exitAnimation);
-  exitAnimation = null;
-  cancelAnimation(arrivalAnimation);
-  arrivalAnimation = null;
-
-  if (reduceMotion || !screen || typeof screen.animate !== 'function') return;
-  arrivalAnimation = screen.animate([
-    { opacity: 0.42, transform: 'translate3d(0, 12px, 0)' },
-    { opacity: 1, transform: 'translate3d(0, 0, 0)' }
-  ], {
-    duration: 175,
-    easing: 'cubic-bezier(.22,.61,.36,1)'
-  });
-}
-
-function performSwitch(token) {
-  if (token !== transitionToken) return;
+function finishNavigation(token) {
+  if (token !== waitToken) return;
+  cancelAnimationFrame(waitFrame);
+  waitFrame = 0;
 
   const target = targetButton;
   targetButton = null;
+  running = false;
+
   const currentButton = document.querySelector('.nav-item.active');
   const currentTab = currentButton?.dataset.tab || '';
   const destinationTab = target?.dataset.tab || '';
-  const sameTab = Boolean(target && currentButton === target);
 
   resetTabRoot(currentTab);
   resetTabRoot(destinationTab);
-
-  // Reset the actual document position only while the old screen is almost
-  // faded out. Safari no longer has to animate thousands of scroll pixels.
   window.scrollTo({ top: 0, behavior: 'auto' });
 
-  if (target && !sameTab) {
-    bypass = true;
-    try {
-      // Hand the real navigation back to KickPot's existing app.js handler.
-      target.click();
-    } finally {
-      bypass = false;
-    }
-  }
+  // Re-tapping the active tab is just a return-to-top action. Do not rebuild it.
+  if (!target || target === currentButton) return;
 
-  running = false;
-  requestAnimationFrame(animateArrival);
+  // Hand the actual tab change back to KickPot's existing navigation handler.
+  bypass = true;
+  try {
+    target.click();
+  } finally {
+    bypass = false;
+  }
 }
 
-async function startTransition() {
-  if (running) return;
-  running = true;
-  const token = ++transitionToken;
+function waitForNativeScroll(token, startedAt) {
+  if (token !== waitToken) return;
 
-  cancelAnimation(arrivalAnimation);
-  arrivalAnimation = null;
-
-  if (reduceMotion || !screen || typeof screen.animate !== 'function') {
-    performSwitch(token);
+  if (window.scrollY <= 2) {
+    finishNavigation(token);
     return;
   }
 
-  // Animate the already-painted viewport on the compositor instead of driving
-  // window.scrollY frame-by-frame. This is substantially smoother in iOS PWAs.
-  exitAnimation = screen.animate([
-    { opacity: 1, transform: 'translate3d(0, 0, 0)' },
-    { opacity: 0.18, transform: 'translate3d(0, -14px, 0)' }
-  ], {
-    duration: 125,
-    easing: 'cubic-bezier(.4,0,.6,1)',
-    fill: 'forwards'
-  });
+  // Native smooth scrolling is controlled by Safari. We only observe it; we do
+  // not write scrollY on every frame. The timeout is a fail-safe, not an animation.
+  if (performance.now() - startedAt > 1200) {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    finishNavigation(token);
+    return;
+  }
 
-  // Never let a Web Animations quirk trap navigation. The timeout guarantees
-  // the tab switch completes even if Safari fails to resolve .finished.
-  await Promise.race([
-    exitAnimation.finished.catch(() => null),
-    new Promise(resolve => setTimeout(resolve, 180))
-  ]);
-  performSwitch(token);
+  waitFrame = requestAnimationFrame(() => waitForNativeScroll(token, startedAt));
 }
 
+function startNativeReturnToTop() {
+  if (running) return;
+  running = true;
+  const token = ++waitToken;
+
+  if (reduceMotion || window.scrollY <= 2) {
+    finishNavigation(token);
+    return;
+  }
+
+  // Let iOS/Safari perform the actual scrolling. This produces the visible
+  // glide through the current page instead of fading and teleporting to the top.
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  waitFrame = requestAnimationFrame(() => waitForNativeScroll(token, performance.now()));
+}
+
+// Only intercept a bottom-tab tap when there is a real scroll-to-top to perform.
+// At the top, different-tab navigation is left completely untouched.
 window.addEventListener('click', event => {
   if (bypass) return;
+
   const rawTarget = event.target;
   const button = rawTarget instanceof Element ? rawTarget.closest('.nav-item[data-tab]') : null;
   if (!button) return;
@@ -111,18 +92,21 @@ window.addEventListener('click', event => {
   const sameTab = button.classList.contains('active');
   const atTop = window.scrollY <= 2;
 
-  // Re-tapping the active tab while already at the top needs no animation.
+  // Avoid an unnecessary full re-render when the active tab is tapped at top.
   if (sameTab && atTop && !running) {
-    cancelAnimation(arrivalAnimation);
-    arrivalAnimation = null;
+    event.preventDefault();
+    event.stopPropagation();
+    resetTabRoot(button.dataset.tab);
     return;
   }
 
-  // During one short transition, repeated taps merely replace the destination.
-  // There is still only one animation and one eventual navigation action.
+  // When already at the top, switching tabs uses the original app navigation.
+  if (atTop && !running) return;
+
+  // While Safari is gliding upward, repeated taps only change the final target.
   targetButton = button;
   event.preventDefault();
   event.stopPropagation();
   resetTabRoot(button.dataset.tab);
-  startTransition();
+  startNativeReturnToTop();
 }, true);
