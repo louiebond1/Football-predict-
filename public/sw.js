@@ -1,10 +1,7 @@
-const CACHE='kickpot-v56';
+const CACHE='kickpot-v57-studio';
 const CORE=[
   '/',
   '/styles.css',
-  '/premium-ui.css?v=8',
-  '/product-v3.css?v=1',
-  '/product-v3-tune.css?v=4',
   '/admin-v1.css?v=1',
   '/admin-v1-fix.css?v=1',
   '/settings-v1.css?v=3',
@@ -12,6 +9,7 @@ const CORE=[
   '/live-status.css?v=2',
   '/gameweek-rollover.css?v=1',
   '/launch-fixes-20260901.css?v=2',
+  '/studio-v1.css?v=1',
   '/supabase-singleton.js?v=3',
   '/smooth-runtime.js?v=1',
   '/render-stability.js?v=1',
