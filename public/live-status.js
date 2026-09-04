@@ -144,7 +144,7 @@ function updateWhatYouNeed(ctx) {
   const text = card?.querySelector('p');
   if (!text) return;
   const msg = tieAwareNeedMessage(ctx);
-  if (msg) text.textContent = msg;
+  if (msg && text.textContent !== msg) text.textContent = msg;
 }
 
 function rebuildTable(table, ctx) {
@@ -176,8 +176,21 @@ function rebuildTable(table, ctx) {
       head.append(summary);
     }
     const locked = ctx.rows.filter(r => r.picks_locked).length;
-    summary.textContent = `${locked}/${ctx.rows.length} locked`;
+    const nextSummary = `${locked}/${ctx.rows.length} locked`;
+    if (summary.textContent !== nextSummary) summary.textContent = nextSummary;
   }
+}
+
+function liveTable() {
+  return document.querySelector('.kp3-live .kp3-table-card table, .kp3-live table.table');
+}
+
+function paintCachedLiveStatus() {
+  if (!cache || !document.querySelector('.kp3-live')) return false;
+  const table = liveTable();
+  if (table) rebuildTable(table, cache);
+  updateWhatYouNeed(cache);
+  return Boolean(table);
 }
 
 function normaliseTeamName(value = '') {
@@ -242,9 +255,17 @@ async function revealStartedPicks(ctx) {
 
 async function enhance() {
   if (busy || !document.querySelector('.kp3-live')) return;
-  const table = document.querySelector('.kp3-live .kp3-table-card table, .kp3-live table.table');
+  const table = liveTable();
   const matches = document.querySelector('.kp3-live-matches');
   if (!table && !matches) return;
+
+  // When the Live DOM has just been recreated, immediately repopulate the
+  // already-known lock/submission state before waiting for any network work.
+  if (cache) {
+    if (table) rebuildTable(table, cache);
+    updateWhatYouNeed(cache);
+  }
+
   busy = true;
   try {
     const ctx = await loadStatus();
@@ -257,9 +278,24 @@ async function enhance() {
   }
 }
 
+// app.js/ui-v3 recreate the Live table when changing tabs. MutationObserver
+// callbacks run before the browser's next paint, so cached green lock statuses
+// can be restored without the user seeing them disappear and reappear.
+const liveObserver = new MutationObserver(() => {
+  if (!cache || !document.querySelector('.kp3-live')) return;
+  paintCachedLiveStatus();
+});
+const screen = document.querySelector('#screen');
+if (screen) liveObserver.observe(screen, { childList:true, subtree:true });
+
 setInterval(enhance, 1000);
 document.addEventListener('click', event => {
-  if (event.target.closest('[data-tab="live"], .kp3-feature-row, .kp3-back')) setTimeout(enhance, 80);
+  if (event.target.closest('[data-tab="live"], .kp3-feature-row, .kp3-back')) {
+    // The original app's click handler renders first. Queueing a microtask puts
+    // cached table state back into that fresh DOM before the next frame paints.
+    queueMicrotask(paintCachedLiveStatus);
+    setTimeout(enhance, 80);
+  }
 });
 window.addEventListener('pageshow', () => setTimeout(enhance, 120));
 setTimeout(enhance, 250);
