@@ -94,10 +94,13 @@ function restoreOrRememberDelayedContent() {
 const observer = new MutationObserver(() => queueMicrotask(restoreOrRememberDelayedContent));
 if (screen) observer.observe(screen, { childList: true, subtree: true });
 
-// Group changes intentionally use a different cache namespace. Keeping old
-// entries is harmless and lets switching back to a group stay instant.
+// A group change must always be allowed to render even if two groups happen to
+// produce identical visible markup. Cache entries remain namespaced per group.
 document.addEventListener('change', event => {
-  if (event.target?.id === 'groupSwitch') queueMicrotask(restoreOrRememberDelayedContent);
+  if (event.target?.id === 'groupSwitch') {
+    userActionUntil = performance.now() + 1200;
+    queueMicrotask(restoreOrRememberDelayedContent);
+  }
 }, true);
 
 queueMicrotask(restoreOrRememberDelayedContent);
