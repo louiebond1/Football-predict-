@@ -1,0 +1,104 @@
+/* iPhone production hotfix — 2026-09-05 */
+body.kp-studio .app-shell{
+  padding-top:calc(env(safe-area-inset-top, 0px) + 12px)!important;
+}
+body.kp-studio .topbar{
+  min-height:58px!important;
+  height:58px!important;
+}
+
+/* Never reserve a giant empty photo area. The JS only enables the photo after it has loaded. */
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero:before{
+  height:0!important;
+  margin:0!important;
+  opacity:0!important;
+  transition:height .18s ease,margin .18s ease,opacity .18s ease!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero:after{display:none!important}
+body.kp-studio.kp-photo-ready[data-kp-screen="gw"] .kp3-page-hero:before{
+  height:132px!important;
+  margin:0 0 18px!important;
+  opacity:1!important;
+  background-position:center 48%!important;
+}
+body.kp-studio.kp-photo-ready[data-kp-screen="gw"] .kp3-page-hero:after{
+  display:block!important;
+  content:"SATURDAY FOOTBALL"!important;
+  top:104px!important;
+  left:12px!important;
+}
+
+/* Matchday mode is information, not a decorative pill. */
+body.kp-studio[data-kp-screen="gw"] .hero-meta> :first-child{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  padding:0!important;
+  color:var(--kp-muted)!important;
+  font-size:12px!important;
+  font-weight:700!important;
+}
+
+/* Prevent long club names from entering the score column on real iPhone widths. */
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .teams,
+body.kp-studio .kp3-live-fixture .teams{
+  grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr)!important;
+  gap:6px!important;
+}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .team,
+body.kp-studio .kp3-live-fixture .team{
+  min-width:0!important;
+  max-width:100%!important;
+  gap:7px!important;
+  font-size:14px!important;
+}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .team span,
+body.kp-studio .kp3-live-fixture .team span{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  white-space:normal!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .crest,
+body.kp-studio .kp3-live-fixture .crest{
+  width:34px!important;
+  height:34px!important;
+  flex-basis:34px!important;
+}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .scorepick,
+body.kp-studio .kp3-live-fixture .scorepick{
+  min-width:64px!important;
+  width:64px!important;
+}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .scorebox,
+body.kp-studio .kp3-live-fixture .scorebox{
+  font-size:27px!important;
+}
+
+/* Editable fixtures: one score editor only, names get their own row. */
+body.kp-studio .kp3-pick-fixture:has(.kp3-score-stepper) .team span{
+  min-width:0!important;
+  max-width:125px!important;
+  overflow:hidden!important;
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  white-space:normal!important;
+}
+
+@media(max-width:390px){
+  body.kp-studio .app-shell{padding-left:14px!important;padding-right:14px!important}
+  body.kp-studio .hero h1{font-size:42px!important}
+  body.kp-studio .kp3-pick-fixture[data-locked="1"] .teams,
+  body.kp-studio .kp3-live-fixture .teams{grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr)!important;gap:5px!important}
+  body.kp-studio .kp3-pick-fixture[data-locked="1"] .team,
+  body.kp-studio .kp3-live-fixture .team{font-size:13.5px!important;gap:6px!important}
+  body.kp-studio .kp3-pick-fixture[data-locked="1"] .crest,
+  body.kp-studio .kp3-live-fixture .crest{width:31px!important;height:31px!important;flex-basis:31px!important}
+}
