@@ -1,0 +1,253 @@
+/* KickPot sandbox v3 — fixture-state clarity + a more authored live table */
+
+/* Editable fixtures show the prediction once: inside the control. */
+.fixture.editable .editable-matchup{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  padding-top:2px;
+}
+.fixture.editable .editable-matchup .team{
+  font-size:16px;
+}
+.fixture.editable .kickoff-centre{
+  text-align:center;
+  color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+.fixture.editable .kickoff-centre strong{
+  display:block;
+  color:var(--text);
+  font-size:14px;
+  line-height:1.1;
+}
+.fixture.editable .kickoff-centre span{
+  display:block;
+  margin-top:3px;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.prediction-control{
+  margin:18px auto 0;
+  gap:14px;
+}
+.score-side{
+  display:grid;
+  grid-template-columns:44px 42px 44px;
+  align-items:center;
+}
+.prediction-control button{
+  border-radius:0;
+  border-color:var(--line);
+}
+.prediction-control .score-side button:first-child{
+  border-radius:8px 0 0 8px;
+}
+.prediction-control .score-side button:last-child{
+  border-radius:0 8px 8px 0;
+}
+.prediction-control .score-side strong{
+  height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  font-size:27px;
+  font-variant-numeric:tabular-nums;
+}
+.prediction-control .vs{
+  padding:0;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.live-dot{
+  display:inline-block;
+  width:6px;
+  height:6px;
+  margin-right:6px;
+  border-radius:50%;
+  background:var(--green);
+  vertical-align:1px;
+}
+
+/* Live: less dashboard, more matchday race board. */
+.live-title{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+}
+.live-meta{
+  margin-bottom:20px;
+}
+.live-clock{
+  margin-top:7px;
+  color:var(--muted);
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+}
+.league-board{
+  margin:2px 0 28px;
+}
+.league-heading{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  padding-bottom:11px;
+  border-bottom:2px solid var(--text);
+}
+.league-heading h2{
+  margin:2px 0 0;
+  font-size:30px;
+}
+.league-kicker{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.lead-callout{
+  padding-bottom:4px;
+  color:var(--green);
+  font-size:12px;
+  font-weight:850;
+  font-variant-numeric:tabular-nums;
+}
+.standings{
+  border-bottom:1px solid var(--line);
+}
+.stand-row{
+  position:relative;
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr) 52px;
+  align-items:center;
+  min-height:64px;
+  border-bottom:1px solid var(--line);
+}
+.stand-row:last-child{
+  border-bottom:0;
+}
+.stand-row.you{
+  padding-left:10px;
+  margin-left:-10px;
+  border-left:3px solid var(--accent);
+}
+.place{
+  display:flex;
+  align-items:baseline;
+  gap:7px;
+  font-variant-numeric:tabular-nums;
+}
+.place strong{
+  min-width:18px;
+  font-size:21px;
+  line-height:1;
+}
+.movement{
+  font-size:10px;
+  font-weight:850;
+}
+.movement.up{color:var(--green)}
+.movement.down{color:#e46f72}
+.movement.flat{color:var(--muted)}
+.stand-person{
+  min-width:0;
+}
+.stand-person>div{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  min-width:0;
+}
+.stand-person b{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:16px;
+}
+.stand-person small{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:650;
+}
+.stand-row:not(:last-child) .stand-person small:not(:empty)::before{
+  content:"✓ ";
+  color:var(--green);
+}
+.stand-row:last-child .stand-person small::before{
+  content:"";
+}
+.you-mark{
+  flex:none;
+  color:var(--accent);
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.12em;
+}
+.stand-points{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.stand-points strong{
+  display:block;
+  font-size:27px;
+  line-height:.9;
+}
+.stand-points small{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:8px;
+  font-weight:850;
+  letter-spacing:.14em;
+}
+.race-note{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:11px 0 0;
+  color:var(--muted);
+  font-size:11px;
+}
+.race-note strong{
+  color:var(--text);
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+}
+.commentary{
+  margin:28px 0 30px;
+  padding:0;
+}
+.commentary span{
+  display:block;
+  margin-bottom:7px;
+  color:var(--accent);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.16em;
+}
+.commentary p{
+  max-width:330px;
+  font-size:19px;
+  line-height:1.25;
+  font-weight:760;
+  letter-spacing:-.02em;
+}
+
+@media(max-width:370px){
+  .fixture.editable .editable-matchup .team{font-size:14px}
+  .score-side{grid-template-columns:42px 36px 42px}
+  .prediction-control{gap:10px}
+  .stand-row{grid-template-columns:50px minmax(0,1fr) 46px}
+}
