@@ -1,4 +1,4 @@
-const CACHE='kickpot-v67-iphone-hotfix';
+const CACHE='kickpot-v68-final-layout';
 const CORE=[
   '/',
   '/styles.css',
@@ -15,6 +15,7 @@ const CORE=[
   '/kickpot-studio.css',
   '/kickpot-recording-fixes.css',
   '/kickpot-iphone-hotfix.css?v=2',
+  '/kickpot-final-layout.css?v=1',
   '/supabase-singleton.js?v=3',
   '/smooth-runtime.js?v=1',
   '/render-stability.js?v=1',
@@ -49,7 +50,7 @@ self.addEventListener('install',e=>{
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([
   self.clients.claim(),
   caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
-])));
+]));
 self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET'||new URL(e.request.url).pathname.startsWith('/api/')) return;
   e.respondWith(
