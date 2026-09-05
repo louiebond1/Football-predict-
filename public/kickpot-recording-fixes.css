@@ -1,0 +1,158 @@
+/* KickPot recording review fixes — 2026-09-05
+   Loaded after the approved studio skin. This file only fixes layout/state/theme
+   defects observed on iPhone recordings; it does not change game logic. */
+
+/* ---------- shared cleanup ---------- */
+body.kp-studio .screen{overflow:visible!important}
+body.kp-studio .row-left{min-width:0!important}
+body.kp-studio .row-left strong{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+body.kp-studio .secondary,body.kp-studio .chip-btn{background:transparent!important;color:var(--kp-text)!important;border:1px solid var(--kp-line)!important;box-shadow:none!important}
+body.kp-studio .private-badge{color:var(--kp-muted)!important;background:transparent!important;border:0!important}
+body.kp-studio .private-badge svg{color:var(--kp-accent)!important}
+body.kp-studio .group-emblem{background:transparent!important;color:var(--kp-text)!important;border:1px solid var(--kp-line)!important;box-shadow:none!important}
+body.kp-studio .award-icon{background:transparent!important;border:1px solid var(--kp-line)!important;color:var(--kp-accent-2)!important;box-shadow:none!important}
+
+/* ---------- Matchday fixture hierarchy ---------- */
+body.kp-studio .kp3-pick-fixture{padding:19px 0 17px!important}
+body.kp-studio .kp3-pick-fixture .teams{column-gap:14px!important}
+body.kp-studio .kp3-pick-fixture.kp-editable-fixture .teams,
+body.kp-studio .kp3-pick-fixture:has(.kp3-score-stepper) .teams{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:auto auto!important;column-gap:24px!important;row-gap:15px!important}
+body.kp-studio .kp3-pick-fixture.kp-editable-fixture .team:first-child,
+body.kp-studio .kp3-pick-fixture:has(.kp3-score-stepper) .team:first-child{grid-column:1!important;grid-row:1!important;justify-self:start!important}
+body.kp-studio .kp3-pick-fixture.kp-editable-fixture .team.away,
+body.kp-studio .kp3-pick-fixture:has(.kp3-score-stepper) .team.away{grid-column:2!important;grid-row:1!important;justify-self:end!important}
+body.kp-studio .kp3-pick-fixture.kp-editable-fixture .scorepick,
+body.kp-studio .kp3-pick-fixture:has(.kp3-score-stepper) .scorepick{grid-column:1/-1!important;grid-row:2!important;display:grid!important;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr)!important;width:100%!important;gap:7px!important;align-items:center!important}
+body.kp-studio .kp3-pick-fixture.kp-editable-fixture .kp3-score-home,
+body.kp-studio .kp3-pick-fixture:has(.kp3-score-stepper) .kp3-score-home{justify-self:start!important}
+body.kp-studio .kp3-pick-fixture.kp-editable-fixture .kp3-score-away,
+body.kp-studio .kp3-pick-fixture:has(.kp3-score-stepper) .kp3-score-away{justify-self:end!important}
+body.kp-studio .kp3-pick-fixture .team{font-size:15px!important;line-height:1.12!important}
+body.kp-studio .kp3-pick-fixture .team span{max-width:132px!important;overflow-wrap:normal!important;word-break:normal!important}
+body.kp-studio .kp3-pick-fixture .crest{width:38px!important;height:38px!important;flex-basis:38px!important}
+body.kp-studio .kp3-score-stepper{grid-template-columns:43px 42px 43px!important;height:46px!important;border-color:var(--kp-line)!important;background:transparent!important}
+body.kp-studio .kp3-score-stepper .kp3-step{width:43px!important;height:46px!important;color:var(--kp-muted)!important}
+body.kp-studio .kp3-score-stepper input,body.kp-studio .kp3-score-stepper .scorebox{width:42px!important;height:46px!important;color:var(--kp-text)!important;background:transparent!important;border-color:var(--kp-line)!important;font-size:23px!important}
+body.kp-studio .kp3-vs{color:var(--kp-muted)!important;font-size:12px!important;font-weight:700!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .teams{grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr)!important;gap:9px!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .team{font-size:15px!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .scorepick{min-width:76px!important;display:flex!important;justify-content:center!important;gap:6px!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .scorebox{font-size:28px!important;line-height:1!important}
+body.kp-studio .kp3-pick-fixture .rules{font-size:11px!important;margin-top:11px!important}
+
+/* ---------- revealed group picks: dropdown, not chip soup ---------- */
+body.kp-studio .kp3-reveal{margin:0!important;padding:0!important;border-top:0!important;border-bottom:1px solid var(--kp-line)!important}
+body.kp-studio .kp-picks-details{margin:0!important;border:0!important}
+body.kp-studio .kp-picks-details>summary{min-height:46px!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;list-style:none!important;color:var(--kp-text)!important;font-size:12px!important;font-weight:760!important;cursor:pointer!important}
+body.kp-studio .kp-picks-details>summary::-webkit-details-marker{display:none!important}
+body.kp-studio .kp-picks-details>summary .kp-picks-meta{color:var(--kp-muted)!important;font-size:11px!important;font-weight:650!important;white-space:nowrap!important}
+body.kp-studio .kp-picks-details>summary .kp-picks-chevron{display:inline-block!important;margin-left:7px!important;transition:transform .18s ease!important;color:var(--kp-muted)!important}
+body.kp-studio .kp-picks-details[open]>summary .kp-picks-chevron{transform:rotate(180deg)!important}
+body.kp-studio .kp-picks-list{padding:0 0 8px!important;border-top:1px solid var(--kp-line)!important}
+body.kp-studio .kp-picks-row{min-height:42px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:16px!important;border-bottom:1px solid color-mix(in srgb,var(--kp-line) 72%,transparent)!important;color:var(--kp-muted)!important;font-size:12px!important}
+body.kp-studio .kp-picks-row:last-child{border-bottom:0!important}
+body.kp-studio .kp-picks-row b{color:var(--kp-text)!important;font-weight:760!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+body.kp-studio .kp-picks-row strong{color:var(--kp-text)!important;font-size:15px!important;font-variant-numeric:tabular-nums!important}
+body.kp-studio .kp-picks-row.is-mine{box-shadow:inset 2px 0 0 var(--kp-accent)!important;padding-left:9px!important}
+body.kp-studio .kp-picks-row.is-missing strong{color:var(--kp-muted)!important;font-size:12px!important;font-weight:600!important}
+body.kp-studio .kp3-reveal-scroll,body.kp-studio .kp3-pick-chip{display:none!important}
+
+/* ---------- Live standings ---------- */
+body.kp-studio .kp3-table-card,body.kp-studio[data-kp-screen="live"] .card:has(.table){border-top:1px solid var(--kp-line)!important;margin-top:12px!important}
+body.kp-studio .table thead th{font-size:9px!important;line-height:1!important;font-weight:760!important;color:var(--kp-muted)!important;letter-spacing:.13em!important;padding:10px 5px!important}
+body.kp-studio .table thead th.pts{font-size:9px!important;line-height:1!important;font-weight:760!important;color:var(--kp-muted)!important;letter-spacing:.13em!important;text-transform:uppercase!important;width:42px!important}
+body.kp-studio .table tbody tr{height:60px!important;background:transparent!important;box-shadow:none!important}
+body.kp-studio .table tbody tr:first-child{background:transparent!important;box-shadow:none!important}
+body.kp-studio .table tbody tr.kp-is-me{background:color-mix(in srgb,var(--kp-accent) 8%,transparent)!important;box-shadow:inset 3px 0 0 var(--kp-accent)!important}
+body.kp-studio .table tbody tr.kp-is-leader:not(.kp-is-me) .rank{color:var(--kp-text)!important;font-weight:850!important}
+body.kp-studio .table tbody tr.kp-is-leader .pts:before{content:"LEAD"!important;display:block!important;margin-bottom:3px!important;color:var(--kp-accent-2)!important;font-size:7px!important;line-height:1!important;letter-spacing:.14em!important;font-weight:850!important}
+body.kp-studio .table tbody tr:not(.kp-is-leader) .pts:before{display:none!important}
+body.kp-studio .table tbody td.pts{font-size:23px!important;line-height:1!important;font-weight:860!important;color:var(--kp-text)!important;width:42px!important}
+body.kp-studio .table .person,body.kp-studio .table .row-left{font-size:14px!important;min-width:0!important}
+body.kp-studio .table .person small{font-size:10px!important;line-height:1.2!important;margin-top:4px!important;color:var(--kp-green)!important}
+body.kp-studio .kp3-live-card>.card-title{font-size:23px!important;line-height:1.05!important;padding-bottom:13px!important}
+body.kp-studio .kp3-live-fixture .teams{grid-template-columns:minmax(0,1fr) 74px minmax(0,1fr)!important;gap:9px!important}
+body.kp-studio .kp3-live-fixture .team{font-size:14px!important;line-height:1.1!important}
+body.kp-studio .kp3-live-fixture .team span{max-width:126px!important}
+body.kp-studio .kp3-live-fixture .scorepick{min-width:74px!important}
+body.kp-studio .kp3-broadcast-score{font-size:28px!important}
+
+/* ---------- History: honours board, no purple dashboard tiles ---------- */
+body.kp-studio .kp3-latest-winner,body.kp-studio .winner{border:0!important;border-top:1px solid var(--kp-line)!important;border-bottom:1px solid var(--kp-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:20px 0!important}
+body.kp-studio .kp3-history-preview,body.kp-studio .kp3-history-links,body.kp-studio .kp3-gameweeks-list,body.kp-studio .kp3-records-card{border:0!important;border-top:1px solid var(--kp-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+body.kp-studio .kp3-history-preview .payment-row,body.kp-studio .kp3-gameweeks-list .payment-row{padding:0!important;min-height:52px!important;border-bottom:1px solid var(--kp-line)!important}
+body.kp-studio .kp3-history-preview .payment-row b,body.kp-studio .kp3-gameweeks-list .payment-row b{color:var(--kp-text)!important;font-size:11px!important}
+body.kp-studio .award-grid{display:block!important;margin-top:0!important;border-top:1px solid var(--kp-line)!important}
+body.kp-studio .award-tile{width:100%!important;min-height:58px!important;margin:0!important;padding:0!important;border:0!important;border-bottom:1px solid var(--kp-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;display:grid!important;grid-template-columns:34px minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;text-align:left!important}
+body.kp-studio .award-tile .award-icon{width:28px!important;height:28px!important;margin:0!important;border-radius:50%!important;display:grid!important;place-items:center!important}
+body.kp-studio .award-tile b{font-size:13px!important;color:var(--kp-text)!important;justify-self:start!important}
+body.kp-studio .award-tile small{font-size:10px!important;color:var(--kp-muted)!important;justify-self:end!important;text-align:right!important}
+body.kp-studio #awardsCard{margin-top:24px!important}
+body.kp-studio #awardsCard>.card-title{margin-bottom:10px!important}
+
+/* ---------- Group and drill-down screens ---------- */
+body.kp-studio .kp3-group-head{grid-template-columns:48px minmax(0,1fr)!important;gap:13px!important;padding-bottom:18px!important;border-bottom:1px solid var(--kp-line)!important}
+body.kp-studio .kp3-group-head .group-emblem{width:48px!important;height:48px!important;font-size:15px!important}
+body.kp-studio .kp3-group-head h1{font-size:34px!important;letter-spacing:-.04em!important}
+body.kp-studio .kp3-group-head .private-badge{font-size:9px!important;letter-spacing:.12em!important;color:var(--kp-muted)!important}
+body.kp-studio .kp3-group-head .hero-sub{font-size:12px!important;color:var(--kp-muted)!important}
+body.kp-studio .kp3-pot-hero{min-height:0!important;margin:0 0 12px!important;padding:20px 0!important;border:0!important;border-bottom:1px solid var(--kp-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+body.kp-studio .kp3-pot-hero small{color:var(--kp-muted)!important}
+body.kp-studio .kp3-pot-hero strong{color:var(--kp-text)!important;font-size:44px!important}
+body.kp-studio .kp3-pot-hero span{display:inline-block!important;margin-top:9px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--kp-muted)!important;font-size:11px!important}
+body.kp-studio .kp3-ball-art{display:none!important}
+body.kp-studio .kp3-group-menu,body.kp-studio .kp3-members-list,body.kp-studio .kp3-settings-list,body.kp-studio .kp3-payment-details,body.kp-studio .kp3-payment-history,body.kp-studio .kp3-rules-card,body.kp-studio .kp3-admin-card{border:0!important;border-top:1px solid var(--kp-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+body.kp-studio .kp3-group-menu .kp3-nav-row{padding:0!important;min-height:64px!important;grid-template-columns:minmax(0,1fr) auto 18px!important;gap:12px!important}
+body.kp-studio .kp3-group-menu .kp3-nav-copy{gap:3px!important}
+body.kp-studio .kp3-group-menu .kp3-nav-copy strong{font-size:16px!important;line-height:1.12!important}
+body.kp-studio .kp3-group-menu .kp3-nav-copy small{font-size:11px!important;line-height:1.25!important;color:var(--kp-muted)!important}
+body.kp-studio .kp3-group-menu .kp3-nav-meta{font-size:10px!important;color:var(--kp-muted)!important}
+body.kp-studio .kp3-group-menu .kp3-nav-icon{display:none!important}
+body.kp-studio .kp3-member-row{min-height:60px!important;padding:0!important;background:transparent!important;border-bottom:1px solid var(--kp-line)!important;color:var(--kp-text)!important}
+body.kp-studio .kp3-member-row .avatar{background:transparent!important;color:var(--kp-text)!important;border:1px solid var(--kp-line)!important}
+body.kp-studio .kp3-member-row strong{font-size:13px!important;color:var(--kp-text)!important}
+body.kp-studio .kp3-member-status{padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;font-size:10px!important}
+body.kp-studio .kp3-primary-small{min-height:48px!important;margin-top:16px!important;border-radius:8px!important;background:var(--kp-text)!important;color:var(--kp-bg)!important;box-shadow:none!important;font-size:13px!important}
+body.kp-studio .kp3-setting-row{min-height:62px!important;padding:0!important;color:var(--kp-text)!important;border-bottom:1px solid var(--kp-line)!important}
+body.kp-studio .kp3-setting-row em{color:var(--kp-accent-2)!important}
+body.kp-studio .kp3-copy-bank,body.kp-studio .kp3-join-form button,body.kp-studio .kp3-admin-card #saveBankBtn{border-radius:8px!important;background:var(--kp-text)!important;color:var(--kp-bg)!important;border:0!important;box-shadow:none!important}
+body.kp-studio .kp3-join-form{background:transparent!important;border-color:var(--kp-line)!important}
+body.kp-studio .kp3-join-form input,body.kp-studio .kp3-admin-card .scorer-select{background:transparent!important;color:var(--kp-text)!important;border:1px solid var(--kp-line)!important}
+body.kp-studio .kp3-drill-header{border-color:var(--kp-line)!important}
+body.kp-studio .kp3-back{background:transparent!important;color:var(--kp-text)!important;border-color:var(--kp-line)!important}
+
+/* ---------- Light mode must actually be light everywhere ---------- */
+html[data-kp-theme="light"] body.kp-studio .kp3-group-menu,
+html[data-kp-theme="light"] body.kp-studio .kp3-members-list,
+html[data-kp-theme="light"] body.kp-studio .kp3-settings-list,
+html[data-kp-theme="light"] body.kp-studio .kp3-payment-details,
+html[data-kp-theme="light"] body.kp-studio .kp3-payment-history,
+html[data-kp-theme="light"] body.kp-studio .kp3-rules-card,
+html[data-kp-theme="light"] body.kp-studio .kp3-admin-card,
+html[data-kp-theme="light"] body.kp-studio .kp3-history-preview,
+html[data-kp-theme="light"] body.kp-studio .kp3-history-links,
+html[data-kp-theme="light"] body.kp-studio .kp3-gameweeks-list,
+html[data-kp-theme="light"] body.kp-studio .kp3-records-card,
+html[data-kp-theme="light"] body.kp-studio .award-tile{background:transparent!important;color:var(--kp-text)!important}
+html[data-kp-theme="light"] body.kp-studio .kp3-member-row,
+html[data-kp-theme="light"] body.kp-studio .kp3-nav-row,
+html[data-kp-theme="light"] body.kp-studio .kp3-setting-row{color:var(--kp-text)!important}
+html[data-kp-theme="light"] body.kp-studio .kp3-member-row .avatar{background:transparent!important;color:var(--kp-text)!important}
+html[data-kp-theme="light"] body.kp-studio .kp3-member-status.is-paid{color:var(--kp-green)!important}
+html[data-kp-theme="light"] body.kp-studio .kp3-member-status.is-pending{color:var(--kp-amber)!important}
+html[data-kp-theme="light"] body.kp-studio .kp3-member-status.is-unpaid{color:var(--kp-muted)!important}
+
+/* ---------- nav/readability ---------- */
+body.kp-studio .bottom-nav{height:calc(72px + env(safe-area-inset-bottom))!important}
+body.kp-studio .nav-item{min-height:58px!important;gap:5px!important}
+body.kp-studio .nav-item small{font-size:10.5px!important}
+body.kp-studio .nav-item.active:before{width:28px!important;height:2px!important}
+
+@media(max-width:390px){
+  body.kp-studio .kp3-pick-fixture .team{font-size:14px!important}
+  body.kp-studio .kp3-pick-fixture .team span{max-width:116px!important}
+  body.kp-studio .kp3-score-stepper{grid-template-columns:40px 40px 40px!important}
+  body.kp-studio .kp3-score-stepper .kp3-step{width:40px!important}
+  body.kp-studio .kp3-score-stepper input,body.kp-studio .kp3-score-stepper .scorebox{width:40px!important}
+  body.kp-studio .kp3-live-fixture .team span{max-width:108px!important}
+}
