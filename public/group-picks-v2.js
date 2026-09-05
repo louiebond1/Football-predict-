@@ -92,16 +92,23 @@ function renderReveal(row, ctx, fixture, picks) {
   const signature = revealSignature(members, byUser);
 
   let reveal = row.querySelector('.kp3-reveal');
-  if (reveal?.dataset.kpRevealSignature === signature) return;
-  if (!reveal) {
-    reveal = document.createElement('div');
-    reveal.className = 'kp3-reveal';
-    row.append(reveal);
+  if (reveal?.dataset.kpRevealSignature === signature && reveal.tagName === 'DETAILS') return;
+
+  const wasOpen = reveal?.hasAttribute?.('open') || false;
+  if (!reveal || reveal.tagName !== 'DETAILS') {
+    const details = document.createElement('details');
+    details.className = 'kp3-reveal';
+    if (reveal) reveal.replaceWith(details);
+    else row.append(details);
+    reveal = details;
   }
 
   reveal.dataset.kpRevealSignature = signature;
   reveal.dataset.kpGroupPicksV2 = String(fixture.id);
-  reveal.innerHTML = `<div><small>GROUP PICKS · REVEALED AT KICK-OFF</small><span>${(picks || []).length}/${members.length}</span></div><div class="kp3-reveal-scroll">${members.map(member => {
+  if (wasOpen) reveal.setAttribute('open', '');
+  else reveal.removeAttribute('open');
+
+  reveal.innerHTML = `<summary><small>Group picks and scores</small><span>${(picks || []).length}/${members.length} revealed</span></summary><div class="kp3-reveal-scroll">${members.map(member => {
     const pick = byUser.get(member.user_id);
     const name = member.display_name || 'Player';
     const mine = member.user_id === ctx.session.user.id;
@@ -133,15 +140,15 @@ async function enhanceGroupPicks() {
         .in('fixture_id', missingIds);
       if (!error) {
         missingIds.forEach(id => {
-          const picks = (data || []).filter(p => Number(p.fixture_id) === id);
-          revealedPicks.set(`${ctx.group.id}:${id}`, picks);
+          const groupPicks = (data || []).filter(p => Number(p.fixture_id) === id);
+          revealedPicks.set(`${ctx.group.id}:${id}`, groupPicks);
         });
       }
     }
 
     visible.forEach(({ row, fixture }) => {
-      const picks = revealedPicks.get(`${ctx.group.id}:${Number(fixture.id)}`);
-      if (picks) renderReveal(row, ctx, fixture, picks);
+      const groupPicks = revealedPicks.get(`${ctx.group.id}:${Number(fixture.id)}`);
+      if (groupPicks) renderReveal(row, ctx, fixture, groupPicks);
     });
   } finally {
     busy = false;
