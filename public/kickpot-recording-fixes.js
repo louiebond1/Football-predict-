@@ -2,6 +2,16 @@
   const screen = document.querySelector('#screen');
   if (!screen) return;
 
+  // Final approved responsive polish is loaded here so we can ship layout fixes
+  // without disturbing the application render/business-logic stack.
+  if (!document.querySelector('link[data-kp-final-layout]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/kickpot-final-layout.css?v=1';
+    link.dataset.kpFinalLayout = '1';
+    document.head.appendChild(link);
+  }
+
   function markFixtures() {
     const active = document.querySelector('.nav-item.active')?.dataset?.tab;
     if (active !== 'gw' && active !== 'live') return;
