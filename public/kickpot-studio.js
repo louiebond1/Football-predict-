@@ -12,6 +12,22 @@
   if (!body) return;
   body.classList.add('kp-studio');
 
+  // Production iPhone fixes are isolated so they can be removed cleanly if needed.
+  if (!document.querySelector('link[data-kp-iphone-hotfix]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/kickpot-iphone-hotfix.css?v=2';
+    link.dataset.kpIphoneHotfix = '1';
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector('script[data-kp-iphone-hotfix]')) {
+    const script = document.createElement('script');
+    script.src = '/kickpot-iphone-hotfix.js?v=2';
+    script.defer = true;
+    script.dataset.kpIphoneHotfix = '1';
+    document.head.appendChild(script);
+  }
+
   function preferredTheme() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'light' || saved === 'dark') return saved;
