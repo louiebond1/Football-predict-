@@ -3,6 +3,8 @@
    retaining the class hooks used by the existing working feature scripts. */
 
 body::before,.card::after,.fixture::before,.winner::before{display:none!important;content:none!important}
+.kp3-view{display:block}
+.kp3-disabled{opacity:.42!important;pointer-events:none!important}
 
 /* Base form chrome used a decorative pawn and double containers. */
 .scorer-row{display:block!important;padding-top:0!important;border-top:0!important}
@@ -21,6 +23,22 @@ body::before,.card::after,.fixture::before,.winner::before{display:none!importan
   color:var(--kp-text-soft)!important;
   box-shadow:none!important;
   font-size:10px!important;
+  font-weight:700!important;
+}
+.kp3-copy-bank{
+  width:100%!important;
+  min-height:46px!important;
+  padding:0 12px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  border:1px solid var(--kp-line-strong)!important;
+  border-radius:8px!important;
+  background:transparent!important;
+  color:var(--kp-text)!important;
+  box-shadow:none!important;
+  font-size:11px!important;
   font-weight:700!important;
 }
 
@@ -113,10 +131,83 @@ body::before,.card::after,.fixture::before,.winner::before{display:none!importan
 }
 .kp-group-rename small{color:var(--kp-muted)!important}
 
+/* Winner moment remains a deliberate product moment without the old neon card art. */
+.kp3-winner{
+  position:fixed!important;
+  inset:0!important;
+  z-index:16000!important;
+  min-height:100dvh!important;
+  padding:calc(26px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom))!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:flex-start!important;
+  background:var(--kp-bg)!important;
+  color:var(--kp-text)!important;
+  overflow:auto!important;
+}
+.kp3-winner>:first-child{
+  position:absolute!important;
+  top:calc(12px + env(safe-area-inset-top))!important;
+  right:14px!important;
+  width:44px!important;
+  height:44px!important;
+  border:0!important;
+  border-radius:8px!important;
+  background:transparent!important;
+  color:var(--kp-muted)!important;
+  box-shadow:none!important;
+  font-size:25px!important;
+}
+.kp3-winner-cup{
+  margin:0 0 24px!important;
+  color:var(--kp-muted)!important;
+}
+.kp3-winner-cup svg{width:28px!important;height:28px!important}
+.kp3-winner>small{
+  margin:0 0 9px!important;
+  color:var(--kp-accent-2)!important;
+  font-size:10px!important;
+  font-weight:760!important;
+  letter-spacing:.09em!important;
+}
+.kp3-winner>h1{
+  margin:0!important;
+  max-width:9ch!important;
+  color:var(--kp-text)!important;
+  font-size:52px!important;
+  line-height:.9!important;
+  font-weight:840!important;
+  letter-spacing:-.06em!important;
+}
+.kp3-winner>strong{
+  display:block!important;
+  margin:24px 0 0!important;
+  color:var(--kp-text)!important;
+  font-size:28px!important;
+  line-height:1!important;
+  font-weight:790!important;
+  font-variant-numeric:tabular-nums!important;
+}
+.kp3-winner>p{margin:7px 0 0!important;color:var(--kp-muted)!important;font-size:13px!important}
+.kp3-winner-action{
+  width:100%!important;
+  min-height:50px!important;
+  margin:36px 0 0!important;
+  border:1px solid var(--kp-accent)!important;
+  border-radius:8px!important;
+  background:var(--kp-accent)!important;
+  color:#fff!important;
+  box-shadow:none!important;
+  font-size:14px!important;
+  font-weight:730!important;
+}
+
 /* Remove decorative filtering that was applied to real club crests. */
 .crest{filter:none!important}
 
 @media(max-width:390px){
   .kp-group-rename{grid-template-columns:1fr!important}
   .kp-group-rename button{width:100%!important}
+  .kp3-winner>h1{font-size:47px!important}
 }
