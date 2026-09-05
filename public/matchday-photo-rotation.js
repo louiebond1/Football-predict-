@@ -52,7 +52,8 @@ function ensureFigure() {
 
 function swapTo(index, force = false) {
   const figure = ensureFigure();
-  if (!figure || (!force && index === currentIndex)) return;
+  if (!figure) return;
+  if (!force && index === currentIndex && figure.querySelector('img.is-active')) return;
 
   const photo = PHOTOS[index];
   const active = figure.querySelector('img.is-active');
