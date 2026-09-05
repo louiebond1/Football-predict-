@@ -1,4 +1,4 @@
-const CACHE='kickpot-v59';
+const CACHE='kickpot-v60';
 const CORE=[
   '/',
   '/styles.css',
@@ -6,6 +6,7 @@ const CORE=[
   '/product-v3.css?v=1',
   '/product-v3-tune.css?v=4',
   '/matchday-editorial.css?v=1',
+  '/matchday-photo-rotation.css?v=1',
   '/admin-v1.css?v=1',
   '/admin-v1-fix.css?v=1',
   '/settings-v1.css?v=3',
@@ -24,6 +25,7 @@ const CORE=[
   '/password-auth.js?v=3',
   '/passkey-auth.js?v=1',
   '/ui-v3.js?v=1',
+  '/matchday-photo-rotation.js?v=1',
   '/live-status.js?v=5',
   '/group-picks-v2.js?v=1',
   '/live-state-v1.js?v=1',
