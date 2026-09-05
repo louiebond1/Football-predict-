@@ -1,4 +1,4 @@
-const CACHE='kickpot-v66-recording-fixes';
+const CACHE='kickpot-v67-iphone-hotfix';
 const CORE=[
   '/',
   '/styles.css',
@@ -14,6 +14,7 @@ const CORE=[
   '/launch-fixes-20260901.css?v=2',
   '/kickpot-studio.css',
   '/kickpot-recording-fixes.css',
+  '/kickpot-iphone-hotfix.css?v=2',
   '/supabase-singleton.js?v=3',
   '/smooth-runtime.js?v=1',
   '/render-stability.js?v=1',
@@ -36,6 +37,7 @@ const CORE=[
   '/launch-fixes-20260901.js?v=3',
   '/kickpot-studio.js',
   '/kickpot-recording-fixes.js',
+  '/kickpot-iphone-hotfix.js?v=2',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
