@@ -1,0 +1,61 @@
+/* Final iPhone fixture/layout polish — 2026-09-05 */
+body.kp-studio .kp3-page-hero{min-height:0!important;padding-bottom:0!important}
+body.kp-studio .hero-meta{margin:16px 0 16px!important}
+body.kp-studio .kp3-fixtures-card{margin-top:10px!important}
+body.kp-studio .kp3-fixtures-card .card-head{margin-bottom:4px!important}
+body.kp-studio .kp3-day{margin-top:16px!important}
+body.kp-studio .kp3-pick-fixture{padding:16px 0 15px!important}
+
+/* Kill decorative mode pills in the approved skin */
+body.kp-studio .hero-meta .pill,
+body.kp-studio .mode-pill,
+body.kp-studio .mode-badge,
+body.kp-studio [class*="for-fun"]{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;color:var(--kp-muted)!important;font-weight:700!important}
+
+/* Locked/started fixtures: one broadcast row, score always centred */
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .teams,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .teams{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr)!important;
+  grid-template-rows:auto!important;
+  align-items:center!important;
+  column-gap:8px!important;
+}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .teams>.team:first-child,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .teams>.team:first-child{grid-column:1!important;grid-row:1!important;justify-self:stretch!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .teams>.scorepick,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .teams>.scorepick{grid-column:2!important;grid-row:1!important;justify-self:center!important;align-self:center!important;min-width:68px!important;display:flex!important;gap:5px!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .teams>.team.away,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .teams>.team.away{grid-column:3!important;grid-row:1!important;justify-self:stretch!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .team,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .team{font-size:13px!important;line-height:1.08!important;min-width:0!important;gap:7px!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .team:first-child,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .team:first-child{justify-content:flex-start!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .team.away,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .team.away{justify-content:flex-end!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .team span,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .team span{max-width:none!important;min-width:0!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;word-break:normal!important;overflow-wrap:normal!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .scorebox,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .scorebox{font-size:29px!important;line-height:1!important}
+body.kp-studio .kp3-pick-fixture[data-locked="1"] .crest,
+body.kp-studio .kp3-pick-fixture.kp-locked-fixture .crest{width:34px!important;height:34px!important;flex-basis:34px!important}
+
+/* Editable rows stay two-team + one control row, never duplicate score */
+body.kp-studio .kp3-pick-fixture.kp-editable-fixture .teams{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:auto auto!important}
+body.kp-studio .kp3-pick-fixture.kp-editable-fixture .teams>.scorepick{grid-column:1/-1!important;grid-row:2!important}
+
+/* Bottom nav: authored active state, no floating purple dash */
+body.kp-studio .nav-item.active:before{display:none!important}
+body.kp-studio .nav-item.active{color:var(--kp-text)!important}
+body.kp-studio .nav-item.active svg{color:var(--kp-accent)!important}
+
+@media(max-width:390px){
+ body.kp-studio .kp3-pick-fixture[data-locked="1"] .teams,
+ body.kp-studio .kp3-pick-fixture.kp-locked-fixture .teams{grid-template-columns:minmax(0,1fr) 62px minmax(0,1fr)!important;column-gap:6px!important}
+ body.kp-studio .kp3-pick-fixture[data-locked="1"] .team,
+ body.kp-studio .kp3-pick-fixture.kp-locked-fixture .team{font-size:12.5px!important;gap:6px!important}
+ body.kp-studio .kp3-pick-fixture[data-locked="1"] .crest,
+ body.kp-studio .kp3-pick-fixture.kp-locked-fixture .crest{width:31px!important;height:31px!important;flex-basis:31px!important}
+ body.kp-studio .kp3-pick-fixture[data-locked="1"] .scorebox,
+ body.kp-studio .kp3-pick-fixture.kp-locked-fixture .scorebox{font-size:27px!important}
+}
