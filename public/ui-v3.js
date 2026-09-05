@@ -238,20 +238,28 @@ async function addLiveExtras(matchesView) {
     });
     const insight = document.createElement('section');
     insight.className = 'kp3-live-impact';
-    insight.innerHTML = `<small>LIVE INSIGHT</small><strong>${best ? `If ${esc(best.team)} score next, you move to ${ordinal(best.rank)}.` : baseRank === 1 ? 'You’re leading the live projection.' : `You’re ${ordinal(baseRank)} right now.`}</strong><span>Calculated from revealed group picks.</span>`;
+    insight.innerHTML = `<small>WHAT YOU NEED</small><strong>${best ? `If ${esc(best.team)} score next, you move to ${ordinal(best.rank)}.` : baseRank === 1 ? 'You’re leading the live projection.' : `You’re ${ordinal(baseRank)} right now.`}</strong><span>Calculated from revealed group picks.</span>`;
+    const table = matchesView.querySelector('.kp3-table-card');
     const hero = matchesView.querySelector('.kp3-page-hero');
-    hero?.after(insight);
+    (table || hero)?.after(insight);
   }
 
   const rows = [...matchesView.querySelectorAll('.kp3-live-fixture')];
   rows.forEach((row, index) => {
     const fixture = ctx.fixtures[index];
-    if (!fixture || Date.now() < new Date(fixture.kickoff).getTime()) return;
+    if (!fixture || Date.now() < new Date(fixture.kickoff).getTime() || row.querySelector('.kp3-reveal')) return;
     const picks = ctx.predictions.filter(p => Number(p.fixture_id) === Number(fixture.id));
-    if (!picks.length || row.querySelector('.kp3-reveal')) return;
+    const roster = ctx.members.length ? ctx.members : picks.map(p => ({ user_id: p.user_id }));
+    if (!roster.length) return;
     const reveal = document.createElement('div');
     reveal.className = 'kp3-reveal';
-    reveal.innerHTML = `<div><small>PICKS REVEALED</small><span>${picks.length}</span></div><div class="kp3-reveal-scroll">${picks.map(p => `<span class="kp3-pick-chip${p.user_id === ctx.session.user.id ? ' mine' : ''}"><b>${esc(ctx.names.get(p.user_id) || 'Player')}</b><em>${p.predicted_home}–${p.predicted_away}</em></span>`).join('')}</div>`;
+    const people = roster.map(member => {
+      const p = picks.find(pick => pick.user_id === member.user_id);
+      const mine = member.user_id === ctx.session.user.id;
+      const name = `${ctx.names.get(member.user_id) || 'Player'}${mine ? ' · YOU' : ''}`;
+      return `<span class="kp3-pick-chip${mine ? ' mine' : ''}${p ? '' : ' is-missing'}"><b>${esc(name)}</b><em>${p ? `${p.predicted_home}–${p.predicted_away}` : 'No pick'}</em></span>`;
+    }).join('');
+    reveal.innerHTML = `<div><small>GROUP PICKS</small><span>${picks.length}/${roster.length}</span></div><div class="kp3-reveal-scroll">${people}</div>`;
     row.append(reveal);
   });
 }
@@ -268,27 +276,23 @@ function enhanceLive() {
 
   const root = document.createElement('div'); root.className = 'kp3-live-root';
   const matches = document.createElement('section'); matches.className = 'kp3-view kp3-live-matches';
-  const tableView = document.createElement('section'); tableView.className = 'kp3-view';
-  screen.insertBefore(root, hero); root.append(matches, tableView);
+  screen.insertBefore(root, hero); root.append(matches);
   hero.classList.add('kp3-page-hero');
   matches.append(hero);
   if (switcher) matches.append(switcher);
+
+  table.classList.add('kp3-table-card');
+  matches.append(table);
   if (need) { need.classList.add('kp3-need'); matches.append(need); }
 
-  const tableLink = makeNavRow('Live table', 'See the group standings', 'trophy', () => {
-    subState.live = 'table'; showView({ matches, table: tableView }, 'table');
-  }, 'kp3-feature-row');
-  matches.append(tableLink, fixtures);
   fixtures.classList.add('kp3-live-card');
   fixtures.querySelectorAll('.fixture').forEach(f => {
     f.classList.add('kp3-live-fixture');
     f.querySelectorAll('.scorebox').forEach(s => s.classList.add('kp3-broadcast-score'));
   });
+  matches.append(fixtures);
   if (swing) { swing.classList.add('kp3-swing'); fixtures.after(swing); }
 
-  table.classList.add('kp3-table-card');
-  tableView.append(makeBackHeader('Live table', 'Gameweek standings', () => { subState.live = 'matches'; showView({ matches, table: tableView }, 'matches'); }), table);
-  showView({ matches, table: tableView }, subState.live);
   addLiveExtras(matches).catch(() => {});
 }
 
