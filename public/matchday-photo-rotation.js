@@ -3,20 +3,20 @@ const HALF_HOUR = 30 * 60 * 1000;
 
 const PHOTOS = [
   {
-    src: 'https://images.unsplash.com/photo-1747213286331-0f00410a62e2?auto=format&fit=crop&w=1600&q=82',
+    src: 'https://images.unsplash.com/photo-1665413811870-5b29a250f64a?auto=format&fit=crop&w=1600&q=82',
+    position: '50% 52%'
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1638642423879-21272e1f3c15?auto=format&fit=crop&w=1600&q=82',
+    position: '50% 64%'
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1678281967101-d350b502d17b?auto=format&fit=crop&w=1600&q=82',
     position: '50% 48%'
   },
   {
-    src: 'https://images.unsplash.com/photo-1781152791898-945ca008c8ef?auto=format&fit=crop&w=1600&q=82',
-    position: '50% 54%'
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1767916732786-a83902ffc25c?auto=format&fit=crop&w=1600&q=82',
-    position: '50% 50%'
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1556816214-6d16c62fbbf6?auto=format&fit=crop&w=1600&q=82',
-    position: '50% 58%'
+    src: 'https://images.unsplash.com/photo-1777715330440-025d52e54435?auto=format&fit=crop&w=1600&q=82',
+    position: '50% 52%'
   }
 ];
 
