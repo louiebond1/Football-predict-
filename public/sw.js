@@ -1,4 +1,4 @@
-const CACHE='kickpot-v68-final-layout';
+const CACHE='kickpot-v69-live-score';
 const CORE=[
   '/',
   '/styles.css',
@@ -14,7 +14,7 @@ const CORE=[
   '/launch-fixes-20260901.css?v=2',
   '/kickpot-studio.css',
   '/kickpot-recording-fixes.css',
-  '/kickpot-iphone-hotfix.css?v=2',
+  '/kickpot-iphone-hotfix.css?v=3',
   '/kickpot-final-layout.css?v=1',
   '/supabase-singleton.js?v=3',
   '/smooth-runtime.js?v=1',
@@ -29,7 +29,7 @@ const CORE=[
   '/ui-v3.js?v=1',
   '/live-status.js?v=5',
   '/group-picks-v2.js?v=2',
-  '/live-state-v1.js?v=1',
+  '/live-state-v1.js?v=2',
   '/draw-settlement-ui.js?v=4',
   '/gameweek-rollover.js?v=1',
   '/admin-v1.js?v=1',
@@ -38,7 +38,7 @@ const CORE=[
   '/launch-fixes-20260901.js?v=3',
   '/kickpot-studio.js',
   '/kickpot-recording-fixes.js',
-  '/kickpot-iphone-hotfix.js?v=2',
+  '/kickpot-iphone-hotfix.js?v=3',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
