@@ -1,0 +1,36 @@
+/* Matchday photography: one restrained editorial image, never a hero card. */
+.kp3-gw .kp-matchday-photo{
+  position:relative;
+  height:122px;
+  margin:2px 0 18px;
+  overflow:hidden;
+  border-top:1px solid var(--kp-ed-line-soft,#e5e0d6);
+  border-bottom:1px solid var(--kp-ed-line-soft,#e5e0d6);
+  border-radius:0;
+  background:#d9d5cd;
+}
+.kp3-gw .kp-matchday-photo img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:0;
+  filter:saturate(.78) contrast(1.04) brightness(.93);
+  transform:scale(1.002);
+  transition:opacity 240ms cubic-bezier(.2,.8,.2,1);
+}
+.kp3-gw .kp-matchday-photo img.is-active{opacity:1}
+
+/* The photograph earns its own space; don't let the old oversized hero create a gap below it. */
+.kp3-gw .kp-matchday-photo + .kp3-page-hero{
+  margin-top:0!important;
+}
+
+@media(max-width:390px){
+  .kp3-gw .kp-matchday-photo{height:112px;margin-bottom:16px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .kp3-gw .kp-matchday-photo img{transition:none}
+}
