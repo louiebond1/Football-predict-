@@ -1,4 +1,4 @@
-const CACHE='kickpot-v69-live-score';
+const CACHE='kickpot-v70-live-polish';
 const CORE=[
   '/',
   '/styles.css',
@@ -16,6 +16,7 @@ const CORE=[
   '/kickpot-recording-fixes.css',
   '/kickpot-iphone-hotfix.css?v=3',
   '/kickpot-final-layout.css?v=1',
+  '/live-polish-v2.css?v=1',
   '/supabase-singleton.js?v=3',
   '/smooth-runtime.js?v=1',
   '/render-stability.js?v=1',
@@ -39,6 +40,7 @@ const CORE=[
   '/kickpot-studio.js',
   '/kickpot-recording-fixes.js',
   '/kickpot-iphone-hotfix.js?v=3',
+  '/live-polish-v2.js?v=1',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
