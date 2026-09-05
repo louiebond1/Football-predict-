@@ -85,14 +85,33 @@ function revealSignature(members, byUser) {
   }).join('|');
 }
 
+function patchMyLockedPrediction(row, ctx, byUser) {
+  if (activeTab() !== 'gw') return;
+  const mine = byUser.get(ctx.session.user.id);
+  if (!mine) return;
+  const editable = row.querySelector('.kp3-score-stepper,[data-score]');
+  if (editable) return;
+  const boxes = [...row.querySelectorAll('.scorepick .scorebox')];
+  if (boxes.length < 2) return;
+  const blank = value => !value || /^[\s–—-]+$/.test(value);
+  if (blank(boxes[0].textContent) && blank(boxes[1].textContent)) {
+    boxes[0].textContent = String(mine.predicted_home);
+    boxes[1].textContent = String(mine.predicted_away);
+    row.dataset.kpPredictionRecovered = '1';
+  }
+}
+
 function renderReveal(row, ctx, fixture, picks) {
   const members = ctx.members || [];
   if (!members.length) return;
   const byUser = new Map((picks || []).map(p => [p.user_id, p]));
   const signature = revealSignature(members, byUser);
 
+  patchMyLockedPrediction(row, ctx, byUser);
+
   let reveal = row.querySelector('.kp3-reveal');
-  if (reveal?.dataset.kpRevealSignature === signature) return;
+  const wasOpen = Boolean(reveal?.querySelector('.kp-picks-details')?.open);
+  if (reveal?.dataset.kpRevealSignature === signature && reveal.querySelector('.kp-picks-details')) return;
   if (!reveal) {
     reveal = document.createElement('div');
     reveal.className = 'kp3-reveal';
@@ -101,12 +120,16 @@ function renderReveal(row, ctx, fixture, picks) {
 
   reveal.dataset.kpRevealSignature = signature;
   reveal.dataset.kpGroupPicksV2 = String(fixture.id);
-  reveal.innerHTML = `<div><small>GROUP PICKS · REVEALED AT KICK-OFF</small><span>${(picks || []).length}/${members.length}</span></div><div class="kp3-reveal-scroll">${members.map(member => {
-    const pick = byUser.get(member.user_id);
-    const name = member.display_name || 'Player';
-    const mine = member.user_id === ctx.session.user.id;
-    return `<span class="kp3-pick-chip${mine ? ' mine' : ''}${pick ? '' : ' is-missing'}"><b>${esc(name)}${mine ? ' · you' : ''}</b><em>${pick ? `${pick.predicted_home}–${pick.predicted_away}` : 'No pick'}</em></span>`;
-  }).join('')}</div>`;
+  const revealedCount = (picks || []).length;
+  reveal.innerHTML = `<details class="kp-picks-details"${wasOpen ? ' open' : ''}>
+    <summary><span>Group picks</span><span class="kp-picks-meta">${revealedCount}/${members.length} revealed <span class="kp-picks-chevron">⌄</span></span></summary>
+    <div class="kp-picks-list">${members.map(member => {
+      const pick = byUser.get(member.user_id);
+      const name = member.display_name || 'Player';
+      const mine = member.user_id === ctx.session.user.id;
+      return `<div class="kp-picks-row${mine ? ' is-mine' : ''}${pick ? '' : ' is-missing'}"><b>${esc(name)}${mine ? ' · you' : ''}</b><strong>${pick ? `${pick.predicted_home}–${pick.predicted_away}` : 'No pick'}</strong></div>`;
+    }).join('')}</div>
+  </details>`;
 }
 
 async function enhanceGroupPicks() {
@@ -133,15 +156,15 @@ async function enhanceGroupPicks() {
         .in('fixture_id', missingIds);
       if (!error) {
         missingIds.forEach(id => {
-          const picks = (data || []).filter(p => Number(p.fixture_id) === id);
-          revealedPicks.set(`${ctx.group.id}:${id}`, picks);
+          const fixturePicks = (data || []).filter(p => Number(p.fixture_id) === id);
+          revealedPicks.set(`${ctx.group.id}:${id}`, fixturePicks);
         });
       }
     }
 
     visible.forEach(({ row, fixture }) => {
-      const picks = revealedPicks.get(`${ctx.group.id}:${Number(fixture.id)}`);
-      if (picks) renderReveal(row, ctx, fixture, picks);
+      const fixturePicks = revealedPicks.get(`${ctx.group.id}:${Number(fixture.id)}`);
+      if (fixturePicks) renderReveal(row, ctx, fixture, fixturePicks);
     });
   } finally {
     busy = false;
@@ -158,13 +181,13 @@ document.addEventListener('change', event => {
 
 document.addEventListener('click', event => {
   if (event.target.closest('.nav-item[data-tab="gw"],.nav-item[data-tab="live"]')) {
-    setTimeout(enhanceGroupPicks, 60);
-    setTimeout(enhanceGroupPicks, 300);
+    setTimeout(enhanceGroupPicks, 40);
+    setTimeout(enhanceGroupPicks, 180);
   }
 }, true);
 
 const observer = new MutationObserver(() => queueMicrotask(enhanceGroupPicks));
 if (screen) observer.observe(screen, { childList:true, subtree:true });
 setInterval(enhanceGroupPicks, 1500);
-window.addEventListener('pageshow', () => setTimeout(enhanceGroupPicks, 120));
-setTimeout(enhanceGroupPicks, 250);
+window.addEventListener('pageshow', () => setTimeout(enhanceGroupPicks, 80));
+setTimeout(enhanceGroupPicks, 120);
