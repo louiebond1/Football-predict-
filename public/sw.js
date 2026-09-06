@@ -1,4 +1,4 @@
-const CACHE='kickpot-v75-play-mode-write-guard';
+const CACHE='kickpot-v76-play-mode-dedupe';
 const CORE=[
   '/',
   '/styles.css',
