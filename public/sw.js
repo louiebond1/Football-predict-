@@ -1,4 +1,4 @@
-const CACHE='kickpot-v71-round-sync';
+const CACHE='kickpot-v72-rollover-final-gate';
 const CORE=[
   '/',
   '/styles.css',
@@ -32,7 +32,7 @@ const CORE=[
   '/group-picks-v2.js?v=2',
   '/live-state-v1.js?v=2',
   '/draw-settlement-ui.js?v=4',
-  '/gameweek-rollover.js?v=1',
+  '/gameweek-rollover.js?v=2',
   '/admin-v1.js?v=1',
   '/settings-v2.js?v=1',
   '/account-password.js?v=3',
