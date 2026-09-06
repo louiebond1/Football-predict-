@@ -31,6 +31,13 @@
     link.dataset.kpBrandPass3 = '1';
     document.head.appendChild(link);
   }
+  if (!document.querySelector('link[data-kp-brand-pass3-hotfix]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/brand-pass3-hotfix.css?v=1&studio=20260906r';
+    link.dataset.kpBrandPass3Hotfix = '1';
+    document.head.appendChild(link);
+  }
   if (!document.querySelector('script[data-kp-brand-pass3]')) {
     const script = document.createElement('script');
     script.src = '/brand-pass3.js?v=1&studio=20260906q';
