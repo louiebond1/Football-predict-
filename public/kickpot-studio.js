@@ -53,6 +53,23 @@
     document.head.appendChild(script);
   }
 
+  // Final Matchday layer follows the supplied iPhone reference. It intentionally
+  // loads after Pass 3 so only Matchday presentation changes; game/state logic is untouched.
+  if (!document.querySelector('link[data-kp-reference-matchday]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/reference-matchday-v1.css?v=1&studio=20260906t';
+    link.dataset.kpReferenceMatchday = '1';
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector('script[data-kp-reference-matchday]')) {
+    const script = document.createElement('script');
+    script.src = '/reference-matchday-v1.js?v=1&studio=20260906t';
+    script.defer = true;
+    script.dataset.kpReferenceMatchday = '1';
+    document.head.appendChild(script);
+  }
+
   function preferredTheme() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'light' || saved === 'dark') return saved;
