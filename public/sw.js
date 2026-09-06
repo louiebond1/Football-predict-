@@ -1,4 +1,4 @@
-const CACHE='kickpot-v70-live-polish';
+const CACHE='kickpot-v71-round-sync';
 const CORE=[
   '/',
   '/styles.css',
@@ -41,6 +41,7 @@ const CORE=[
   '/kickpot-recording-fixes.js',
   '/kickpot-iphone-hotfix.js?v=3',
   '/live-polish-v2.js?v=1',
+  '/round-sync.js?v=1',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
