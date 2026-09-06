@@ -1,4 +1,4 @@
-const CACHE='kickpot-v73-for-fun-security';
+const CACHE='kickpot-v74-active-group-persistence';
 const CORE=[
   '/',
   '/styles.css',
@@ -43,6 +43,7 @@ const CORE=[
   '/live-polish-v2.js?v=1',
   '/round-sync.js?v=1',
   '/play-mode-refresh.js?v=1',
+  '/active-group-persistence.js?v=1',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
