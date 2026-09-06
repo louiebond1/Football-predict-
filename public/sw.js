@@ -1,4 +1,4 @@
-const CACHE='kickpot-v92-reference-live';
+const CACHE='kickpot-v93-live-fixtures-reference';
 const CORE=[
   '/',
   '/styles.css',
@@ -26,6 +26,7 @@ const CORE=[
   '/brand-pass3-avatar-v2.css?v=1',
   '/reference-matchday-v1.css?v=1',
   '/reference-live-v1.css?v=1',
+  '/reference-live-fixtures-v2.css?v=1',
   '/core-boot-guard.js?v=3',
   '/supabase-singleton.js?v=5',
   '/smooth-runtime.js?v=1',
@@ -57,6 +58,7 @@ const CORE=[
   '/brand-pass3.js?v=2',
   '/reference-matchday-v1.js?v=1',
   '/reference-live-v1.js?v=1',
+  '/reference-live-fixtures-v2.js?v=1',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
