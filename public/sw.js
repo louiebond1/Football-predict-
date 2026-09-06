@@ -1,4 +1,4 @@
-const CACHE='kickpot-v76-play-mode-dedupe';
+const CACHE='kickpot-v77-light-mode-accessibility';
 const CORE=[
   '/',
   '/styles.css',
@@ -17,6 +17,7 @@ const CORE=[
   '/kickpot-iphone-hotfix.css?v=3',
   '/kickpot-final-layout.css?v=1',
   '/live-polish-v2.css?v=1',
+  '/light-mode-fixes.css?v=1',
   '/supabase-singleton.js?v=3',
   '/smooth-runtime.js?v=1',
   '/render-stability.js?v=1',
