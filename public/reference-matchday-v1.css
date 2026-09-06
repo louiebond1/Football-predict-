@@ -1,0 +1,426 @@
+/* KickPot Matchday reference pass — matches the supplied iPhone direction.
+   Visual-only: all auth, prediction, locking, scoring and reveal logic stays in app.js. */
+
+body.kp-studio[data-kp-screen="gw"]{
+  --ref-bg:#f7f4ec;
+  --ref-ink:#11151b;
+  --ref-muted:#7e848b;
+  --ref-gold:#a78643;
+  --ref-line:rgba(17,21,27,.09);
+  --ref-photo:url("https://images.unsplash.com/photo-1663298953773-4a63966632a8?auto=format&fit=crop&q=82&w=1200");
+  background:var(--ref-bg)!important;
+  color:var(--ref-ink)!important;
+}
+
+/* Phone canvas */
+body.kp-studio[data-kp-screen="gw"] .app-shell{
+  max-width:430px!important;
+  margin:0 auto!important;
+  padding-left:0!important;
+  padding-right:0!important;
+  background:var(--ref-bg)!important;
+}
+body.kp-studio[data-kp-screen="gw"] .screen{
+  padding-left:0!important;
+  padding-right:0!important;
+  overflow:visible!important;
+}
+
+/* Header from the reference: crown + KickPot, one account control. */
+body.kp-studio[data-kp-screen="gw"] .topbar{
+  position:relative!important;
+  z-index:5!important;
+  min-height:72px!important;
+  padding:16px 18px 12px!important;
+  margin:0!important;
+  background:rgba(247,244,236,.98)!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.kp-studio[data-kp-screen="gw"] .brand{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  color:var(--ref-ink)!important;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif!important;
+  font-size:17px!important;
+  line-height:1!important;
+  font-weight:750!important;
+  letter-spacing:-.03em!important;
+  text-transform:none!important;
+}
+body.kp-studio[data-kp-screen="gw"] .brand-mark{
+  display:flex!important;
+  width:20px!important;
+  height:20px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:var(--ref-gold)!important;
+  background:transparent!important;
+  border:0!important;
+}
+body.kp-studio[data-kp-screen="gw"] .brand>span,
+body.kp-studio[data-kp-screen="gw"] .brand .kp-wordmark{
+  display:inline!important;
+  color:var(--ref-ink)!important;
+  font:inherit!important;
+  letter-spacing:inherit!important;
+  text-transform:none!important;
+}
+body.kp-studio[data-kp-screen="gw"] #installBtn,
+body.kp-studio[data-kp-screen="gw"] #kpThemeToggle,
+body.kp-studio[data-kp-screen="gw"] #bellBtn{display:none!important}
+body.kp-studio[data-kp-screen="gw"] .topbar-actions{margin-left:auto!important}
+body.kp-studio[data-kp-screen="gw"] .user-chip{
+  width:34px!important;
+  height:34px!important;
+  border:1px solid rgba(17,21,27,.34)!important;
+  border-radius:50%!important;
+  background:rgba(255,255,255,.28)!important;
+  color:var(--ref-ink)!important;
+  box-shadow:none!important;
+  font-size:13px!important;
+  font-weight:700!important;
+}
+
+/* Hero — photo, editorial type, no card chrome. */
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero,
+body.kp-studio .kp3-gw .kp3-page-hero{
+  position:relative!important;
+  min-height:318px!important;
+  margin:0!important;
+  padding:28px 20px 24px!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background-image:
+    linear-gradient(90deg,rgba(247,244,236,.96) 0%,rgba(247,244,236,.88) 22%,rgba(247,244,236,.46) 45%,rgba(247,244,236,.05) 70%),
+    linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.08)),
+    var(--ref-photo)!important;
+  background-size:cover!important;
+  background-position:center 48%!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero::before,
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero::after{content:none!important;display:none!important}
+body.kp-studio[data-kp-screen="gw"] .kp-ref-round{
+  margin:0 0 19px!important;
+  color:var(--ref-gold)!important;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:750!important;
+  letter-spacing:.28em!important;
+  text-transform:uppercase!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp-ref-round::after{
+  content:"";
+  display:block;
+  width:32px;
+  height:2px;
+  margin-top:10px;
+  background:var(--ref-gold);
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero h1{
+  width:205px!important;
+  max-width:205px!important;
+  margin:0!important;
+  color:var(--ref-ink)!important;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif!important;
+  font-size:46px!important;
+  line-height:.91!important;
+  font-weight:760!important;
+  letter-spacing:-.065em!important;
+  text-wrap:balance!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp-ref-tagline{
+  width:155px!important;
+  margin:14px 0 0!important;
+  color:#7d8288!important;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif!important;
+  font-size:15px!important;
+  line-height:1.25!important;
+  font-weight:430!important;
+  letter-spacing:-.02em!important;
+}
+
+/* Countdown block at lower-left, as in the reference. */
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero .hero-meta{
+  position:absolute!important;
+  left:20px!important;
+  right:auto!important;
+  bottom:20px!important;
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero .hero-meta>.pill:not(.lock){display:none!important}
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero .pill.lock{
+  display:block!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--ref-ink)!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero .pill.lock svg{display:none!important}
+body.kp-studio[data-kp-screen="gw"] #lockPill{font-size:0!important}
+body.kp-studio[data-kp-screen="gw"] #lockPill::before{
+  content:"PICKS CLOSE IN";
+  display:block;
+  margin:0 0 5px;
+  color:#4b5057;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  font-size:8px;
+  line-height:1;
+  font-weight:750;
+  letter-spacing:.24em;
+}
+body.kp-studio[data-kp-screen="gw"] #lockPillTime{
+  display:block!important;
+  color:var(--ref-ink)!important;
+  font-family:"SFMono-Regular","SF Mono",ui-monospace,Menlo,monospace!important;
+  font-size:17px!important;
+  line-height:1!important;
+  font-weight:500!important;
+  letter-spacing:.08em!important;
+  font-variant-numeric:tabular-nums!important;
+}
+
+/* Group switch remains functional, but becomes a quiet text control instead of a large box. */
+body.kp-studio[data-kp-screen="gw"] .kp3-gw-root>.select-wrap{
+  width:auto!important;
+  margin:10px 18px 2px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-gw-root>.select-wrap select{
+  width:auto!important;
+  max-width:100%!important;
+  padding:8px 22px 8px 0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#555c64!important;
+  font-size:12px!important;
+  font-weight:600!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-gw-root>.status{margin:8px 18px!important}
+
+/* Fixture list: no card, one compact horizontal row per match. */
+body.kp-studio[data-kp-screen="gw"] .kp3-fixtures-card{
+  margin:0!important;
+  padding:4px 18px 112px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:var(--ref-bg)!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-fixtures-card>.card-head{display:none!important}
+body.kp-studio[data-kp-screen="gw"] .kp3-fixtures-card>.kp3-day{
+  margin:14px 0 4px!important;
+  padding:0!important;
+  color:#8c7250!important;
+  font-size:9px!important;
+  line-height:1!important;
+  font-weight:750!important;
+  letter-spacing:.26em!important;
+  text-transform:uppercase!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture{
+  margin:0!important;
+  padding:13px 0 14px!important;
+  border:0!important;
+  border-bottom:1px solid var(--ref-line)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture .teams{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 126px minmax(0,1fr)!important;
+  gap:7px!important;
+  align-items:center!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture .team{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  min-width:0!important;
+  color:var(--ref-ink)!important;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif!important;
+  font-size:12px!important;
+  line-height:1.12!important;
+  font-weight:650!important;
+  letter-spacing:-.02em!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture .team.away{
+  flex-direction:row!important;
+  justify-content:flex-end!important;
+  text-align:right!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture .team span{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture img.crest,
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture .crest-fallback{
+  width:31px!important;
+  height:31px!important;
+  flex:0 0 31px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  object-fit:contain!important;
+}
+
+/* Score controls become the paired capsule controls from the reference. */
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture .scorepick{
+  display:grid!important;
+  grid-template-columns:1fr 12px 1fr!important;
+  gap:3px!important;
+  align-items:center!important;
+  justify-items:center!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-score-stepper{
+  display:grid!important;
+  grid-template-columns:28px 27px 28px!important;
+  width:83px!important;
+  min-width:83px!important;
+  height:31px!important;
+  overflow:hidden!important;
+  border:1px solid rgba(17,21,27,.075)!important;
+  border-radius:16px!important;
+  background:rgba(255,255,255,.28)!important;
+  box-shadow:none!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-score-stepper .kp3-step,
+body.kp-studio[data-kp-screen="gw"] .kp3-score-stepper .scorebox{
+  width:auto!important;
+  min-width:0!important;
+  height:29px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#555b62!important;
+  font-size:14px!important;
+  line-height:29px!important;
+  font-weight:450!important;
+  text-align:center!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-score-stepper .scorebox{
+  color:var(--ref-ink)!important;
+  font-weight:600!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-vs{
+  width:12px!important;
+  color:#aaaeb2!important;
+  font-size:0!important;
+  text-align:center!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-vs::after{content:"|";font-size:11px;font-weight:300;color:#b3b6b9}
+
+/* Put kickoff time above the centre controls when the legacy rule text is present. */
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture>.rules{
+  margin:5px 0 0!important;
+  color:#8d9297!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+  text-align:center!important;
+}
+
+/* Locked/revealed rows remain readable and retain Group picks. */
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture .locked-score,
+body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture .actual-score{
+  color:var(--ref-ink)!important;
+  font-weight:750!important;
+}
+body.kp-studio[data-kp-screen="gw"] .group-picks,
+body.kp-studio[data-kp-screen="gw"] .kp-group-picks{border:0!important;background:transparent!important;box-shadow:none!important}
+
+/* Primary action */
+body.kp-studio[data-kp-screen="gw"] #lockPicks{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:calc(100% - 36px)!important;
+  min-height:48px!important;
+  margin:14px 18px 10px!important;
+  padding:0 18px!important;
+  border:0!important;
+  border-radius:12px!important;
+  background:linear-gradient(90deg,#b29557 0%,#9d7b37 100%)!important;
+  color:#fff!important;
+  box-shadow:none!important;
+  font-size:14px!important;
+  font-weight:650!important;
+  letter-spacing:-.02em!important;
+  text-transform:none!important;
+}
+body.kp-studio[data-kp-screen="gw"] #lockPicks svg{display:none!important}
+body.kp-studio[data-kp-screen="gw"] #lockPicks::after{content:"→";margin-left:9px;font-size:18px;font-weight:400}
+body.kp-studio[data-kp-screen="gw"] #gwStatus.rules{
+  margin:4px 18px 8px!important;
+  color:#9a9da1!important;
+  font-size:9px!important;
+  text-align:center!important;
+}
+
+/* Bottom nav */
+body.kp-studio[data-kp-screen="gw"] .bottom-nav{
+  left:50%!important;
+  right:auto!important;
+  width:min(430px,100vw)!important;
+  transform:translateX(-50%)!important;
+  background:rgba(247,244,236,.97)!important;
+  border-top:1px solid rgba(17,21,27,.07)!important;
+  box-shadow:none!important;
+  backdrop-filter:blur(14px)!important;
+}
+body.kp-studio[data-kp-screen="gw"] .nav-item{color:#8b9095!important;background:transparent!important}
+body.kp-studio[data-kp-screen="gw"] .nav-item.active{color:var(--ref-gold)!important}
+body.kp-studio[data-kp-screen="gw"] .bottom-nav .nav-item svg{stroke-width:1.7!important}
+
+/* Dark mode: same geometry, charcoal/cream treatment. */
+html[data-kp-theme="dark"] body.kp-studio[data-kp-screen="gw"]{
+  --ref-bg:#0d100f;
+  --ref-ink:#f4f1ea;
+  --ref-muted:#a2a7a4;
+  --ref-line:rgba(255,255,255,.09);
+  background:var(--ref-bg)!important;
+}
+html[data-kp-theme="dark"] body.kp-studio[data-kp-screen="gw"] .topbar,
+html[data-kp-theme="dark"] body.kp-studio[data-kp-screen="gw"] .bottom-nav{background:rgba(13,16,15,.97)!important}
+html[data-kp-theme="dark"] body.kp-studio[data-kp-screen="gw"] .kp3-page-hero{
+  background-image:
+    linear-gradient(90deg,rgba(8,11,10,.95) 0%,rgba(8,11,10,.84) 24%,rgba(8,11,10,.43) 48%,rgba(8,11,10,.05) 72%),
+    linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.18)),
+    var(--ref-photo)!important;
+}
+html[data-kp-theme="dark"] body.kp-studio[data-kp-screen="gw"] .kp-ref-tagline,
+html[data-kp-theme="dark"] body.kp-studio[data-kp-screen="gw"] #lockPill::before{color:#b4b7b5!important}
+html[data-kp-theme="dark"] body.kp-studio[data-kp-screen="gw"] .kp3-score-stepper{
+  border-color:rgba(255,255,255,.10)!important;
+  background:rgba(255,255,255,.035)!important;
+}
+html[data-kp-theme="dark"] body.kp-studio[data-kp-screen="gw"] .kp3-score-stepper .kp3-step{color:#b9bdbb!important}
+
+@media(max-width:380px){
+  body.kp-studio[data-kp-screen="gw"] .kp3-page-hero{min-height:300px!important;padding-left:17px!important;padding-right:17px!important}
+  body.kp-studio[data-kp-screen="gw"] .kp3-page-hero h1{font-size:42px!important;width:185px!important}
+  body.kp-studio[data-kp-screen="gw"] .kp3-pick-fixture .teams{grid-template-columns:minmax(0,1fr) 118px minmax(0,1fr)!important}
+  body.kp-studio[data-kp-screen="gw"] .kp3-score-stepper{grid-template-columns:25px 25px 25px!important;width:75px!important;min-width:75px!important}
+}
