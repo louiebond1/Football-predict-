@@ -1,0 +1,14 @@
+/* Pass 3 hero regression hotfix.
+   The legacy studio skin still owns a ::after caption reading “SATURDAY FOOTBALL”.
+   Disable that pseudo-element entirely so it cannot inherit the new oversized
+   hero typography and bleed outside the bespoke pitch surface. */
+html body.kp-studio[data-kp-screen="gw"] .kp3-page-hero::after,
+html[data-kp-theme="light"] body.kp-studio[data-kp-screen="gw"] .kp3-page-hero::after,
+html[data-kp-theme="dark"] body.kp-studio[data-kp-screen="gw"] .kp3-page-hero::after{
+  content:none!important;
+  display:none!important;
+  position:static!important;
+  width:0!important;
+  height:0!important;
+  overflow:hidden!important;
+}
