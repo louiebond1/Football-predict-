@@ -1,0 +1,172 @@
+/* KickPot Pass 3 — personality layer
+   Bespoke matchday art, authored wordmark, deterministic avatars, quieter icons.
+   Core screen hierarchy and interactions intentionally unchanged. */
+
+/* ---------- authored wordmark ---------- */
+body.kp-studio .brand{
+  gap:0!important;
+  min-width:0;
+}
+body.kp-studio .brand-mark{display:none!important}
+body.kp-studio .brand>span,
+body.kp-studio .brand .kp-wordmark{
+  display:inline-flex!important;
+  align-items:baseline!important;
+  gap:0!important;
+  font-family:var(--kp-font-display)!important;
+  font-size:16px!important;
+  line-height:1!important;
+  font-weight:850!important;
+  letter-spacing:-.025em!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+}
+body.kp-studio .kp-word-kick{color:var(--kp-text)!important}
+body.kp-studio .kp-word-slash{
+  display:inline-block;
+  margin:0 2px 0 1px;
+  color:var(--kp-green)!important;
+  font-weight:600!important;
+  transform:skewX(-10deg);
+}
+body.kp-studio .kp-word-pot{color:var(--kp-gold)!important}
+
+/* ---------- bespoke Matchday hero ----------
+   No photography: a compact broadcast/pitch graphic with one cut corner and
+   restrained field geometry. It is deliberately the only expressive graphic
+   surface on Matchday. */
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero:before{
+  content:""!important;
+  display:block!important;
+  height:162px!important;
+  margin:0 0 24px!important;
+  border:0!important;
+  border-radius:0!important;
+  clip-path:polygon(0 0,100% 0,100% 88%,96% 100%,0 100%)!important;
+  background-color:#0b4b2f!important;
+  background-image:
+    linear-gradient(90deg,transparent 49.7%,rgba(245,241,232,.19) 49.8%,rgba(245,241,232,.19) 50.2%,transparent 50.3%),
+    radial-gradient(circle at 50% 50%,transparent 0 29px,rgba(245,241,232,.16) 30px,rgba(245,241,232,.16) 31px,transparent 32px),
+    linear-gradient(90deg,rgba(245,241,232,.11) 0 1px,transparent 1px calc(100% - 1px),rgba(245,241,232,.11) calc(100% - 1px)),
+    linear-gradient(0deg,rgba(245,241,232,.11) 0 1px,transparent 1px calc(100% - 1px),rgba(245,241,232,.11) calc(100% - 1px)),
+    linear-gradient(134deg,transparent 0 73%,rgba(225,178,74,.17) 73.2%,rgba(225,178,74,.17) 74%,transparent 74.2%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 52px,rgba(0,0,0,.018) 52px 104px),
+    linear-gradient(135deg,#0e5a39 0%,#0a3b27 58%,#082d1f 100%)!important;
+  background-size:auto!important;
+  background-position:center!important;
+  box-shadow:inset 0 0 0 1px rgba(245,241,232,.08)!important;
+  filter:none!important;
+}
+html[data-kp-theme="light"] body.kp-studio[data-kp-screen="gw"] .kp3-page-hero:before{
+  background-color:#17603f!important;
+  background-image:
+    linear-gradient(90deg,transparent 49.7%,rgba(248,244,233,.22) 49.8%,rgba(248,244,233,.22) 50.2%,transparent 50.3%),
+    radial-gradient(circle at 50% 50%,transparent 0 29px,rgba(248,244,233,.19) 30px,rgba(248,244,233,.19) 31px,transparent 32px),
+    linear-gradient(90deg,rgba(248,244,233,.13) 0 1px,transparent 1px calc(100% - 1px),rgba(248,244,233,.13) calc(100% - 1px)),
+    linear-gradient(0deg,rgba(248,244,233,.13) 0 1px,transparent 1px calc(100% - 1px),rgba(248,244,233,.13) calc(100% - 1px)),
+    linear-gradient(134deg,transparent 0 73%,rgba(225,178,74,.20) 73.2%,rgba(225,178,74,.20) 74%,transparent 74.2%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 52px,rgba(0,0,0,.018) 52px 104px),
+    linear-gradient(135deg,#25734f 0%,#145738 58%,#0d442d 100%)!important;
+}
+body.kp-studio[data-kp-screen="gw"] .kp3-page-hero:after{
+  content:"K/P"!important;
+  position:absolute!important;
+  left:auto!important;
+  right:15px!important;
+  top:28px!important;
+  width:auto!important;
+  height:auto!important;
+  color:rgba(245,241,232,.13)!important;
+  font-family:var(--kp-font-display)!important;
+  font-size:76px!important;
+  line-height:.86!important;
+  font-weight:850!important;
+  letter-spacing:-.075em!important;
+  text-transform:uppercase!important;
+  text-shadow:none!important;
+  transform:skewX(-4deg)!important;
+  pointer-events:none!important;
+}
+
+/* ---------- friends/family avatars ---------- */
+body.kp-studio .avatar[data-kp-tone]{
+  border:0!important;
+  border-radius:9px!important;
+  box-shadow:none!important;
+  font-family:var(--kp-font-body)!important;
+  font-weight:800!important;
+  letter-spacing:-.02em!important;
+}
+body.kp-studio .avatar.sm[data-kp-tone]{border-radius:8px!important}
+
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="0"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="0"]{background:#1b3a29!important;color:#bfe8ce!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="1"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="1"]{background:#4b3b1d!important;color:#f4d887!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="2"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="2"]{background:#432c24!important;color:#efc5ae!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="3"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="3"]{background:#20373c!important;color:#b8dce2!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="4"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="4"]{background:#32371f!important;color:#d9e2a9!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="5"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="5"]{background:#2b3338!important;color:#d4dde1!important}
+
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="0"]{background:#cfe3d5!important;color:#24583a!important}
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="1"]{background:#ead9ad!important;color:#76540d!important}
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="2"]{background:#e7c9ba!important;color:#713f31!important}
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="3"]{background:#c9dde1!important;color:#315c64!important}
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="4"]{background:#dce0bd!important;color:#57611f!important}
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="5"]{background:#d4dadd!important;color:#46545b!important}
+
+/* ---------- quieter icon language ---------- */
+body.kp-studio .bottom-nav .nav-item svg,
+body.kp-studio .topbar-actions svg{
+  stroke-width:1.7!important;
+  vector-effect:non-scaling-stroke;
+}
+body.kp-studio .bottom-nav .nav-item svg{opacity:.72}
+body.kp-studio .bottom-nav .nav-item.active svg{opacity:1}
+body.kp-studio .topbar-actions .icon-btn{color:var(--kp-muted)!important}
+body.kp-studio .topbar-actions .icon-btn:hover,
+body.kp-studio .topbar-actions .icon-btn:focus-visible{color:var(--kp-text)!important}
+body.kp-studio #bellBtn .dot{background:var(--kp-green)!important}
+
+/* Awards and decorative signals no longer sit in generic icon circles. */
+body.kp-studio .award-tile .award-icon,
+body.kp-studio .award-icon{
+  width:24px!important;
+  height:24px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--kp-muted)!important;
+}
+body.kp-studio .award-tile:first-child .award-icon{color:var(--kp-green)!important}
+body.kp-studio .trophy,
+body.kp-studio .kp3-winner-cup{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:var(--kp-gold)!important;
+}
+
+/* Keep the Group identity typographic rather than another circular icon chip. */
+body.kp-studio .kp3-group-head .group-emblem{
+  border:0!important;
+  border-left:3px solid var(--kp-green)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  justify-content:flex-start!important;
+  padding-left:10px!important;
+  color:var(--kp-text)!important;
+}
+
+@media(max-width:370px){
+  body.kp-studio[data-kp-screen="gw"] .kp3-page-hero:before{height:148px!important}
+  body.kp-studio[data-kp-screen="gw"] .kp3-page-hero:after{font-size:66px!important;top:27px!important}
+}
