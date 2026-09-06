@@ -1,4 +1,4 @@
-const CACHE='kickpot-v83-builder-proxy-fix';
+const CACHE='kickpot-v84-multitab-preference';
 const CORE=[
   '/',
   '/styles.css',
@@ -45,7 +45,7 @@ const CORE=[
   '/kickpot-iphone-hotfix.js?v=3',
   '/live-polish-v2.js?v=1',
   '/round-sync.js?v=1',
-  '/active-group-persistence.js?v=1',
+  '/active-group-persistence.js?v=2',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
