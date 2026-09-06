@@ -1,0 +1,17 @@
+/* Pass 3 avatar refinement — four additional muted tones.
+   Together with tones 0–5 in brand-pass3.css this gives current groups up to
+   ten visually distinct member colours before any repeat is necessary. */
+
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="6"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="6"]{background:#193d3a!important;color:#bde5df!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="7"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="7"]{background:#472b2d!important;color:#f0c1c4!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="8"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="8"]{background:#263348!important;color:#c4d3eb!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="9"],
+html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="9"]{background:#40372f!important;color:#e7d7c6!important}
+
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="6"]{background:#c8e1dc!important;color:#285b55!important}
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="7"]{background:#e7cacc!important;color:#743e42!important}
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="8"]{background:#d0daea!important;color:#405676!important}
+html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="9"]{background:#e2d5c8!important;color:#64503f!important}
