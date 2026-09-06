@@ -53,8 +53,7 @@
     document.head.appendChild(script);
   }
 
-  // Final Matchday layer follows the supplied iPhone reference. It intentionally
-  // loads after Pass 3 so only Matchday presentation changes; game/state logic is untouched.
+  // Matchday follows the supplied iPhone reference.
   if (!document.querySelector('link[data-kp-reference-matchday]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -67,6 +66,23 @@
     script.src = '/reference-matchday-v1.js?v=1&studio=20260906t';
     script.defer = true;
     script.dataset.kpReferenceMatchday = '1';
+    document.head.appendChild(script);
+  }
+
+  // Live now uses the same reference language as Matchday: quiet crown header,
+  // editorial type, flat standings and gold/neutral hierarchy.
+  if (!document.querySelector('link[data-kp-reference-live]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/reference-live-v1.css?v=1&studio=20260906w';
+    link.dataset.kpReferenceLive = '1';
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector('script[data-kp-reference-live]')) {
+    const script = document.createElement('script');
+    script.src = '/reference-live-v1.js?v=1&studio=20260906w';
+    script.defer = true;
+    script.dataset.kpReferenceLive = '1';
     document.head.appendChild(script);
   }
 
