@@ -1,4 +1,4 @@
-const CACHE='kickpot-v81-session-validation-trace';
+const CACHE='kickpot-v82-singleton-boot-path';
 const CORE=[
   '/',
   '/styles.css',
@@ -18,7 +18,7 @@ const CORE=[
   '/kickpot-final-layout.css?v=1',
   '/live-polish-v2.css?v=1',
   '/light-mode-fixes.css?v=2',
-  '/core-boot-guard.js?v=2',
+  '/core-boot-guard.js?v=3',
   '/supabase-singleton.js?v=4',
   '/smooth-runtime.js?v=1',
   '/render-stability.js?v=1',
