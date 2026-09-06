@@ -24,13 +24,26 @@ function stampPlayModePage(page) {
   if (id) page.dataset.kpGroupId = id;
 }
 
-function stampExistingPages() {
+function dedupePlayModeUi() {
+  const navs = [...document.querySelectorAll('.kp-playmode-nav')];
+  const pages = [...document.querySelectorAll('.kp-playmode-page')];
+
+  // settings-v2 can be asked to enhance the same Admin menu several times in
+  // quick succession. Each call checks for an existing row before awaiting its
+  // group query, so two calls can both pass that check and later append a row.
+  // Keep the newest complete pair and discard earlier duplicate pairs.
+  if (navs.length > 1) navs.slice(0, -1).forEach(node => node.remove());
+  if (pages.length > 1) pages.slice(0, -1).forEach(node => node.remove());
+}
+
+function syncPlayModeUi() {
   document.querySelectorAll('.kp-playmode-page').forEach(stampPlayModePage);
+  dedupePlayModeUi();
 }
 
 const root = document.querySelector('#screen') || document.body;
-new MutationObserver(stampExistingPages).observe(root, { childList: true, subtree: true });
-stampExistingPages();
+new MutationObserver(() => queueMicrotask(syncPlayModeUi)).observe(root, { childList: true, subtree: true });
+syncPlayModeUi();
 
 // A Play Mode page captures a group context when settings-v2 builds it. Never
 // allow that page to survive a group switch: it could otherwise present controls
