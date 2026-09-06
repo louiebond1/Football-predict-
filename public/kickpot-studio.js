@@ -38,9 +38,16 @@
     link.dataset.kpBrandPass3Hotfix = '1';
     document.head.appendChild(link);
   }
+  if (!document.querySelector('link[data-kp-brand-pass3-avatar-v2]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/brand-pass3-avatar-v2.css?v=1&studio=20260906s';
+    link.dataset.kpBrandPass3AvatarV2 = '1';
+    document.head.appendChild(link);
+  }
   if (!document.querySelector('script[data-kp-brand-pass3]')) {
     const script = document.createElement('script');
-    script.src = '/brand-pass3.js?v=1&studio=20260906q';
+    script.src = '/brand-pass3.js?v=2&studio=20260906s';
     script.defer = true;
     script.dataset.kpBrandPass3 = '1';
     document.head.appendChild(script);
