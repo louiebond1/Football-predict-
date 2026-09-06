@@ -2,7 +2,6 @@
   const GROUP_KEY = 'kp-active-group-v1';
   let client = null;
   let refreshPromise = null;
-  let initialGroupsQueryHandled = false;
 
   function readStoredGroup() {
     try {
@@ -16,14 +15,22 @@
     }
   }
 
-  function isJwtExpired(error) {
+  function isAuthTokenFailure(error) {
     if (!error) return false;
     const text = [error.message, error.details, error.hint, error.code]
       .filter(Boolean)
       .join(' ')
       .toLowerCase();
+
     return text.includes('jwt expired')
       || text.includes('jwt is expired')
+      || text.includes('invalid jwt')
+      || text.includes('jwt invalid')
+      || text.includes('invalid signature')
+      || text.includes('signature verification')
+      || text.includes('no suitable key')
+      || text.includes('wrong key type')
+      || text.includes('pgrst301')
       || (text.includes('expired') && text.includes('token'));
   }
 
@@ -39,16 +46,18 @@
   }
 
   function maybePrioritiseStoredGroup(result, meta) {
-    if (initialGroupsQueryHandled) return result;
     if (meta.table !== 'groups' || !meta.selectAll || !meta.orderCreatedAt || meta.filtered) return result;
-    initialGroupsQueryHandled = true;
-
     if (!Array.isArray(result?.data) || result.data.length < 2) return result;
+
     const stored = readStoredGroup();
     if (!stored) return result;
     const index = result.data.findIndex(group => group?.id === stored);
     if (index <= 0) return result;
 
+    // Several legacy/enhancement modules independently load the user's groups
+    // and fall back to groups[0] when #groupSwitch is not mounted yet. Always
+    // put the persisted active group first for this specific unfiltered ordered
+    // groups query so every init path resolves the same group during cold boot.
     const reordered = result.data.slice();
     const [selected] = reordered.splice(index, 1);
     reordered.unshift(selected);
@@ -58,13 +67,20 @@
   async function executeBuilder(target, meta) {
     let result = await target;
 
-    // Supabase can occasionally return a locally cached session whose JWT has
-    // already expired according to the server. Refresh once and replay the
-    // original PostgREST/RPC operation instead of leaving KickPot on a dead-end
-    // "Couldn't load your pot" state.
-    if (isJwtExpired(result?.error)) {
+    // Recover once from server-side JWT failures even when getSession() still
+    // considers the locally cached session usable. This covers expiry plus the
+    // equivalent malformed/signature/key errors PostgREST can return for a bad
+    // cached access token while the refresh token is still valid.
+    if (isAuthTokenFailure(result?.error)) {
       const refreshed = await refreshSessionOnce();
-      if (refreshed) result = await target;
+      if (refreshed) {
+        result = await target;
+        // If this particular builder captured the old Authorization header,
+        // a reload now starts all builders from the freshly persisted session.
+        if (isAuthTokenFailure(result?.error)) {
+          setTimeout(() => location.reload(), 0);
+        }
+      }
     }
 
     return maybePrioritiseStoredGroup(result, meta);
@@ -129,7 +145,7 @@
 
   // Install before app.js runs. supabase-singleton.js assigns the shared client
   // to window.__kickpotSupabase; the setter lets us patch it synchronously at
-  // creation time, before app.js performs its first group-scoped data load.
+  // creation time, before any legacy/core init path performs group-scoped work.
   let current = window.__kickpotSupabase || null;
   const descriptor = Object.getOwnPropertyDescriptor(window, '__kickpotSupabase');
   if (!descriptor || descriptor.configurable) {
