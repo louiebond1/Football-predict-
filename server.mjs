@@ -116,8 +116,32 @@ async function inspectSchema() {
   return { tables, views, rpcs };
 }
 
+async function getDatabaseActiveMatchday() {
+  if (COMPETITION !== 'PL' || !SUPABASE_SECRET_KEY) return null;
+  try {
+    const [gameweeks, fixtures] = await Promise.all([
+      supabaseAdmin('gameweeks?league_id=eq.39&select=id,round_name,starts_at&order=starts_at.asc'),
+      supabaseAdmin('fixtures?select=gameweek_id,status')
+    ]);
+    if (!Array.isArray(gameweeks) || !Array.isArray(fixtures)) return null;
+    const unfinished = new Set(
+      fixtures
+        .filter(f => !['FT','AET','PEN'].includes(String(f.status || '').toUpperCase()))
+        .map(f => Number(f.gameweek_id))
+    );
+    const active = gameweeks.find(g => unfinished.has(Number(g.id)) && /^Matchday\s+\d+$/i.test(String(g.round_name || '')));
+    const match = String(active?.round_name || '').match(/Matchday\s+(\d+)/i);
+    return match ? Number(match[1]) : null;
+  } catch (err) {
+    console.error('active matchday lookup failed:', err.message);
+    return null;
+  }
+}
+
 async function getCurrentMatchday() {
-  return cached(`matchday:${COMPETITION}`, 6*60*60*1000, async () => {
+  return cached(`matchday:${COMPETITION}`, 30*1000, async () => {
+    const databaseMatchday = await getDatabaseActiveMatchday();
+    if (databaseMatchday) return databaseMatchday;
     const d = await footballData(`competitions/${COMPETITION}`);
     return d.currentSeason?.currentMatchday || null;
   });
