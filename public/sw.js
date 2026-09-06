@@ -1,4 +1,4 @@
-const CACHE='kickpot-v93-live-fixtures-reference';
+const CACHE='kickpot-v101-working-rollback-clean';
 const CORE=[
   '/',
   '/styles.css',
