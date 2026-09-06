@@ -1,4 +1,4 @@
-const CACHE='kickpot-v88-personality-pass3';
+const CACHE='kickpot-v89-pass3-hero-hotfix';
 const CORE=[
   '/',
   '/styles.css',
@@ -22,6 +22,7 @@ const CORE=[
   '/brand-pass2.css?v=1',
   '/brand-pass2-finish.css?v=1',
   '/brand-pass3.css?v=1',
+  '/brand-pass3-hotfix.css?v=1',
   '/core-boot-guard.js?v=3',
   '/supabase-singleton.js?v=5',
   '/smooth-runtime.js?v=1',
