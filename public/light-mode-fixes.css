@@ -1,3 +1,5 @@
+@import url('/brand-pass1.css?v=1&studio=20260906n');
+
 /* Light-mode parity fixes for shared group switch + Treasurer admin surfaces. */
 html[data-kp-theme="light"] body.kp-studio .select-wrap{
   background:transparent!important;
