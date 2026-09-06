@@ -1,4 +1,4 @@
-const CACHE='kickpot-v87-pass2-finish';
+const CACHE='kickpot-v88-personality-pass3';
 const CORE=[
   '/',
   '/styles.css',
@@ -21,6 +21,7 @@ const CORE=[
   '/brand-pass1.css?v=1',
   '/brand-pass2.css?v=1',
   '/brand-pass2-finish.css?v=1',
+  '/brand-pass3.css?v=1',
   '/core-boot-guard.js?v=3',
   '/supabase-singleton.js?v=5',
   '/smooth-runtime.js?v=1',
@@ -49,6 +50,7 @@ const CORE=[
   '/live-polish-v2.js?v=1',
   '/round-sync.js?v=1',
   '/active-group-persistence.js?v=2',
+  '/brand-pass3.js?v=1',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
