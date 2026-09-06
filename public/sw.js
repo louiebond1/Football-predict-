@@ -1,4 +1,4 @@
-const CACHE='kickpot-v89-pass3-hero-hotfix';
+const CACHE='kickpot-v90-avatar-collision-refinement';
 const CORE=[
   '/',
   '/styles.css',
@@ -23,6 +23,7 @@ const CORE=[
   '/brand-pass2-finish.css?v=1',
   '/brand-pass3.css?v=1',
   '/brand-pass3-hotfix.css?v=1',
+  '/brand-pass3-avatar-v2.css?v=1',
   '/core-boot-guard.js?v=3',
   '/supabase-singleton.js?v=5',
   '/smooth-runtime.js?v=1',
@@ -51,7 +52,7 @@ const CORE=[
   '/live-polish-v2.js?v=1',
   '/round-sync.js?v=1',
   '/active-group-persistence.js?v=2',
-  '/brand-pass3.js?v=1',
+  '/brand-pass3.js?v=2',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
