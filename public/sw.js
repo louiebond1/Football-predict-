@@ -1,4 +1,4 @@
-const CACHE='kickpot-v74-active-group-persistence';
+const CACHE='kickpot-v75-play-mode-write-guard';
 const CORE=[
   '/',
   '/styles.css',
@@ -35,6 +35,7 @@ const CORE=[
   '/gameweek-rollover.js?v=2',
   '/admin-v1.js?v=1',
   '/settings-v2.js?v=1',
+  '/play-mode-safe-write.js?v=1',
   '/account-password.js?v=3',
   '/launch-fixes-20260901.js?v=3',
   '/kickpot-studio.js',
@@ -42,7 +43,6 @@ const CORE=[
   '/kickpot-iphone-hotfix.js?v=3',
   '/live-polish-v2.js?v=1',
   '/round-sync.js?v=1',
-  '/play-mode-refresh.js?v=1',
   '/active-group-persistence.js?v=1',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
