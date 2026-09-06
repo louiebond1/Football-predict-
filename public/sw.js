@@ -1,4 +1,4 @@
-const CACHE='kickpot-v85-brand-foundation';
+const CACHE='kickpot-v86-premium-surface-hierarchy';
 const CORE=[
   '/',
   '/styles.css',
@@ -19,6 +19,7 @@ const CORE=[
   '/live-polish-v2.css?v=1',
   '/light-mode-fixes.css?v=2',
   '/brand-pass1.css?v=1',
+  '/brand-pass2.css?v=1',
   '/core-boot-guard.js?v=3',
   '/supabase-singleton.js?v=5',
   '/smooth-runtime.js?v=1',
