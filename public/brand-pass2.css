@@ -1,0 +1,300 @@
+/* KickPot visual foundation — Pass 2
+   Surface hierarchy + flow. No data, interaction, icon or hero-asset changes. */
+
+/* Make dark mode visibly bottle-green rather than generic charcoal. */
+html:not([data-kp-theme="light"]),
+html[data-kp-theme="dark"]{
+  --kp-bg:#06130d;
+  --kp-surface:#0b1a12;
+  --kp-surface-2:#11241a;
+  --kp-line:#294333;
+  --kp-nav:rgba(6,19,13,.965);
+  --kp-row:#09170f;
+  --kp-row-hi:#10251a;
+}
+html[data-kp-theme="light"]{
+  --kp-bg:#f4f0e6;
+  --kp-surface:#eae4d8;
+  --kp-surface-2:#e1dacd;
+  --kp-line:#cec6b8;
+  --kp-row:#efeae0;
+  --kp-row-hi:#e5eee5;
+}
+body.kp-studio,
+body.kp-studio .app-shell{
+  background:var(--kp-bg)!important;
+}
+
+/* Header stats become one typographic strip, not three mini components. */
+body.kp-studio .hero-meta{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:flex-start!important;
+  gap:0!important;
+  margin:18px 0 28px!important;
+  padding:11px 0 12px!important;
+  border-top:1px solid var(--kp-line)!important;
+  border-bottom:1px solid var(--kp-line)!important;
+  flex-wrap:wrap!important;
+}
+body.kp-studio .hero-meta .pill{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:baseline!important;
+  gap:4px!important;
+  padding:0 15px 0 0!important;
+  margin:0 15px 0 0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--kp-muted)!important;
+  font-size:11px!important;
+  line-height:1.2!important;
+  white-space:nowrap!important;
+}
+body.kp-studio .hero-meta .pill:not(:last-child):after{
+  content:"";
+  position:absolute;
+  right:0;
+  top:1px;
+  width:1px;
+  height:14px;
+  background:var(--kp-line);
+}
+body.kp-studio .hero-meta .pill svg{display:none!important}
+body.kp-studio .hero-meta .pill strong{
+  font-family:var(--kp-font-display)!important;
+  font-size:17px!important;
+  line-height:1!important;
+  font-weight:800!important;
+  letter-spacing:-.01em!important;
+  color:var(--kp-text)!important;
+}
+body.kp-studio[data-kp-screen="gw"] .hero-meta .pill:nth-child(1) strong,
+body.kp-studio[data-kp-screen="live"] .hero-meta .pill:nth-child(1) strong{
+  color:var(--kp-gold)!important;
+}
+body.kp-studio[data-kp-screen="gw"] .hero-meta .pill:nth-child(2) strong,
+body.kp-studio[data-kp-screen="gw"] .hero-meta .pill.lock strong,
+body.kp-studio[data-kp-screen="live"] .hero-meta .pill:nth-child(2) strong{
+  color:var(--kp-green)!important;
+}
+
+/* Group selection is navigation context, not a navy/purple input card. */
+body.kp-studio .select-wrap,
+body.kp-studio .kp3-group-switch-top{
+  position:relative!important;
+  margin:0 0 22px!important;
+  padding:0!important;
+  border:0!important;
+  border-bottom:1px solid var(--kp-line)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.kp-studio .select-wrap select,
+body.kp-studio select#groupSwitch{
+  width:100%!important;
+  min-height:42px!important;
+  padding:0 28px 10px 0!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  color:var(--kp-text)!important;
+  font-size:13px!important;
+  font-weight:650!important;
+  appearance:none!important;
+  -webkit-appearance:none!important;
+}
+body.kp-studio .select-wrap:after{
+  content:"↘";
+  position:absolute;
+  right:1px;
+  bottom:11px;
+  color:var(--kp-muted);
+  font-size:12px;
+  pointer-events:none;
+}
+body.kp-studio .select-wrap>svg{display:none!important}
+
+/* Generic cards disappear into page flow. Real hierarchy comes from content type. */
+body.kp-studio .card,
+body.kp-studio .kp3-fixtures-card,
+body.kp-studio .kp3-live-card,
+body.kp-studio .kp3-season-stats,
+body.kp-studio .kp3-recent,
+body.kp-studio .kp3-history-links{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.kp-studio .card:after,
+body.kp-studio .fixture:before{display:none!important}
+
+/* Section heads read editorially instead of as card headers. */
+body.kp-studio .kp3-fixtures-card .card-head,
+body.kp-studio .kp3-live-card>.card-title,
+body.kp-studio .kp3-table-card,
+body.kp-studio[data-kp-screen="live"] .card:has(.table){
+  border-color:var(--kp-line)!important;
+}
+body.kp-studio .kp3-fixtures-card .card-head{
+  padding:0 0 12px!important;
+  margin-bottom:0!important;
+}
+
+/* Fixtures are editorial rows, never repeated rounded tiles. */
+body.kp-studio .fixture,
+body.kp-studio .kp3-pick-fixture,
+body.kp-studio .kp3-live-fixture{
+  margin:0!important;
+  padding:18px 0!important;
+  border:0!important;
+  border-bottom:1px solid var(--kp-line)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.kp-studio .kp3-day{
+  margin-top:25px!important;
+  padding-bottom:8px!important;
+  border-bottom:0!important;
+  color:var(--kp-muted)!important;
+}
+
+/* Score editing keeps 44px tap targets without the component-library segmented box. */
+body.kp-studio .kp3-score-stepper{
+  display:grid!important;
+  grid-template-columns:38px 38px 38px!important;
+  height:42px!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:visible!important;
+  background:transparent!important;
+}
+body.kp-studio .kp3-score-stepper .kp3-step{
+  width:38px!important;
+  height:42px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--kp-muted)!important;
+  font-size:21px!important;
+}
+body.kp-studio .kp3-score-stepper input{
+  width:38px!important;
+  height:42px!important;
+  padding:0!important;
+  border:0!important;
+  border-bottom:2px solid var(--kp-text)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--kp-text)!important;
+}
+body.kp-studio .kp3-vs{
+  padding:0 2px!important;
+  color:var(--kp-muted)!important;
+}
+
+/* Informational states are copy with a signal rule, not another rounded box. */
+body.kp-studio .status:not(.toast){
+  padding:10px 0 10px 12px!important;
+  border:0!important;
+  border-left:2px solid var(--kp-line)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.kp-studio .status.success:not(.toast){border-left-color:var(--kp-green)!important}
+body.kp-studio .status.warning:not(.toast){border-left-color:var(--kp-amber)!important}
+body.kp-studio .status.error:not(.toast){border-left-color:var(--kp-red)!important}
+
+/* Live table gets one deliberate hierarchy moment: leader wash, everything else flat. */
+body.kp-studio .table tbody tr{
+  background:transparent!important;
+}
+body.kp-studio .table tbody tr:first-child{
+  background:color-mix(in srgb,var(--kp-green) 8%,transparent)!important;
+  box-shadow:inset 3px 0 0 var(--kp-green)!important;
+}
+body.kp-studio .table tbody tr:first-child .pts:before{
+  color:var(--kp-green)!important;
+}
+
+/* Group pot is intentionally the one major filled surface on the overview. */
+body.kp-studio .kp3-pot-hero{
+  margin:12px -18px 16px!important;
+  padding:23px 18px 21px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:color-mix(in srgb,var(--kp-green) 9%,var(--kp-surface))!important;
+  box-shadow:none!important;
+}
+body.kp-studio .kp3-pot-hero small{
+  color:var(--kp-muted)!important;
+}
+body.kp-studio .kp3-pot-hero strong{
+  color:var(--kp-gold)!important;
+}
+body.kp-studio .kp3-pot-hero span{
+  color:var(--kp-green)!important;
+}
+
+/* History statistics flow as one ruled strip rather than three mini cards. */
+body.kp-studio .statgrid{
+  gap:0!important;
+  border-top:1px solid var(--kp-line)!important;
+  border-bottom:1px solid var(--kp-line)!important;
+}
+body.kp-studio .stat{
+  padding:17px 8px 17px 0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+
+/* Nav/menu rows are simply rows. Avoid any icon-circle/card treatment that leaks through older CSS. */
+body.kp-studio .kp3-nav-row,
+body.kp-studio .kp3-setting-row,
+body.kp-studio .kp3-member-row{
+  border:0!important;
+  border-bottom:1px solid var(--kp-line)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.kp-studio .kp3-nav-icon{display:none!important}
+
+/* Keep true forms/admin utilities bounded: hierarchy, not blanket de-boxing. */
+body.kp-studio .bankbox,
+body.kp-studio .kp3-payment-details,
+body.kp-studio .kp3-admin-card,
+body.kp-studio .kp3-rules-card,
+body.kp-studio .kp-admin-section,
+body.kp-studio .kp-admin-summary{
+  border-color:var(--kp-line)!important;
+  box-shadow:none!important;
+}
+
+/* Hard override for old purple light-mode reward rules loaded after imports. */
+html[data-kp-theme="light"] body.kp-studio.kp-studio .kp-stakes-card{
+  background:color-mix(in srgb,var(--kp-gold) 5%,var(--kp-surface))!important;
+  border-color:color-mix(in srgb,var(--kp-gold) 24%,var(--kp-line))!important;
+}
+html[data-kp-theme="light"] body.kp-studio.kp-studio .kp-stakes-card>small{
+  color:var(--kp-gold)!important;
+}
+
+@media(max-width:370px){
+  body.kp-studio .kp3-pot-hero{margin-left:-14px!important;margin-right:-14px!important;padding-left:14px!important;padding-right:14px!important}
+  body.kp-studio .hero-meta .pill{padding-right:10px!important;margin-right:10px!important}
+}
