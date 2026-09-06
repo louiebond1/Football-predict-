@@ -2,26 +2,38 @@
   const KEY = 'kp-active-group-v1';
   let applyingSavedSelection = false;
 
-  function readStoredGroup() {
-    try {
-      const sessionValue = sessionStorage.getItem(KEY);
-      if (sessionValue) return sessionValue;
-    } catch {}
-    try {
-      return localStorage.getItem(KEY) || '';
-    } catch {
-      return '';
-    }
+  function readSessionGroup() {
+    try { return sessionStorage.getItem(KEY) || ''; } catch { return ''; }
   }
 
-  function storeGroup(groupId) {
+  function readDurableGroup() {
+    try { return localStorage.getItem(KEY) || ''; } catch { return ''; }
+  }
+
+  function readStoredGroup() {
+    return readSessionGroup() || readDurableGroup();
+  }
+
+  function storeSession(groupId) {
     if (!groupId) return;
     try { sessionStorage.setItem(KEY, groupId); } catch {}
+  }
+
+  function storeExplicitChoice(groupId) {
+    if (!groupId) return;
+    // sessionStorage is tab-local; localStorage is the durable preference for
+    // future tabs/PWA relaunches. Only an explicit user switch should update
+    // the durable value, otherwise two open tabs can overwrite each other's
+    // preference on every MutationObserver/live-refresh pass.
+    storeSession(groupId);
     try { localStorage.setItem(KEY, groupId); } catch {}
   }
 
-  function clearStoredGroup() {
+  function clearSessionGroup() {
     try { sessionStorage.removeItem(KEY); } catch {}
+  }
+
+  function clearDurableGroup() {
     try { localStorage.removeItem(KEY); } catch {}
   }
 
@@ -29,22 +41,28 @@
     const select = document.querySelector('#groupSwitch');
     if (!select) return;
 
-    const stored = readStoredGroup();
+    const sessionValue = readSessionGroup();
+    const durableValue = readDurableGroup();
+    const stored = sessionValue || durableValue;
+
     if (!stored) {
-      storeGroup(select.value);
+      // First ever/default selection: establish both tab-local and durable state.
+      storeExplicitChoice(select.value);
       return;
     }
 
     const isStillAvailable = [...select.options].some(option => option.value === stored);
     if (!isStillAvailable) {
-      clearStoredGroup();
-      storeGroup(select.value);
+      if (sessionValue) clearSessionGroup();
+      if (!sessionValue && durableValue) clearDurableGroup();
+      storeExplicitChoice(select.value);
       return;
     }
 
-    // Keep both storage scopes in sync so a normal reload and a later PWA
-    // relaunch both return to the same group.
-    storeGroup(stored);
+    // A new tab inherits the durable choice into its own sessionStorage. An
+    // existing tab keeps its own session choice without rewriting localStorage,
+    // so independent tabs cannot fight over the durable preference during polls.
+    if (!sessionValue) storeSession(stored);
     if (select.value === stored || applyingSavedSelection) return;
 
     // app.js owns the actual group state. Driving its existing change handler
@@ -55,11 +73,11 @@
     queueMicrotask(() => { applyingSavedSelection = false; });
   }
 
-  // Capture the choice before app.js begins its async group reload.
+  // Capture an explicit user choice before app.js begins its async group reload.
   document.addEventListener('change', event => {
     const target = event.target;
     if (target?.id !== 'groupSwitch' || applyingSavedSelection) return;
-    storeGroup(target.value);
+    storeExplicitChoice(target.value);
   }, true);
 
   const root = document.querySelector('#screen') || document.body;
