@@ -46,7 +46,7 @@
   }
 
   function maybePrioritiseStoredGroup(result, meta) {
-    if (meta.table !== 'groups' || !meta.selectAll || !meta.orderCreatedAt || meta.filtered) return result;
+    if (meta.table !== 'groups' || !meta.selected || !meta.orderCreatedAt || meta.filtered) return result;
     if (!Array.isArray(result?.data) || result.data.length < 2) return result;
 
     const stored = readStoredGroup();
@@ -56,8 +56,9 @@
 
     // Several legacy/enhancement modules independently load the user's groups
     // and fall back to groups[0] when #groupSwitch is not mounted yet. Always
-    // put the persisted active group first for this specific unfiltered ordered
-    // groups query so every init path resolves the same group during cold boot.
+    // put the persisted active group first for any unfiltered groups query that
+    // is explicitly ordered by created_at so every init path resolves the same
+    // group during cold boot, regardless of which columns it selected.
     const reordered = result.data.slice();
     const [selected] = reordered.splice(index, 1);
     reordered.unshift(selected);
@@ -101,7 +102,7 @@
         return (...args) => {
           const nextMeta = { ...meta };
           if (meta.table === 'groups') {
-            if (prop === 'select' && args[0] === '*') nextMeta.selectAll = true;
+            if (prop === 'select') nextMeta.selected = true;
             if (prop === 'order' && args[0] === 'created_at') nextMeta.orderCreatedAt = true;
             if (['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'like', 'ilike', 'is', 'in', 'contains', 'containedBy', 'range', 'match', 'not', 'or', 'filter'].includes(prop)) {
               nextMeta.filtered = true;
@@ -127,7 +128,7 @@
     const originalFrom = nextClient.from.bind(nextClient);
     nextClient.from = table => wrapBuilder(originalFrom(table), {
       table,
-      selectAll: false,
+      selected: false,
       orderCreatedAt: false,
       filtered: false
     });
@@ -135,7 +136,7 @@
     const originalRpc = nextClient.rpc.bind(nextClient);
     nextClient.rpc = (...args) => wrapBuilder(originalRpc(...args), {
       table: `rpc:${args[0]}`,
-      selectAll: false,
+      selected: false,
       orderCreatedAt: false,
       filtered: false
     });
