@@ -1,4 +1,4 @@
-const CACHE='kickpot-v84-multitab-preference';
+const CACHE='kickpot-v85-brand-foundation';
 const CORE=[
   '/',
   '/styles.css',
@@ -18,6 +18,7 @@ const CORE=[
   '/kickpot-final-layout.css?v=1',
   '/live-polish-v2.css?v=1',
   '/light-mode-fixes.css?v=2',
+  '/brand-pass1.css?v=1',
   '/core-boot-guard.js?v=3',
   '/supabase-singleton.js?v=5',
   '/smooth-runtime.js?v=1',
