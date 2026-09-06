@@ -1,0 +1,168 @@
+/* KickPot visual foundation — Pass 1
+   Palette + typography + semantic colour only. Layout/surface geometry intentionally untouched. */
+
+:root{
+  --kp-font-body:"Avenir Next","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --kp-font-display:"Avenir Next Condensed","Arial Narrow","Roboto Condensed","HelveticaNeue-CondensedBold","Franklin Gothic Condensed","Aptos Narrow",sans-serif;
+  --kp-gold:#e1b24a;
+}
+
+/* Dark is a bottle-green night palette, not a neutral charcoal inversion. */
+html:not([data-kp-theme="light"]),
+html[data-kp-theme="dark"]{
+  --kp-bg:#07100c;
+  --kp-surface:#0d1711;
+  --kp-surface-2:#132018;
+  --kp-text:#f3f1e8;
+  --kp-muted:#8d9991;
+  --kp-line:#26372c;
+  --kp-accent:#43b873;
+  --kp-accent-2:#68cb8d;
+  --kp-green:#43b873;
+  --kp-amber:#e1b24a;
+  --kp-gold:#e1b24a;
+  --kp-red:#ed7370;
+  --kp-nav:rgba(7,16,12,.96);
+  --kp-row:#0a140f;
+  --kp-row-hi:#102017;
+}
+
+/* Light stays warm and editorial, with football green rather than violet/blue. */
+html[data-kp-theme="light"]{
+  --kp-bg:#f4f1e8;
+  --kp-surface:#ebe6db;
+  --kp-surface-2:#e2ddd1;
+  --kp-text:#142019;
+  --kp-muted:#68736c;
+  --kp-line:#d1cbbf;
+  --kp-accent:#137a49;
+  --kp-accent-2:#0f6b40;
+  --kp-green:#137a49;
+  --kp-amber:#9a6811;
+  --kp-gold:#9a6811;
+  --kp-red:#b94c49;
+  --kp-nav:rgba(244,241,232,.97);
+  --kp-row:#f0ece3;
+  --kp-row-hi:#e5ede4;
+}
+
+body.kp-studio{
+  font-family:var(--kp-font-body)!important;
+  background:var(--kp-bg)!important;
+  color:var(--kp-text)!important;
+  font-feature-settings:"kern" 1,"liga" 1;
+}
+
+body.kp-studio button,
+body.kp-studio input,
+body.kp-studio select,
+body.kp-studio textarea{
+  font-family:var(--kp-font-body)!important;
+}
+
+/* Display language: one condensed sports/broadcast face for the moments that carry score and hierarchy. */
+body.kp-studio .hero h1,
+body.kp-studio .kp3-history-mast h1,
+body.kp-studio .kp3-drill-header h1,
+body.kp-studio .kp3-group-head h1,
+body.kp-studio .card-title,
+body.kp-studio .kp3-section-head strong,
+body.kp-studio .winner h1,
+body.kp-studio .kp3-winner h1,
+body.kp-studio .kp3-pot-hero strong,
+body.kp-studio .scorepick>.scorebox,
+body.kp-studio .kp3-score-stepper input,
+body.kp-studio .kp3-broadcast-score,
+body.kp-studio .table .pts,
+body.kp-studio .stat b{
+  font-family:var(--kp-font-display)!important;
+  font-stretch:condensed;
+  font-variant-numeric:tabular-nums;
+}
+
+body.kp-studio .hero h1,
+body.kp-studio .kp3-history-mast h1,
+body.kp-studio .kp3-drill-header h1,
+body.kp-studio .kp3-group-head h1{
+  letter-spacing:-.025em!important;
+  font-weight:800!important;
+}
+
+body.kp-studio .card-title,
+body.kp-studio .kp3-section-head strong{
+  letter-spacing:-.015em!important;
+  font-weight:750!important;
+}
+
+body.kp-studio .scorepick>.scorebox,
+body.kp-studio .kp3-score-stepper input,
+body.kp-studio .kp3-broadcast-score,
+body.kp-studio .table .pts,
+body.kp-studio .stat b,
+body.kp-studio .kp3-pot-hero strong{
+  letter-spacing:-.02em!important;
+  font-weight:800!important;
+}
+
+/* Wordmark gets a dedicated typographic voice without pretending to be a finished custom logo yet. */
+body.kp-studio .brand span{
+  font-family:var(--kp-font-display)!important;
+  font-size:15px!important;
+  font-weight:800!important;
+  letter-spacing:.075em!important;
+  text-transform:uppercase!important;
+}
+
+/* Flatten the scaffold-y medium-bold-everywhere feeling. */
+body.kp-studio .team{font-weight:650!important}
+body.kp-studio .kp3-nav-copy strong{font-weight:650!important}
+body.kp-studio .nav-item small{font-weight:600!important}
+body.kp-studio .kp3-count,
+body.kp-studio .hero-sub,
+body.kp-studio .kp3-history-mast p,
+body.kp-studio .kp3-drill-header p{font-weight:450!important}
+
+/* Semantic colour: green = football/action/live/success; gold = money/reward; red = negative. */
+body.kp-studio .nav-item.active{color:var(--kp-accent)!important}
+body.kp-studio .nav-item.active:before{background:var(--kp-accent)!important}
+body.kp-studio .accent,
+body.kp-studio .rules .accent,
+body.kp-studio .table tbody tr:first-child .pts:before{color:var(--kp-accent)!important}
+body.kp-studio .table tbody tr:first-child{box-shadow:inset 3px 0 0 var(--kp-accent)!important}
+body.kp-studio .kp3-live-impact,
+body.kp-studio .kp3-need,
+body.kp-studio .swing{border-left-color:var(--kp-accent)!important}
+body.kp-studio .live-dot{background:var(--kp-accent)!important;box-shadow:0 0 0 5px color-mix(in srgb,var(--kp-accent) 12%,transparent),0 0 18px color-mix(in srgb,var(--kp-accent) 52%,transparent)!important}
+body.kp-studio .paid,
+body.kp-studio .kp3-member-status.is-paid,
+body.kp-studio .rank-move.up{color:var(--kp-green)!important}
+body.kp-studio .unpaid,
+body.kp-studio .rank-move.down{color:var(--kp-red)!important}
+body.kp-studio .warning,
+body.kp-studio .kp3-member-status.is-pending{color:var(--kp-amber)!important}
+
+body.kp-studio .kp3-pot-hero strong,
+body.kp-studio .pot-amount,
+body.kp-studio .winner .money,
+body.kp-studio .kp3-winner>strong{
+  color:var(--kp-gold)!important;
+}
+
+/* Results use the football green family; no residual indigo token. */
+body.kp-studio .badge.result{
+  background:color-mix(in srgb,var(--kp-accent) 12%,transparent)!important;
+  color:var(--kp-accent)!important;
+}
+body.kp-studio .badge.exact{
+  background:color-mix(in srgb,var(--kp-green) 14%,transparent)!important;
+  color:var(--kp-green)!important;
+}
+
+/* Light-mode reward label previously carried a hard-coded violet accessibility fix. Move it to the money semantic. */
+html[data-kp-theme="light"] body.kp-studio .kp-stakes-card>small{
+  color:var(--kp-gold)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-stakes-card{
+  background:color-mix(in srgb,var(--kp-gold) 5%,var(--kp-surface))!important;
+  border-color:color-mix(in srgb,var(--kp-gold) 26%,var(--kp-line))!important;
+}
