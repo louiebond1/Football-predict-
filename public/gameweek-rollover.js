@@ -7,14 +7,10 @@ let cache = null;
 let cacheAt = 0;
 let busy = false;
 const drafts = new Map();
+const FINAL_CODES = new Set(['FT','AET','PEN']);
 
 function esc(v='') { return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 function parseRound(label='') { return Number(String(label).match(/(\d+)/)?.[1] || 0); }
-function londonDateKey(value) {
-  const parts = new Intl.DateTimeFormat('en-GB', { timeZone:'Europe/London', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date(value));
-  const get = type => parts.find(p => p.type === type)?.value || '';
-  return `${get('year')}-${get('month')}-${get('day')}`;
-}
 function kickoffLabel(value) {
   return new Intl.DateTimeFormat('en-GB', { timeZone:'Europe/London', weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }).format(new Date(value));
 }
@@ -44,18 +40,23 @@ function groupIdFromPage(groups) {
 
 async function loadBridge(force=false) {
   if (!force && cache && Date.now()-cacheAt < 20000) return cache;
-  const current = await fetch('/api/football/fixtures', { cache:'no-store' }).then(r=>r.json()).catch(()=>null);
+  const current = await fetch(`/api/football/fixtures?_=${Date.now()}`, { cache:'no-store' }).then(r=>r.json()).catch(()=>null);
   const currentRound = parseRound(current?.round);
   const currentFixtures = current?.fixtures || [];
   if (!currentRound || !currentFixtures.length) return null;
 
-  const lastKickoff = currentFixtures.reduce((max,f)=> Math.max(max, new Date(f.kickoff).getTime() || 0), 0);
-  if (!lastKickoff || londonDateKey(Date.now()) < londonDateKey(lastKickoff)) {
-    cache = { active:false }; cacheAt = Date.now(); return cache;
+  // Never expose the next Matchday while the current Matchday still has
+  // an unfinished fixture. The old behaviour opened at midnight on the
+  // final calendar day, which is why GW4 appeared while GW3 still had games.
+  const currentFinished = currentFixtures.every(f => FINAL_CODES.has(String(f?.status?.short || '').toUpperCase()));
+  if (!currentFinished) {
+    cache = { active:false, currentRound };
+    cacheAt = Date.now();
+    return cache;
   }
 
   const targetRound = currentRound + 1;
-  const next = await fetch(`/api/football/fixtures?round=${targetRound}`, { cache:'no-store' }).then(r=>r.json()).catch(()=>null);
+  const next = await fetch(`/api/football/fixtures?round=${targetRound}&_=${Date.now()}`, { cache:'no-store' }).then(r=>r.json()).catch(()=>null);
   if (!(next?.fixtures || []).length) return null;
 
   const c = await client();
@@ -139,7 +140,7 @@ function renderBridge(ctx) {
   screen.className = 'screen kp3-screen kp3-gw kp-rollover-screen';
   screen.dataset.kpRollover = ctx.round;
   screen.innerHTML = `<div class="kp3-gw-root kp-rollover-root">
-    <section class="hero kp3-page-hero"><div class="eyebrow">NEXT GAMEWEEK OPEN</div><h1>${esc(ctx.round)}</h1><div class="hero-meta"><span class="pill">Opens from final-day midnight</span>${first ? `<span class="pill lock">Locks in <strong>${countdown(new Date(first.kickoff)-Date.now())}</strong></span>` : ''}</div></section>
+    <section class="hero kp3-page-hero"><div class="eyebrow">NEXT MATCHDAY OPEN</div><h1>${esc(ctx.round)}</h1><div class="hero-meta">${first ? `<span class="pill lock">Locks in <strong>${countdown(new Date(first.kickoff)-Date.now())}</strong></span>` : ''}</div></section>
     ${paymentPanel(ctx)}
     <section class="card kp3-fixtures-card"><div class="card-head"><div class="card-title">Your Picks</div><span class="muted">${ctx.fixtures.length} fixtures</span></div>
       ${ctx.fixtures.map(f=>fixtureRow(ctx,f)).join('')}
