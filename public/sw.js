@@ -1,4 +1,4 @@
-const CACHE='kickpot-v78-light-reward-card';
+const CACHE='kickpot-v79-core-boot-recovery';
 const CORE=[
   '/',
   '/styles.css',
@@ -18,6 +18,7 @@ const CORE=[
   '/kickpot-final-layout.css?v=1',
   '/live-polish-v2.css?v=1',
   '/light-mode-fixes.css?v=2',
+  '/core-boot-guard.js?v=1',
   '/supabase-singleton.js?v=3',
   '/smooth-runtime.js?v=1',
   '/render-stability.js?v=1',
