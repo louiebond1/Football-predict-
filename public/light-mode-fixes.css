@@ -1,0 +1,83 @@
+/* Light-mode parity fixes for shared group switch + Treasurer admin surfaces. */
+html[data-kp-theme="light"] body.kp-studio .select-wrap{
+  background:transparent!important;
+  color:var(--kp-text)!important;
+  box-shadow:none!important;
+}
+html[data-kp-theme="light"] body.kp-studio .select-wrap select,
+html[data-kp-theme="light"] body.kp-studio select#groupSwitch{
+  background:transparent!important;
+  color:var(--kp-text)!important;
+  border-color:var(--kp-line)!important;
+}
+
+html[data-kp-theme="light"] body.kp-studio .kp-admin-section,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-summary{
+  background:var(--kp-surface)!important;
+  border-color:var(--kp-line)!important;
+  color:var(--kp-text)!important;
+  box-shadow:none!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-admin-summary>div,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-section-head,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-member-action,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-audit-row{
+  border-color:var(--kp-line)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-admin-summary strong,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-section-head strong,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-code strong,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-member-action,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-member-action b,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-audit-row b,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-audit-row>strong,
+html[data-kp-theme="light"] body.kp-studio .kp-mode-toggle-copy strong,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-section .bankline span:last-child,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-section .bankline strong{
+  color:var(--kp-text)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-admin-summary small,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-section-head small,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-code small,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-member-action small,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-audit-row small,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-empty,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-form label,
+html[data-kp-theme="light"] body.kp-studio .kp-mode-form label,
+html[data-kp-theme="light"] body.kp-studio .kp-mode-toggle-copy small,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-section .bankline span:first-child{
+  color:var(--kp-muted)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-admin-form input,
+html[data-kp-theme="light"] body.kp-studio .kp-admin-form select,
+html[data-kp-theme="light"] body.kp-studio .kp-mode-form input,
+html[data-kp-theme="light"] body.kp-studio .kp-mode-form textarea{
+  background:var(--kp-bg)!important;
+  color:var(--kp-text)!important;
+  border-color:var(--kp-line)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-admin-code button{
+  background:color-mix(in srgb,var(--kp-accent) 9%,transparent)!important;
+  border-color:color-mix(in srgb,var(--kp-accent) 30%,var(--kp-line))!important;
+  color:var(--kp-accent)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-switch span{
+  background:var(--kp-surface-2)!important;
+  border-color:var(--kp-line)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-switch input:checked+span{
+  background:var(--kp-accent)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-admin-modal-card{
+  background:var(--kp-surface)!important;
+  border-color:var(--kp-line)!important;
+  color:var(--kp-text)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-admin-modal-card>p{
+  color:var(--kp-muted)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-admin-modal-cancel{
+  background:var(--kp-bg)!important;
+  border-color:var(--kp-line)!important;
+  color:var(--kp-text)!important;
+}
