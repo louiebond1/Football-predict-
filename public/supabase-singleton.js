@@ -76,11 +76,22 @@ async function executeBuilder(target, meta) {
 }
 
 function wrapBuilder(target, meta) {
-  if (!target || typeof target !== 'object' || typeof target.then !== 'function') return target;
+  // supabase.from(table) returns a PostgrestQueryBuilder that is NOT thenable
+  // until select()/insert()/update()/etc is called. The old guard required
+  // target.then up front, so the initial from() builder escaped unproxied and
+  // select/order/eq were never observed. RPC builders are already thenable,
+  // which is why RPC tracing worked while table-query tracing never did.
+  if (!target || (typeof target !== 'object' && typeof target !== 'function')) return target;
+
   return new Proxy(target, {
     get(obj, prop) {
-      if (prop === 'then') return (resolve, reject) => executeBuilder(obj, meta).then(resolve, reject);
       const value = Reflect.get(obj, prop, obj);
+
+      if (prop === 'then') {
+        if (typeof value !== 'function') return value;
+        return (resolve, reject) => executeBuilder(obj, meta).then(resolve, reject);
+      }
+
       if (typeof value !== 'function') return value;
       return (...args) => {
         const nextMeta = { ...meta };
