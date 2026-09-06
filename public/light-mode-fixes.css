@@ -81,3 +81,21 @@ html[data-kp-theme="light"] body.kp-studio .kp-admin-modal-cancel{
   border-color:var(--kp-line)!important;
   color:var(--kp-text)!important;
 }
+
+/* Reward / forfeit card was authored against a dark surface. Give it a real
+   light-mode surface and AA-safe label/value colors instead of compositing the
+   old translucent navy gradient onto the cream page. */
+html[data-kp-theme="light"] body.kp-studio .kp-stakes-card{
+  background:color-mix(in srgb,var(--kp-accent) 6%,var(--kp-surface))!important;
+  border-color:color-mix(in srgb,var(--kp-accent) 28%,var(--kp-line))!important;
+  box-shadow:none!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-stakes-card>small{
+  color:#4b3aa8!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-stakes-card .kp-stakes-line span{
+  color:var(--kp-muted)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-stakes-card .kp-stakes-line strong{
+  color:var(--kp-text)!important;
+}
