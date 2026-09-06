@@ -1,0 +1,13 @@
+/* KickPot Pass 2 finish — remove the last legacy violet status values. */
+
+/* product-v3-tune.css has an ID-specific legacy violet timer rule; beat it explicitly. */
+body.kp-studio .kp3-gw #lockPillTime,
+body.kp-studio[data-kp-screen="gw"] #lockPillTime{
+  color:var(--kp-green)!important;
+}
+
+/* live-status.css still hard-codes the table lock summary to violet. */
+body.kp-studio .kp-live-summary,
+body.kp-studio[data-kp-screen="live"] .kp-live-summary{
+  color:var(--kp-green)!important;
+}
