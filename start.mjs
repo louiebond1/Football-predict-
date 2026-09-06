@@ -1,3 +1,4 @@
+import './security-headers.mjs';
 import './server.mjs';
 
 const port = Number(process.env.PORT || 3000);
