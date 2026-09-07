@@ -87,3 +87,22 @@
   window.addEventListener('pageshow', restoreGroupSelection);
   restoreGroupSelection();
 })();
+
+// History v2 is deliberately loaded as an isolated inline enhancement. It does
+// not touch app boot, global navigation, or create any page-covering overlay.
+(() => {
+  if (!document.querySelector('link[data-kp-history-v2]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/history-inline-v2.css?v=2';
+    link.dataset.kpHistoryV2 = '1';
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector('script[data-kp-history-v2]')) {
+    const script = document.createElement('script');
+    script.src = '/history-inline-v2.js?v=2';
+    script.defer = true;
+    script.dataset.kpHistoryV2 = '1';
+    document.head.appendChild(script);
+  }
+})();
