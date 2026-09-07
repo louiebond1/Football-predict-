@@ -1,4 +1,4 @@
-const state={tab:'matchday',subTab:'fixtures',fixtures:[],round:null,picks:{},loading:false,config:null,members:[
+const state={tab:'gw',subTab:'fixtures',fixtures:[],round:null,picks:{},loading:false,config:null,members:[
   {name:'Louie',paid:true,pts:14},{name:'Jack',paid:true,pts:12},{name:'Harry',paid:true,pts:9},{name:'Sam',paid:true,pts:8},{name:'Ben',paid:true,pts:6},{name:'Charlie',paid:true,pts:5}
 ]};
 const screen=document.querySelector('#screen');
@@ -16,6 +16,10 @@ const demoFixtures=[
 ];
 
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function pickFor(id){return state.picks[id]||(state.picks[id]={home:1,away:1,scorer:'No goalscorer'})}
+function meta(){return `<div class="hero-meta"><span class="pill"><strong>£30</strong> Pot</span><span class="pill"><strong>6/6</strong> Paid</span><span class="pill">+3 exact · +1 result · +2 scorer</span></div>`}
+
+// ---- Matchday tab (redesigned) ----
 function initials(name=''){return name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()}
 function hashColor(name=''){let h=0;for(const c of name)h=(h*31+c.charCodeAt(0))>>>0;const hues=[142,206,28,268,12,48];return `hsl(${hues[h%hues.length]} 50% 42%)`}
 function crestHTML(team){
@@ -70,12 +74,6 @@ function roundShort(round){
   const m=String(round).match(/(\d+)/);
   return m?`Matchday ${m[1]}`:round;
 }
-function scorerOptions(){
-  const names=['No goalscorer','Bukayo Saka','Mohamed Salah','Alexander Isak','Cole Palmer','Erling Haaland','Son Heung-min','Other'];
-  return names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
-}
-function pickFor(id){return state.picks[id]||(state.picks[id]={home:1,away:1,scorer:'No goalscorer'})}
-
 function subnavHTML(){
   const tabs=[['fixtures','Fixtures'],['table','Table'],['picks','My Picks']];
   return `<div class="subnav">
@@ -110,10 +108,6 @@ function fixtureRow(f){
     </div>
     <div class="fx-info right"><div class="fx-name">${esc(f.away?.name)}</div>${formHTML(f.away?.form)}</div>
     ${crestHTML(f.away)}
-    <div class="fx-scorer">
-      <button class="scorer-toggle" data-scorer-toggle>⚽ First scorer: <span class="accent">${esc(p.scorer)}</span></button>
-      <select class="scorer-select" data-scorer hidden>${scorerOptions()}</select>
-    </div>
   </div>`;
 }
 function fixturesListHTML(fixtures){
@@ -138,31 +132,25 @@ function myPicksHTML(fixtures){
     </div>`;
   }).join('')}</div>`).join('');
 }
-function standingsTableHTML({live=false}={}){
-  return `<section class="card"><div class="card-head"><div class="card-title${live?' accent':''}">${live?'Live Table':'Standings'}</div>${live?'<span class="badge">LIVE</span>':`<span class="muted">${state.members.length} players</span>`}</div><table class="table"><thead><tr><th>#</th><th>Player</th><th class="pts">Pts</th></tr></thead><tbody>${state.members.map((m,i)=>`<tr><td class="rank">${i+1}</td><td><strong>${esc(m.name)}</strong></td><td class="pts">${m.pts}</td></tr>`).join('')}</tbody></table></section>`;
+function standingsTableHTML(){
+  return `<section class="card"><div class="card-head"><div class="card-title">Standings</div><span class="muted">${state.members.length} players</span></div><table class="table"><thead><tr><th>#</th><th>Player</th><th class="pts">Pts</th></tr></thead><tbody>${state.members.map((m,i)=>`<tr><td class="rank">${i+1}</td><td><strong>${esc(m.name)}</strong></td><td class="pts">${m.pts}</td></tr>`).join('')}</tbody></table></section>`;
 }
-
 function bindSubnav(){
-  document.querySelectorAll('[data-subtab]').forEach(btn=>btn.addEventListener('click',()=>{state.subTab=btn.dataset.subtab;renderMatchday()}));
+  document.querySelectorAll('[data-subtab]').forEach(btn=>btn.addEventListener('click',()=>{state.subTab=btn.dataset.subtab;renderGW()}));
 }
 function bindFixtureRows(){
   document.querySelectorAll('[data-fixture]').forEach(row=>{
     const id=Number(row.dataset.fixture),p=pickFor(id);
-    const toggleBtn=row.querySelector('[data-scorer-toggle]');
-    const sel=row.querySelector('[data-scorer]');
-    if(sel){sel.value=p.scorer;sel.addEventListener('change',()=>{p.scorer=sel.value;toggleBtn.querySelector('.accent').textContent=sel.value})}
-    if(toggleBtn && sel) toggleBtn.addEventListener('click',()=>{sel.hidden=!sel.hidden});
     row.querySelectorAll('[data-step]').forEach(btn=>btn.addEventListener('click',()=>{
       const [side,delta]=btn.dataset.step.split(',');
       p[side]=Math.max(0,Math.min(20,p[side]+Number(delta)));
-      renderMatchday();
+      renderGW();
     }));
   });
   const lockBtn=document.querySelector('#lockPicks');
   if(lockBtn) lockBtn.addEventListener('click',()=>{const s=document.querySelector('#gwStatus');s.className='status success';s.textContent='✓ Picks locked on this device. Supabase connection will sync them for the whole group.'});
 }
-
-function renderMatchday(){
+function renderGW(){
   const fixtures=state.fixtures.length?state.fixtures:demoFixtures;
   let body='';
   if(state.subTab==='fixtures'){
@@ -172,25 +160,30 @@ function renderMatchday(){
   } else {
     body=myPicksHTML(fixtures);
   }
-  screen.innerHTML=`${subnavHTML()}${heroHTML(fixtures)}${body}`;
+  screen.innerHTML=`<div class="matchday-screen">${subnavHTML()}${heroHTML(fixtures)}${body}</div>`;
   bindSubnav();
   bindCrestFallbacks();
   if(state.subTab==='fixtures') bindFixtureRows();
 }
 
+// ---- Live / History / Group tabs: unchanged from the original app ----
 function renderLive(){
-  screen.innerHTML=`<section class="hero"><div class="eyebrow"><span class="live-dot"></span>Live Matchday</div><div class="eyebrow-rule"></div><h1>Everything can change.</h1></section>
-  ${standingsTableHTML({live:true})}
-  <section class="card swing"><div class="eyebrow">⚡ Goal Swing</div><h2>GOAL — Liverpool 89'</h2><div>Jack <span class="accent">+2 places</span> · Louie <span style="color:var(--red)">−1 place</span></div><p class="muted">A late goal can flip the whole £30 pot.</p></section>
+  screen.innerHTML=`<section class="hero"><div class="eyebrow"><span class="live-dot"></span>Live Matchday</div><h1>Everything can change.</h1>${meta()}</section>
+  <section class="card"><div class="card-head"><div class="card-title accent">Live Table</div><span class="badge">LIVE</span></div><table class="table"><thead><tr><th>#</th><th>Player</th><th class="pts">Pts</th></tr></thead><tbody>${state.members.map((m,i)=>`<tr><td class="rank">${i+1}</td><td><strong>${esc(m.name)}</strong></td><td class="pts">${m.pts}</td></tr>`).join('')}</tbody></table></section>
+  <section class="card swing"><div class="eyebrow">⚡ Goal Swing</div><h2>GOAL — Liverpool 89'</h2><div>Jack <span class="accent">+2 places</span> · Louie <span style="color:var(--danger)">−1 place</span></div><p class="muted">A late goal can flip the whole £30 pot.</p></section>
   <section class="card"><div class="card-title accent">What You Need</div><p>You can still win if Newcastle beat Villa and Liverpool–Chelsea stays level.</p></section>`;
 }
 function renderHistory(){
-  screen.innerHTML=`<section class="card winner"><div class="trophy">🏆</div><div class="eyebrow">Gameweek Champion</div><h1>LOUIE WINS</h1><div class="muted">Gameweek 4</div><div class="money">18 pts · £30 won</div></section><section class="card"><div class="statgrid"><div class="stat"><b>4</b><small>Exact scores</small></div><div class="stat"><b>6</b><small>Results</small></div><div class="stat"><b>2</b><small>First scorers</small></div></div></section><section class="card"><div class="card-title accent">Season Stats</div><div class="payment-row"><span>Weekly wins</span><b>4</b></div><div class="payment-row"><span>Total points</span><b>58</b></div><div class="payment-row"><span>Exact scores</span><b>11</b></div><div class="payment-row"><span>Winnings</span><b class="accent">£45</b></div><div class="payment-row"><span>Net P/L</span><b class="accent">+£25</b></div></section>`;
+  screen.innerHTML=`<section class="card winner"><div class="trophy">🏆</div><div class="eyebrow">Gameweek Champion</div><h1>LOUIE WINS</h1><div class="muted">Gameweek 4</div><div class="money">18 pts · £30 won</div></section><section class="card"><div class="statgrid"><div class="stat"><b>4</b><small>Exact scores</small></div><div class="stat"><b>6</b><small>Results</small></div><div class="stat"><b>2</b><small>First scorers</small></div></div></section><section class="card"><div class="card-title accent">Season Stats</div><div class="payment-row"><span>Weekly wins</span><b>4</b></div><div class="payment-row"><span>Total points</span><b>58</b></div><div class="payment-row"><span>Exact scores</span><b>11</b></div><div class="payment-row"><span>Winnings</span><b class="accent">£45</b></div><div class="payment-row"><span>Net P/L</span><b class="accent">+£25</b></div></section>`
 }
 function renderGroup(){
-  screen.innerHTML=`<section class="hero"><div class="eyebrow">Private Group</div><div class="eyebrow-rule"></div><h1>VAR Is Corrupt</h1><div class="hero-sub-label">£5 / week · 6 members · Treasurer: Louie</div></section><section class="card"><div class="card-head"><div class="card-title">Gameweek 4 Pot</div><span class="badge">6/6 paid</span></div><div style="font-size:42px;font-weight:900;color:var(--accent)">£30</div></section><section class="card"><div class="card-title">Member Payments</div>${state.members.map(m=>`<div class="payment-row"><strong>${esc(m.name)}</strong><span class="${m.paid?'paid':'unpaid'}">${m.paid?'✓ Paid':'Unpaid'}</span></div>`).join('')}</section><section class="card"><div class="card-title accent">Pay the Treasurer</div><p class="muted">Money is sent separately. KickPot only records whether the Treasurer has confirmed payment.</p><div class="bankbox"><div class="bankline"><span>Account name</span><b>Set in Group Settings</b></div><div class="bankline"><span>Sort code</span><b>••-••-••</b></div><div class="bankline"><span>Account no.</span><b>••••••••</b></div><div class="bankline"><span>Reference</span><b>GW4-YOURNAME</b></div></div><button class="secondary" style="margin-top:12px">I've Paid</button></section>`;
+  screen.innerHTML=`<section class="hero"><div class="eyebrow">Private Group</div><h1>VAR Is Corrupt</h1><div class="hero-sub">£5 / week · 6 members · Treasurer: Louie</div></section><section class="card"><div class="card-head"><div class="card-title">Gameweek 4 Pot</div><span class="badge">6/6 paid</span></div><div style="font-size:42px;font-weight:900;color:var(--accent)">£30</div></section><section class="card"><div class="card-title">Member Payments</div>${state.members.map(m=>`<div class="payment-row"><strong>${esc(m.name)}</strong><span class="${m.paid?'paid':'unpaid'}">${m.paid?'✓ Paid':'Unpaid'}</span></div>`).join('')}</section><section class="card"><div class="card-title accent">Pay the Treasurer</div><p class="muted">Money is sent separately. KickPot only records whether the Treasurer has confirmed payment.</p><div class="bankbox"><div class="bankline"><span>Account name</span><b>Set in Group Settings</b></div><div class="bankline"><span>Sort code</span><b>••-••-••</b></div><div class="bankline"><span>Account no.</span><b>••••••••</b></div><div class="bankline"><span>Reference</span><b>GW4-YOURNAME</b></div></div><button class="secondary" style="margin-top:12px">I've Paid</button></section>`
 }
-function render(){nav.forEach(n=>n.classList.toggle('active',n.dataset.tab===state.tab));({matchday:renderMatchday,live:renderLive,history:renderHistory,group:renderGroup}[state.tab])()}
+function render(){
+  nav.forEach(n=>n.classList.toggle('active',n.dataset.tab===state.tab));
+  document.body.classList.toggle('theme-light',state.tab==='gw');
+  ({gw:renderGW,live:renderLive,history:renderHistory,group:renderGroup}[state.tab])()
+}
 nav.forEach(btn=>btn.addEventListener('click',()=>{state.tab=btn.dataset.tab;render()}));
 
 async function load(){
