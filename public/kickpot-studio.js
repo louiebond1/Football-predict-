@@ -133,10 +133,27 @@
     applyTheme(root.dataset.kpTheme || preferredTheme());
   }
 
+  function syncHistoryBrowserHook() {
+    if (document.querySelector('.nav-item[data-tab="history"]')?.classList.contains('active') !== true) return;
+    const titles = [...document.querySelectorAll('#screen .card-title')];
+    const title = titles.find(el => /Past (?:Matchdays|Gameweeks)/i.test(el.textContent || ''));
+    if (!title) return;
+    const mounted = !!document.querySelector('#kpHistoryBrowser');
+    if (!mounted && /Past Matchdays/i.test(title.textContent || '')) {
+      // history-browser-v1 originally targets the app's internal "Past Gameweeks"
+      // heading. The polished skin renames it to "Past Matchdays", so temporarily
+      // expose the internal label long enough for the enhancer to mount.
+      title.textContent = 'Past Gameweeks';
+    } else if (mounted && /Past Gameweeks/i.test(title.textContent || '')) {
+      title.textContent = 'Past Matchdays';
+    }
+  }
+
   function syncScreen() {
     const tab = document.querySelector('.nav-item.active')?.dataset?.tab || '';
     if (tab) body.dataset.kpScreen = tab;
     installThemeButton();
+    syncHistoryBrowserHook();
   }
 
   applyTheme(preferredTheme());
@@ -150,6 +167,6 @@
   }
 
   const screen = document.querySelector('#screen');
-  if (screen) new MutationObserver(syncScreen).observe(screen, { childList: true });
+  if (screen) new MutationObserver(syncScreen).observe(screen, { childList: true, subtree: true });
   window.addEventListener('pageshow', syncScreen);
 })();
