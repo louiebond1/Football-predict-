@@ -1,1 +1,61 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#0a0d12"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>KickPot Design Sandbox</title><link rel="stylesheet" href="/design-preview.css?v=1"><link rel="stylesheet" href="/design-preview-v3.css?v=1"></head><body><div class="sandbox">Design sandbox · mock data · production untouched</div><div class="app" id="app" data-theme="dark"><header><div class="wordmark">KICKPOT</div><div class="actions"><button class="icon" id="theme" aria-label="Toggle light and dark mode">◐</button><button class="icon avatar" aria-label="Preview account">L</button></div></header><main id="screen"></main><nav aria-label="Preview navigation"><button data-tab="matchday" class="active"><span>▣</span><small>Matchday</small></button><button data-tab="live"><span>◉</span><small>Live</small></button><button data-tab="history"><span>◷</span><small>History</small></button><button data-tab="group"><span>◎</span><small>Group</small></button></nav></div><script src="/design-preview-v3.js?v=1"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f6f2e8">
+<title>KickPot Matchday Sandbox</title>
+<style>
+:root{--bg:#f6f2e8;--ink:#171717;--muted:#8c8a86;--gold:#a58943;--line:rgba(23,23,23,.075);--green:#3e9d6d;--red:#d95659;--draw:#b6b5b1}
+*{box-sizing:border-box}html,body{margin:0;background:#e9e6de;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}button{font:inherit;color:inherit}
+.phone{width:min(100%,430px);min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding-bottom:92px;overflow:hidden}
+.header{padding:52px 28px 16px;background:var(--bg)}
+.brandrow{height:58px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:13px}.crown{width:25px;height:20px;color:var(--gold)}.wordmark{font-size:16px;font-weight:650;letter-spacing:.34em}.avatar{width:38px;height:38px;border:1px solid rgba(23,23,23,.18);border-radius:50%;display:grid;place-items:center;font-weight:600;background:transparent}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr auto;align-items:center;gap:16px;margin-top:18px}.tab{border:0;background:none;padding:11px 0 13px;text-align:left;font:600 14px/1.1 Georgia,"Times New Roman",serif;color:#a39d96;position:relative}.tab.active{color:var(--ink)}.tab.active:after{content:"";position:absolute;left:0;bottom:0;width:53px;height:2px;background:var(--gold)}.round{border:1px solid rgba(23,23,23,.10);border-radius:22px;background:rgba(255,255,255,.22);padding:10px 14px;font-size:11px;font-weight:650;white-space:nowrap}
+.hero{height:252px;position:relative;background-image:linear-gradient(90deg,rgba(6,8,10,.78),rgba(6,8,10,.24) 58%,rgba(6,8,10,.05)),url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1200&q=88');background-size:cover;background-position:center 47%;color:white;padding:29px 28px 24px}.eyebrow{font-size:9px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:#d0b46d}.eyebrow:after{content:"";display:block;width:28px;height:2px;background:#c7a85b;margin-top:11px}.hero h1{font:500 43px/.93 Georgia,"Times New Roman",serif;letter-spacing:-.04em;margin:22px 0 0;width:215px}.count{position:absolute;left:28px;bottom:22px}.count small{display:block;font-size:8px;font-weight:750;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:6px}.count strong{font:400 24px/1 Georgia,"Times New Roman",serif;letter-spacing:.01em}
+.fixtures{padding:17px 22px 8px}.date{font-size:9px;font-weight:800;letter-spacing:.23em;color:#8f7c61;text-transform:uppercase;margin:1px 0 6px 1px}.fixture{display:grid;grid-template-columns:minmax(0,1fr) 114px minmax(0,1fr);gap:6px;align-items:center;min-height:94px;border-bottom:1px solid var(--line)}.side{display:grid;grid-template-columns:39px minmax(0,1fr);align-items:center;gap:7px;min-width:0}.side.away{grid-template-columns:minmax(0,1fr) 39px;text-align:right}.crest{width:37px;height:37px;object-fit:contain}.copy{display:flex;flex-direction:column;gap:5px;min-width:0}.away .copy{align-items:flex-end}.name{font:600 12.5px/1.05 Georgia,"Times New Roman",serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.form{display:flex;gap:2px;height:13px;align-items:center}.dot{width:13px;height:13px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:6.5px;font-weight:800;line-height:1}.w{background:var(--green)}.l{background:var(--red)}.d{background:var(--draw)}
+.center{width:114px;display:flex;flex-direction:column;align-items:center;justify-content:center}.time{font-size:10px;color:#898a8d;margin-bottom:5px;font-variant-numeric:tabular-nums}.scores{display:grid;grid-template-columns:54px 4px 54px;align-items:center;gap:1px}.stepper{width:54px;height:25px;display:grid;grid-template-columns:18px 18px 18px;border:1px solid rgba(23,23,23,.09);border-radius:13px;overflow:hidden;background:rgba(255,255,255,.24)}.stepper button,.stepper b{border:0;background:transparent;height:23px;line-height:23px;text-align:center;padding:0;font-size:11px;font-weight:520}.stepper button{cursor:pointer}.stepper b{font-weight:700}.sep{width:1px;height:18px;background:rgba(23,23,23,.11);justify-self:center}
+.bottom{position:fixed;z-index:10;left:50%;transform:translateX(-50%);bottom:0;width:min(100%,430px);height:83px;background:rgba(246,242,232,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:max(10px,env(safe-area-inset-bottom))}.nav{border:0;background:none;color:#9d9d9e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:9px}.nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}.nav.active{color:#9c7e3b}.nav span{font-size:10px;font-weight:600}
+@media(max-width:380px){.header{padding-left:22px;padding-right:22px}.hero{padding-left:22px;padding-right:22px}.count{left:22px}.fixtures{padding-left:17px;padding-right:17px}.fixture{grid-template-columns:minmax(0,1fr) 108px minmax(0,1fr)}.center{width:108px}.scores{grid-template-columns:51px 4px 51px}.stepper{width:51px;grid-template-columns:17px 17px 17px}.side{grid-template-columns:35px minmax(0,1fr)}.side.away{grid-template-columns:minmax(0,1fr) 35px}.crest{width:33px;height:33px}.name{font-size:11.8px}}
+</style>
+</head>
+<body>
+<div class="phone">
+<header class="header">
+  <div class="brandrow">
+    <div class="brand"><svg class="crown" viewBox="0 0 24 20" fill="currentColor"><path d="M2 5.2 7.2 9.4 12 2.6l4.8 6.8L22 5.2 20.2 16H3.8L2 5.2Zm2.5 9h15l.35-2.15H4.15L4.5 14.2Z"/></svg><div class="wordmark">KICKPOT</div></div>
+    <button class="avatar">L</button>
+  </div>
+  <div class="tabs"><button class="tab active">Fixtures</button><button class="tab">Table</button><button class="tab">My Picks</button><button class="round">Matchday 4⌄</button></div>
+</header>
+<section class="hero">
+  <div class="eyebrow">Matchday 4</div>
+  <h1>Premier<br>League</h1>
+  <div class="count"><small>Picks close in</small><strong>4 days 17 hours</strong></div>
+</section>
+<section class="fixtures">
+  <div class="date">Sat 13 September</div>
+  <div id="fixtureList"></div>
+</section>
+</div>
+<nav class="bottom">
+  <button class="nav active"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span>Matchday</span></button>
+  <button class="nav"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.5 5.5a9.5 9.5 0 0 0 0 13M18.5 5.5a9.5 9.5 0 0 1 0 13"/></svg><span>Live</span></button>
+  <button class="nav"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg><span>History</span></button>
+  <button class="nav"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><circle cx="17.5" cy="8.5" r="2.4"/></svg><span>Group</span></button>
+</nav>
+<script>
+const fixtures=[
+ {h:'Crystal Palace',a:'Ipswich Town',hc:'https://crests.football-data.org/354.png',ac:'https://crests.football-data.org/349.png',hf:'WLDDW',af:'LLDWL',hs:2,as:1,t:'15:00'},
+ {h:'Liverpool',a:'Fulham',hc:'https://crests.football-data.org/64.png',ac:'https://crests.football-data.org/63.png',hf:'WWWDD',af:'LDWLD',hs:3,as:1,t:'15:00'},
+ {h:'Aston Villa',a:'Everton',hc:'https://crests.football-data.org/58.png',ac:'https://crests.football-data.org/62.png',hf:'WLDWW',af:'DLLWD',hs:1,as:1,t:'15:00'},
+ {h:'Man Utd',a:'Nottm Forest',hc:'https://crests.football-data.org/66.png',ac:'https://crests.football-data.org/351.png',hf:'WLWDL',af:'WDLLW',hs:2,as:1,t:'17:30'},
+ {h:'Brighton',a:'West Ham',hc:'https://crests.football-data.org/397.png',ac:'https://crests.football-data.org/563.png',hf:'DWWLD',af:'LDWLL',hs:2,as:1,t:'17:30'}
+];
+const form=s=>`<div class="form">${[...s].map(x=>`<i class="dot ${x.toLowerCase()}">${x}</i>`).join('')}</div>`;
+function stepper(side,val,i){return `<div class="stepper"><button data-i="${i}" data-side="${side}" data-d="-1">−</button><b id="${side}-${i}">${val}</b><button data-i="${i}" data-side="${side}" data-d="1">+</button></div>`}
+function render(){document.querySelector('#fixtureList').innerHTML=fixtures.map((f,i)=>`<div class="fixture"><div class="side"><img class="crest" src="${f.hc}" alt=""><div class="copy"><div class="name">${f.h}</div>${form(f.hf)}</div></div><div class="center"><div class="time">${f.t}</div><div class="scores">${stepper('h',f.hs,i)}<span class="sep"></span>${stepper('a',f.as,i)}</div></div><div class="side away"><div class="copy"><div class="name">${f.a}</div>${form(f.af)}</div><img class="crest" src="${f.ac}" alt=""></div></div>`).join('')}
+render();
+document.addEventListener('click',e=>{const b=e.target.closest('.stepper button');if(!b)return;const i=+b.dataset.i,k=b.dataset.side==='h'?'hs':'as';fixtures[i][k]=Math.max(0,fixtures[i][k]+(+b.dataset.d));document.querySelector(`#${b.dataset.side}-${i}`).textContent=fixtures[i][k]});
+</script>
+</body></html>
