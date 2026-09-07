@@ -121,10 +121,8 @@
     if (!card) return;
     if (card.querySelector(`#${ROOT_ID}`)) return;
 
-    const oldRows = [...card.querySelectorAll('.payment-row')];
-    oldRows.forEach(row => row.remove());
-    const oldEmpty = card.querySelector('.empty');
-    if (oldEmpty) oldEmpty.remove();
+    card.querySelectorAll('.payment-row').forEach(row => row.remove());
+    card.querySelector('.empty')?.remove();
 
     const root = document.createElement('div');
     root.id = ROOT_ID;
@@ -140,27 +138,35 @@
       return;
     }
 
-    const { data: board, error: boardErr } = await sb.from('group_leaderboard')
-      .select('group_id,user_id,display_name,gameweek_id,points,exact_scores,scorer_hits,team_score_hits')
-      .eq('group_id', gid);
+    const { data: settled, error: settledErr } = await sb.from('group_gameweeks')
+      .select('gameweek_id,settled_at')
+      .eq('group_id', gid)
+      .not('settled_at', 'is', null)
+      .order('settled_at', { ascending: false });
 
-    if (boardErr || !root.isConnected) {
+    if (settledErr || !root.isConnected) {
       root.innerHTML = '<div class="kp-hi-empty">Couldn’t load previous Matchdays.</div>';
       return;
     }
 
-    const ids = [...new Set((board || []).map(r => r.gameweek_id).filter(Boolean))];
+    const ids = [...new Set((settled || []).map(r => r.gameweek_id).filter(Boolean))];
     if (!ids.length) {
       root.innerHTML = '<div class="kp-hi-empty">No completed Matchdays yet.</div>';
       return;
     }
 
-    const { data: weeks, error: weekErr } = await sb.from('gameweeks')
-      .select('id,round_name,starts_at')
-      .in('id', ids)
-      .order('starts_at', { ascending: false });
+    const [{ data: board, error: boardErr }, { data: weeks, error: weekErr }] = await Promise.all([
+      sb.from('group_leaderboard')
+        .select('group_id,user_id,display_name,gameweek_id,points,exact_scores,scorer_hits,team_score_hits')
+        .eq('group_id', gid)
+        .in('gameweek_id', ids),
+      sb.from('gameweeks')
+        .select('id,round_name,starts_at')
+        .in('id', ids)
+        .order('starts_at', { ascending: false })
+    ]);
 
-    if (weekErr || !weeks?.length) {
+    if (boardErr || weekErr || !weeks?.length || !root.isConnected) {
       root.innerHTML = '<div class="kp-hi-empty">Couldn’t load previous Matchdays.</div>';
       return;
     }
