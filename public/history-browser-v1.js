@@ -3,255 +3,193 @@
   const FEATURE_ID = 'kpHistoryBrowser';
   const MODAL_ID = 'kpHistoryPlayerModal';
   let renderToken = 0;
+  let scheduled = false;
 
   const esc = (value = '') => String(value).replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
   }[c]));
 
   function activeGroupId() {
     const select = document.querySelector('#groupSwitch');
     if (select?.value) return select.value;
-    try {
-      return sessionStorage.getItem(GROUP_KEY) || localStorage.getItem(GROUP_KEY) || '';
-    } catch {
-      return '';
-    }
+    try { return sessionStorage.getItem(GROUP_KEY) || localStorage.getItem(GROUP_KEY) || ''; }
+    catch { return ''; }
   }
 
   function historyIsActive() {
     return document.querySelector('.nav-item[data-tab="history"]')?.classList.contains('active');
   }
 
-  function findPastGameweeksCard() {
+  function findHistoryCard() {
     return [...document.querySelectorAll('#screen .card')].find(card =>
-      /Past Gameweeks/i.test(card.querySelector('.card-title')?.textContent || '')
+      /Past (Gameweeks|Matchdays)/i.test(card.querySelector('.card-title')?.textContent || '')
     );
+  }
+
+  function closeModal() {
+    document.getElementById(MODAL_ID)?.remove();
+    document.body.classList.remove('kp-history-modal-open');
   }
 
   async function getClient() {
     if (window.__kickpotSupabase) return window.__kickpotSupabase;
-    for (let i = 0; i < 40; i += 1) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+    for (let i = 0; i < 30; i += 1) {
+      await new Promise(r => setTimeout(r, 100));
       if (window.__kickpotSupabase) return window.__kickpotSupabase;
     }
     return null;
   }
 
-  function roundNumber(label = '') {
-    const match = String(label).match(/(\d+)/);
-    return match ? Number(match[1]) : null;
+  function label(gw) {
+    const n = String(gw?.round_name || '').match(/(\d+)/)?.[1];
+    return n ? `Matchday ${n}` : (gw?.round_name || 'Matchday');
   }
 
-  function formatGameweek(gw) {
-    const n = roundNumber(gw?.round_name);
-    return n ? `Gameweek ${n}` : (gw?.round_name || 'Gameweek');
+  function initials(name = '') {
+    const words = String(name).trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '?';
+    return (words.length > 1 ? words[0][0] + words.at(-1)[0] : words[0].slice(0,2)).toUpperCase();
   }
 
-  function sortBoard(rows) {
-    return [...rows].sort((a, b) =>
-      (Number(b.points) - Number(a.points)) ||
-      (Number(b.exact_scores) - Number(a.exact_scores)) ||
+  function sorted(rows) {
+    return [...rows].sort((a,b) =>
+      Number(b.points || 0) - Number(a.points || 0) ||
+      Number(b.exact_scores || 0) - Number(a.exact_scores || 0) ||
       String(a.display_name || '').localeCompare(String(b.display_name || ''))
     );
   }
 
-  function playerInitial(name = '') {
-    const words = String(name).trim().split(/\s+/).filter(Boolean);
-    if (!words.length) return '?';
-    return (words.length > 1 ? `${words[0][0]}${words.at(-1)[0]}` : words[0].slice(0, 2)).toUpperCase();
-  }
-
-  function boardRowsHtml(rows, gameweekId) {
-    const sorted = sortBoard(rows);
-    return sorted.map((row, index) => {
+  function rowsHtml(rows, weekId) {
+    return sorted(rows).map((row, i) => {
       const name = row.display_name || 'Player';
-      const crown = index === 0 ? '<span class="kp-history-crown" aria-label="Winner">♛</span>' : '';
-      return `<button class="kp-history-player-row" type="button" data-user-id="${esc(row.user_id)}" data-gameweek-id="${esc(gameweekId)}" data-player-name="${esc(name)}">
-        <span class="kp-history-rank">${index + 1}</span>
-        <span class="kp-history-avatar">${esc(playerInitial(name))}</span>
-        <span class="kp-history-player-copy"><strong>${esc(name)} ${crown}</strong><small>${Number(row.exact_scores || 0)} exact · ${Number(row.scorer_hits || 0)} scorer</small></span>
+      return `<button type="button" class="kp-history-player-row" data-user-id="${esc(row.user_id)}" data-gameweek-id="${esc(weekId)}" data-player-name="${esc(name)}">
+        <span class="kp-history-rank">${i + 1}</span>
+        <span class="kp-history-avatar">${esc(initials(name))}</span>
+        <span class="kp-history-player-copy"><strong>${esc(name)}${i === 0 ? ' ♛' : ''}</strong><small>${Number(row.exact_scores || 0)} exact · ${Number(row.scorer_hits || 0)} scorer</small></span>
         <span class="kp-history-points">${Number(row.points || 0)}<small>pts</small></span>
         <span class="kp-history-chevron">›</span>
       </button>`;
-    }).join('');
+    }).join('') || '<div class="empty">No table data for this Matchday.</div>';
   }
 
-  function loadingHtml() {
-    return `<div class="kp-history-loading"><span></span><span></span><span></span></div>`;
-  }
-
-  async function mountHistoryBrowser() {
-    if (!historyIsActive()) return;
-    const card = findPastGameweeksCard();
-    if (!card || card.dataset.kpHistoryEnhanced === '1') return;
-
-    card.dataset.kpHistoryEnhanced = '1';
-    const existingTitle = card.querySelector('.card-title');
-    const titleHtml = existingTitle?.outerHTML || '<div class="card-title">Past Gameweeks</div>';
-    card.innerHTML = `${titleHtml}<div id="${FEATURE_ID}">${loadingHtml()}</div>`;
-
-    const token = ++renderToken;
-    const client = await getClient();
-    const groupId = activeGroupId();
-    const mount = document.getElementById(FEATURE_ID);
-    if (!mount || token !== renderToken || !historyIsActive()) return;
-
-    if (!client || !groupId) {
-      mount.innerHTML = '<div class="empty">Couldn’t load previous Gameweeks.</div>';
-      return;
-    }
-
-    const { data: boardRows, error: boardError } = await client
-      .from('group_leaderboard')
-      .select('group_id,user_id,display_name,gameweek_id,points,exact_scores,scorer_hits,team_score_hits')
-      .eq('group_id', groupId);
-
-    if (boardError) {
-      mount.innerHTML = `<div class="empty">${esc(boardError.message || 'Couldn’t load previous Gameweeks.')}</div>`;
-      return;
-    }
-
-    const ids = [...new Set((boardRows || []).map(row => row.gameweek_id).filter(Boolean))];
-    if (!ids.length) {
-      mount.innerHTML = '<div class="empty">No completed Gameweeks yet.</div>';
-      return;
-    }
-
-    const { data: weeks, error: weeksError } = await client
-      .from('gameweeks')
-      .select('id,round_name,starts_at,ends_at')
-      .in('id', ids)
-      .order('starts_at', { ascending: false });
-
-    if (weeksError || !weeks?.length) {
-      mount.innerHTML = `<div class="empty">${esc(weeksError?.message || 'Couldn’t load previous Gameweeks.')}</div>`;
-      return;
-    }
-
-    if (token !== renderToken || !document.getElementById(FEATURE_ID)) return;
-
-    const rowsByWeek = new Map(ids.map(id => [String(id), (boardRows || []).filter(row => String(row.gameweek_id) === String(id))]));
-    const defaultWeek = weeks[0];
-
-    mount.innerHTML = `
-      <div class="kp-history-week-strip" role="tablist" aria-label="Previous Gameweeks">
-        ${weeks.map((gw, index) => `<button type="button" role="tab" class="kp-history-week-chip${index === 0 ? ' active' : ''}" data-gameweek-id="${esc(gw.id)}" aria-selected="${index === 0 ? 'true' : 'false'}">${esc(formatGameweek(gw))}</button>`).join('')}
-      </div>
-      <div class="kp-history-table-head"><span id="kpHistoryWeekTitle">${esc(formatGameweek(defaultWeek))}</span><small>Tap a player to see their picks</small></div>
-      <div id="kpHistoryBoard">${boardRowsHtml(rowsByWeek.get(String(defaultWeek.id)) || [], defaultWeek.id)}</div>`;
-
-    mount.querySelectorAll('.kp-history-week-chip').forEach(button => {
-      button.addEventListener('click', () => {
-        const selectedId = button.dataset.gameweekId;
-        const selectedWeek = weeks.find(gw => String(gw.id) === String(selectedId));
-        mount.querySelectorAll('.kp-history-week-chip').forEach(chip => {
-          const active = chip === button;
-          chip.classList.toggle('active', active);
-          chip.setAttribute('aria-selected', active ? 'true' : 'false');
-        });
-        const title = mount.querySelector('#kpHistoryWeekTitle');
-        if (title) title.textContent = formatGameweek(selectedWeek);
-        const board = mount.querySelector('#kpHistoryBoard');
-        if (board) board.innerHTML = boardRowsHtml(rowsByWeek.get(String(selectedId)) || [], selectedId);
-      });
+  function scheduleMount() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      mount().catch(() => {});
     });
   }
 
-  async function openPlayerModal(button) {
-    const userId = button.dataset.userId;
-    const gameweekId = button.dataset.gameweekId;
-    const playerName = button.dataset.playerName || 'Player';
-    if (!userId || !gameweekId) return;
+  async function mount() {
+    if (!historyIsActive()) return;
+    const card = findHistoryCard();
+    if (!card || card.querySelector(`#${FEATURE_ID}`)) return;
 
-    document.getElementById(MODAL_ID)?.remove();
+    const title = card.querySelector('.card-title');
+    const titleHtml = title?.outerHTML || '<div class="card-title">Past Matchdays</div>';
+    const token = ++renderToken;
+    card.innerHTML = `${titleHtml}<div id="${FEATURE_ID}"><div class="kp-history-loading"><span></span><span></span><span></span></div></div>`;
+
+    const client = await getClient();
+    const groupId = activeGroupId();
+    const root = document.getElementById(FEATURE_ID);
+    if (!root || token !== renderToken || !historyIsActive()) return;
+    if (!client || !groupId) { root.innerHTML = '<div class="empty">Couldn’t load previous Matchdays.</div>'; return; }
+
+    const { data: board, error } = await client.from('group_leaderboard')
+      .select('user_id,display_name,gameweek_id,points,exact_scores,scorer_hits,team_score_hits')
+      .eq('group_id', groupId);
+    if (error) { root.innerHTML = `<div class="empty">${esc(error.message)}</div>`; return; }
+
+    const ids = [...new Set((board || []).map(r => r.gameweek_id).filter(Boolean))];
+    if (!ids.length) { root.innerHTML = '<div class="empty">No completed Matchdays yet.</div>'; return; }
+
+    const { data: weeks, error: weekError } = await client.from('gameweeks')
+      .select('id,round_name,starts_at').in('id', ids).order('starts_at', { ascending:false });
+    if (weekError || !weeks?.length) { root.innerHTML = '<div class="empty">Couldn’t load previous Matchdays.</div>'; return; }
+    if (token !== renderToken || !root.isConnected) return;
+
+    const byWeek = new Map(ids.map(id => [String(id), (board || []).filter(r => String(r.gameweek_id) === String(id))]));
+    const first = weeks[0];
+    root.innerHTML = `<div class="kp-history-week-strip" role="tablist">${weeks.map((w,i) => `<button type="button" class="kp-history-week-chip${i === 0 ? ' active' : ''}" data-gameweek-id="${esc(w.id)}">${esc(label(w))}</button>`).join('')}</div>
+      <div class="kp-history-table-head"><span id="kpHistoryWeekTitle">${esc(label(first))}</span><small>Tap a player to see their picks</small></div>
+      <div id="kpHistoryBoard">${rowsHtml(byWeek.get(String(first.id)), first.id)}</div>`;
+
+    root.addEventListener('click', e => {
+      const chip = e.target.closest('.kp-history-week-chip');
+      if (chip) {
+        const id = chip.dataset.gameweekId;
+        root.querySelectorAll('.kp-history-week-chip').forEach(x => x.classList.toggle('active', x === chip));
+        const week = weeks.find(w => String(w.id) === String(id));
+        const heading = root.querySelector('#kpHistoryWeekTitle');
+        if (heading) heading.textContent = label(week);
+        const boardEl = root.querySelector('#kpHistoryBoard');
+        if (boardEl) boardEl.innerHTML = rowsHtml(byWeek.get(String(id)), id);
+      }
+    });
+  }
+
+  async function openPlayer(button) {
+    closeModal();
+    const userId = button.dataset.userId;
+    const weekId = button.dataset.gameweekId;
+    const name = button.dataset.playerName || 'Player';
+    if (!userId || !weekId) return;
+
     const modal = document.createElement('div');
     modal.id = MODAL_ID;
     modal.className = 'kp-history-modal-backdrop';
-    modal.innerHTML = `<section class="kp-history-modal" role="dialog" aria-modal="true" aria-label="${esc(playerName)} predictions">
-      <div class="kp-history-modal-head">
-        <button type="button" class="kp-history-close" aria-label="Close">‹</button>
-        <div><small>Gameweek picks</small><h2>${esc(playerName)}</h2></div>
-      </div>
-      <div class="kp-history-modal-body">${loadingHtml()}</div>
-    </section>`;
+    modal.innerHTML = `<section class="kp-history-modal" role="dialog" aria-modal="true"><div class="kp-history-modal-head"><button type="button" class="kp-history-close">‹</button><div><small>Matchday picks</small><h2>${esc(name)}</h2></div></div><div class="kp-history-modal-body"><div class="kp-history-loading"><span></span><span></span><span></span></div></div></section>`;
     document.body.appendChild(modal);
     document.body.classList.add('kp-history-modal-open');
-
-    const close = () => {
-      modal.remove();
-      document.body.classList.remove('kp-history-modal-open');
-    };
-    modal.querySelector('.kp-history-close')?.addEventListener('click', close);
-    modal.addEventListener('click', event => { if (event.target === modal) close(); });
+    modal.querySelector('.kp-history-close')?.addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
     const client = await getClient();
     const groupId = activeGroupId();
     const body = modal.querySelector('.kp-history-modal-body');
     if (!client || !groupId || !body) return;
 
-    const [{ data: fixtures, error: fixturesError }, { data: predictions, error: predictionsError }, { data: week }] = await Promise.all([
-      client.from('fixtures').select('id,kickoff,home_team_name,away_team_name,status,home_goals,away_goals,first_scorer_name').eq('gameweek_id', gameweekId).order('kickoff'),
+    const [{data:fixtures,error:fxErr},{data:picks,error:pickErr},{data:week}] = await Promise.all([
+      client.from('fixtures').select('id,home_team_name,away_team_name,home_goals,away_goals,first_scorer_name,kickoff').eq('gameweek_id', weekId).order('kickoff'),
       client.from('predictions').select('fixture_id,predicted_home,predicted_away,first_scorer_name,points').eq('group_id', groupId).eq('user_id', userId),
-      client.from('gameweeks').select('id,round_name').eq('id', gameweekId).maybeSingle()
+      client.from('gameweeks').select('id,round_name').eq('id', weekId).maybeSingle()
     ]);
-
     if (!modal.isConnected) return;
-    if (fixturesError || predictionsError) {
-      body.innerHTML = `<div class="empty">${esc(fixturesError?.message || predictionsError?.message || 'Couldn’t load predictions.')}</div>`;
-      return;
-    }
+    if (fxErr || pickErr) { body.innerHTML = '<div class="empty">Couldn’t load predictions.</div>'; return; }
 
-    const predByFixture = new Map((predictions || []).map(pred => [String(pred.fixture_id), pred]));
-    const relevantFixtures = fixtures || [];
-    const totalPoints = relevantFixtures.reduce((sum, fixture) => sum + Number(predByFixture.get(String(fixture.id))?.points || 0), 0);
-
-    const heading = modal.querySelector('.kp-history-modal-head small');
-    if (heading) heading.textContent = week?.round_name || 'Gameweek picks';
-
-    body.innerHTML = `<div class="kp-history-player-total"><span>Total</span><strong>${totalPoints} pts</strong></div>
-      <div class="kp-history-fixtures">
-        ${relevantFixtures.map(fixture => {
-          const pred = predByFixture.get(String(fixture.id));
-          const actualKnown = fixture.home_goals != null && fixture.away_goals != null;
-          const actual = actualKnown ? `${fixture.home_goals}–${fixture.away_goals}` : '–';
-          const pick = pred ? `${pred.predicted_home}–${pred.predicted_away}` : 'No pick';
-          const scorerPick = pred?.first_scorer_name ? ` · ${esc(pred.first_scorer_name)}` : '';
-          const points = pred ? Number(pred.points || 0) : 0;
-          const pointClass = points > 0 ? ' scored' : '';
-          return `<article class="kp-history-fixture-row">
-            <div class="kp-history-fixture-main">
-              <div class="kp-history-team"><span>${esc(fixture.home_team_name || 'Home')}</span><b>${actualKnown ? esc(fixture.home_goals) : '–'}</b></div>
-              <div class="kp-history-team"><span>${esc(fixture.away_team_name || 'Away')}</span><b>${actualKnown ? esc(fixture.away_goals) : '–'}</b></div>
-            </div>
-            <div class="kp-history-pick-line">
-              <span>${pred ? `Predicted <strong>${esc(pick)}</strong>${scorerPick}` : '<strong>No prediction</strong>'}</span>
-              <b class="kp-history-earned${pointClass}">+${points}</b>
-            </div>
-            ${fixture.first_scorer_name ? `<div class="kp-history-result-note">First scorer: ${esc(fixture.first_scorer_name)}</div>` : ''}
-          </article>`;
-        }).join('') || '<div class="empty">No fixtures found for this Gameweek.</div>'}
-      </div>`;
+    const map = new Map((picks || []).map(p => [String(p.fixture_id), p]));
+    const total = (fixtures || []).reduce((s,f) => s + Number(map.get(String(f.id))?.points || 0), 0);
+    modal.querySelector('.kp-history-modal-head small').textContent = label(week);
+    body.innerHTML = `<div class="kp-history-player-total"><span>Total</span><strong>${total} pts</strong></div><div class="kp-history-fixtures">${(fixtures || []).map(f => {
+      const p = map.get(String(f.id));
+      const actual = f.home_goals != null && f.away_goals != null;
+      const pts = Number(p?.points || 0);
+      return `<article class="kp-history-fixture-row"><div class="kp-history-fixture-main"><div class="kp-history-team"><span>${esc(f.home_team_name || 'Home')}</span><b>${actual ? esc(f.home_goals) : '–'}</b></div><div class="kp-history-team"><span>${esc(f.away_team_name || 'Away')}</span><b>${actual ? esc(f.away_goals) : '–'}</b></div></div><div class="kp-history-pick-line"><span>${p ? `Predicted <strong>${p.predicted_home}–${p.predicted_away}</strong>${p.first_scorer_name ? ` · ${esc(p.first_scorer_name)}` : ''}` : '<strong>No prediction</strong>'}</span><b class="kp-history-earned${pts ? ' scored' : ''}">+${pts}</b></div>${f.first_scorer_name ? `<div class="kp-history-result-note">First scorer: ${esc(f.first_scorer_name)}</div>` : ''}</article>`;
+    }).join('')}</div>`;
   }
 
-  document.addEventListener('click', event => {
-    const row = event.target.closest('.kp-history-player-row');
-    if (row) openPlayerModal(row);
+  document.addEventListener('click', e => {
+    const row = e.target.closest('.kp-history-player-row');
+    if (row) openPlayer(row);
   });
 
-  const screen = document.querySelector('#screen');
-  if (screen) {
-    const observer = new MutationObserver(() => queueMicrotask(mountHistoryBrowser));
-    observer.observe(screen, { childList: true, subtree: true });
-  }
-  document.addEventListener('click', event => {
-    if (event.target.closest('.nav-item[data-tab="history"]')) setTimeout(mountHistoryBrowser, 0);
+  // Navigation must always win over the History modal/overlay.
+  document.querySelector('.bottom-nav')?.addEventListener('pointerdown', () => {
+    closeModal();
+    renderToken += 1;
   }, true);
-  document.addEventListener('change', event => {
-    if (event.target?.id === 'groupSwitch') {
-      renderToken += 1;
-      setTimeout(mountHistoryBrowser, 0);
-    }
+  document.querySelector('.bottom-nav')?.addEventListener('click', e => {
+    if (e.target.closest('[data-tab="history"]')) setTimeout(scheduleMount, 0);
   }, true);
 
-  mountHistoryBrowser();
+  document.addEventListener('change', e => {
+    if (e.target?.id === 'groupSwitch') { renderToken += 1; setTimeout(scheduleMount, 0); }
+  }, true);
+
+  const screen = document.querySelector('#screen');
+  if (screen) new MutationObserver(scheduleMount).observe(screen, { childList:true, subtree:true });
+  window.addEventListener('pageshow', scheduleMount);
+  scheduleMount();
 })();
