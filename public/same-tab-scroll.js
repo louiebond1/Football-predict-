@@ -32,7 +32,7 @@ function fixVisibleRenderArtifacts() {
 }
 
 function makeLiveMask() {
-  clearLiveMask();
+  hardClearLiveMask();
   const el = document.createElement('div');
   el.id = 'kpLiveEntryMask';
   el.setAttribute('aria-hidden', 'true');
@@ -76,8 +76,25 @@ function clearLiveMask() {
   } else el.remove();
 }
 
+// Rapid tab-switching (in/out/in/out of Live faster than the 80ms fade above)
+// could leave a *previous* mask still fading out - via clearLiveMask's async
+// animate().onfinish - at the same time a fresh one is created underneath or
+// on top of it. Two hard-coded replicas of the Live hero briefly overlapping
+// at slightly different scroll offsets shows up as a doubled/ghosted "Live"
+// title and stadium photo: exactly the kind of flash this app isn't supposed
+// to have. Anything about to be superseded by a new mask must go instantly,
+// with no fade, so there is never a window where two masks coexist. Sweep by
+// querySelectorAll (not just the single `liveMask` reference) so a stray
+// element left behind by an earlier race gets cleaned up too.
+function hardClearLiveMask() {
+  clearTimeout(liveMaskTimer);
+  liveMaskTimer = 0;
+  liveMask = null;
+  document.querySelectorAll('#kpLiveEntryMask').forEach(el => el.remove());
+}
+
 function makeExitMask() {
-  clearLiveMask();
+  hardClearLiveMask();
   const el = document.createElement('div');
   el.id = 'kpLiveEntryMask';
   el.setAttribute('aria-hidden', 'true');
