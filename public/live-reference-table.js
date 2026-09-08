@@ -137,7 +137,6 @@
     const tabs=[['fixtures','Live Fixtures'],['table','Live Table'],['picks','My Picks']];
     return `<div class="kp-live-subnav">
       <div class="kp-live-subtabs">${tabs.map(([id,label])=>`<button class="kp-live-subtab${S.subTab===id?' active':''}" data-live-subtab="${id}">${label}</button>`).join('')}</div>
-      <div class="kp-live-round-pill">Matchday ${esc(roundShort(S.round))} <span>⌄</span></div>
     </div>`;
   }
 
