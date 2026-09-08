@@ -44,7 +44,14 @@
           tagline.className = 'kp-ref-tagline';
           title.after(tagline);
         }
-        tagline.textContent = 'Same game. Bigger stakes.';
+        // "Bigger stakes" is a real contradiction for a for-fun group (which
+        // already gets its own "FOR FUN" pill right below this, via the
+        // kp-fun-mode class settings-v2.js puts on <body>) - a for-fun group
+        // has no stakes at all. Reuse the Live tab's neutral tagline for that
+        // case instead of inventing new copy.
+        tagline.textContent = document.body.classList.contains('kp-fun-mode')
+          ? 'Same passion. New predictions.'
+          : 'Same game. Bigger stakes.';
       }
     }
 
