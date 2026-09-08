@@ -102,3 +102,97 @@ html[data-kp-theme="light"] body.kp-studio .kp-stakes-card .kp-stakes-line span{
 html[data-kp-theme="light"] body.kp-studio .kp-stakes-card .kp-stakes-line strong{
   color:var(--kp-text)!important;
 }
+
+/* The Account sheet (and the sibling Create-group / Stakes-detail surfaces
+   that share its base rules in settings-v1.css) never got a light-mode pass
+   at all - unlike the Mode-toggle and Admin surfaces above, which share the
+   very same selector groups in that file. Left alone, opening Account in
+   light mode shows a fully dark card floating on the cream page. */
+html[data-kp-theme="light"] body.kp-studio .kp-account-sheet,
+html[data-kp-theme="light"] body.kp-studio .kp-create-group-form,
+html[data-kp-theme="light"] body.kp-studio .kp-stakes-modal{
+  background:var(--kp-surface)!important;
+  border-color:var(--kp-line)!important;
+  box-shadow:none!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-handle{
+  background:var(--kp-line)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-head h2,
+html[data-kp-theme="light"] body.kp-studio .kp-account-section>strong,
+html[data-kp-theme="light"] body.kp-studio .kp-account-section p strong,
+html[data-kp-theme="light"] body.kp-studio .kp-stakes-modal h2{
+  color:var(--kp-text)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-close{
+  background:var(--kp-surface-2)!important;
+  color:var(--kp-muted)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-form label,
+html[data-kp-theme="light"] body.kp-studio .kp-create-group-form label,
+html[data-kp-theme="light"] body.kp-studio .kp-account-status,
+html[data-kp-theme="light"] body.kp-studio .kp-create-group-status,
+html[data-kp-theme="light"] body.kp-studio .kp-account-section p{
+  color:var(--kp-muted)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-form input,
+html[data-kp-theme="light"] body.kp-studio .kp-create-group-form input{
+  background:var(--kp-bg)!important;
+  color:var(--kp-text)!important;
+  border-color:var(--kp-line)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-form input[readonly]{
+  color:var(--kp-muted)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-section{
+  border-color:var(--kp-line)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-install{
+  color:#0b8f62!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-signout{
+  color:#c94646!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-stakes-modal button{
+  border:1px solid var(--kp-line)!important;
+}
+
+/* The "Login PIN" block nested inside the Account sheet (.kp-account-password,
+   defined in auth-password.css) is a second, separate surface that also never
+   got a light-mode pass - its heading has no color set at all, so it inherits
+   whatever the dark shell's default text color was and is nearly invisible on
+   the now-light .kp-account-sheet background above. */
+html[data-kp-theme="light"] body.kp-studio .kp-account-password{
+  border-color:var(--kp-line)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-password>strong{
+  color:var(--kp-text)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-password>p,
+html[data-kp-theme="light"] body.kp-studio .kp-account-password label,
+html[data-kp-theme="light"] body.kp-studio .kp-account-password small{
+  color:var(--kp-muted)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-password input{
+  background:var(--kp-bg)!important;
+  color:var(--kp-text)!important;
+  border-color:var(--kp-line)!important;
+}
+
+/* Same story again for the Face ID / Passkey block: passkey-auth.js injects
+   its own <style> tag with hardcoded dark-surface colors (its heading is
+   literally color:#f8fafc - near-white - so it all but disappears once the
+   sheet above it is light) and never accounted for the light theme. */
+html[data-kp-theme="light"] body.kp-studio .kp-account-passkey{
+  border-color:var(--kp-line)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-passkey strong{
+  color:var(--kp-text)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-passkey p,
+html[data-kp-theme="light"] body.kp-studio .kp-account-passkey small{
+  color:var(--kp-muted)!important;
+}
+html[data-kp-theme="light"] body.kp-studio .kp-account-passkey button{
+  color:#0b8f62!important;
+}
