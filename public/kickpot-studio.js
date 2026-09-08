@@ -5,7 +5,6 @@
   if (!body) return;
   body.classList.add('kp-studio');
 
-  // Production iPhone fixes are isolated so they can be removed cleanly if needed.
   if (!document.querySelector('link[data-kp-iphone-hotfix]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -21,9 +20,6 @@
     document.head.appendChild(script);
   }
 
-  // Pass 3 is a deliberately isolated personality layer. Load it after the
-  // production skin so it can remove the last generic/stock visual treatments
-  // without touching game logic or screen hierarchy.
   if (!document.querySelector('link[data-kp-brand-pass3]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -53,7 +49,6 @@
     document.head.appendChild(script);
   }
 
-  // Matchday follows the supplied iPhone reference.
   if (!document.querySelector('link[data-kp-reference-matchday]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -68,9 +63,14 @@
     script.dataset.kpReferenceMatchday = '1';
     document.head.appendChild(script);
   }
+  if (!document.querySelector('script[data-kp-matchday-hero-img]')) {
+    const script = document.createElement('script');
+    script.src = '/matchday-hero-img.js?v=1&studio=20260908k';
+    script.defer = true;
+    script.dataset.kpMatchdayHeroImg = '1';
+    document.head.appendChild(script);
+  }
 
-  // Live now uses the same reference language as Matchday: quiet crown header,
-  // editorial type, flat standings and gold/neutral hierarchy.
   if (!document.querySelector('link[data-kp-reference-live]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -86,7 +86,6 @@
     document.head.appendChild(script);
   }
 
-  // The Live fixture block uses the supplied compact two-row card treatment.
   if (!document.querySelector('link[data-kp-reference-live-fixtures]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
