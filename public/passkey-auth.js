@@ -28,7 +28,7 @@ function addStyles() {
     .kp-account-passkey{margin-top:18px;padding-top:18px;border-top:1px solid rgba(148,163,184,.16);display:grid;gap:9px}
     .kp-account-passkey strong{font-size:17px;color:#f8fafc}
     .kp-account-passkey p{margin:0;color:#8f9aad;font-size:12.5px;line-height:1.45}
-    .kp-account-passkey button{width:100%;border:1px solid rgba(155,92,255,.35);border-radius:13px;padding:14px 16px;background:rgba(126,75,255,.09);color:#d8c5ff;font:850 13px/1 system-ui,-apple-system,sans-serif}
+    .kp-account-passkey button{width:100%;border:1px solid rgba(67,184,115,.35);border-radius:13px;padding:14px 16px;background:rgba(67,184,115,.12);color:#9fe3bb;font:850 13px/1 system-ui,-apple-system,sans-serif}
     .kp-account-passkey small{min-height:16px;color:#9aa5b7;font-size:12px}
   `;
   document.head.append(style);
