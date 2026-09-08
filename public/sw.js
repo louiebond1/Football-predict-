@@ -1,4 +1,4 @@
-const CACHE='kickpot-v102-20260908-launch-history';
+const CACHE='kickpot-v103-20260908-navfix';
 const CORE=[
   '/',
   '/styles.css',
