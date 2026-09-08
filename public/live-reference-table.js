@@ -234,14 +234,29 @@
     render();
   }
 
+  // Safety net for a rare tab-entry race: occasionally (root cause not fully
+  // pinned down - seen once after a burst of navigation/theme-toggle activity
+  // right before entering this tab) the nav highlights "Live" correctly but
+  // #screen is left showing a stale previous tab's markup, and it never
+  // self-corrects because the render() call this click triggers can lose a
+  // narrow timing race. The MutationObserver below already re-renders if a
+  // later DOM change reveals the problem, but if nothing touches #screen
+  // again after the race, there's nothing left to trigger it. These extra
+  // checks give the tab a couple more chances, at 400ms and 1200ms after
+  // entry, to notice "we're on Live but not showing Live" and fix itself -
+  // render() is a cheap no-op if everything's already correct.
+  function ensureLiveRendered(){if(isLive()&&S.loaded&&!$('#screen .kp-live-screen'))render()}
+
   let liveRefreshInterval=0;
   document.querySelectorAll('.bottom-nav .nav-item').forEach(btn=>btn.addEventListener('click',()=>{
     clearInterval(liveRefreshInterval);
     setTimeout(async()=>{
       if(btn.dataset.tab==='live'){
         await refreshAndRender();
+        setTimeout(ensureLiveRendered,400);
+        setTimeout(ensureLiveRendered,1200);
         // Mirrors app.js's own 30s live-score poll, just routed through this
-        // screen's own render() instead of the old one we now suppress above.
+        // screen's own render() instead of the one we now suppress above.
         liveRefreshInterval=setInterval(()=>{if(isLive())refreshAndRender()},30000);
       } else {
         document.body.classList.remove('kp-native-live');
