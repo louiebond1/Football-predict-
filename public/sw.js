@@ -1,4 +1,4 @@
-const CACHE='kickpot-v101-working-rollback-clean';
+const CACHE='kickpot-v102-20260908-launch-history';
 const CORE=[
   '/',
   '/styles.css',
@@ -12,21 +12,16 @@ const CORE=[
   '/live-status.css?v=2',
   '/gameweek-rollover.css?v=1',
   '/launch-fixes-20260901.css?v=2',
-  '/kickpot-studio.css',
-  '/kickpot-recording-fixes.css',
+  '/kickpot-studio.css?v=1',
+  '/kickpot-recording-fixes.css?v=1',
   '/kickpot-iphone-hotfix.css?v=3',
-  '/kickpot-final-layout.css?v=1',
   '/live-polish-v2.css?v=1',
   '/light-mode-fixes.css?v=2',
-  '/brand-pass1.css?v=1',
-  '/brand-pass2.css?v=1',
   '/brand-pass2-finish.css?v=1',
-  '/brand-pass3.css?v=1',
-  '/brand-pass3-hotfix.css?v=1',
-  '/brand-pass3-avatar-v2.css?v=1',
-  '/reference-matchday-v1.css?v=1',
-  '/reference-live-v1.css?v=1',
-  '/reference-live-fixtures-v2.css?v=1',
+  '/matchday-reference-live.css?v=8',
+  '/matchday-hero-photo.css?v=3',
+  '/live-reference-table.css?v=1',
+  '/history-inline-v2.css?v=2',
   '/core-boot-guard.js?v=3',
   '/supabase-singleton.js?v=5',
   '/smooth-runtime.js?v=1',
@@ -49,17 +44,17 @@ const CORE=[
   '/play-mode-safe-write.js?v=1',
   '/account-password.js?v=3',
   '/launch-fixes-20260901.js?v=3',
-  '/kickpot-studio.js',
-  '/kickpot-recording-fixes.js',
+  '/kickpot-studio.js?v=1',
+  '/kickpot-recording-fixes.js?v=1',
   '/kickpot-iphone-hotfix.js?v=3',
   '/live-polish-v2.js?v=1',
   '/round-sync.js?v=1',
   '/active-group-persistence.js?v=2',
-  '/brand-pass3.js?v=2',
-  '/reference-matchday-v1.js?v=1',
-  '/reference-live-v1.js?v=1',
-  '/reference-live-fixtures-v2.js?v=1',
+  '/matchday-reference-live.js?v=7',
+  '/live-reference-table.js?v=1',
+  '/history-inline-v2.js?v=2',
   '/manifest.webmanifest',
+  '/kickpot-hero-final.jpg',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
@@ -70,12 +65,12 @@ self.addEventListener('install',e=>{
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([
   self.clients.claim(),
   caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
-]));
+])));
 self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET'||new URL(e.request.url).pathname.startsWith('/api/')) return;
   e.respondWith(
     fetch(e.request)
-      .then(r=>{const c=r.clone();caches.open(CACHE).then(x=>x.put(e.request,c));return r})
-      .catch(()=>caches.match(e.request))
+      .then(r=>{if(r&&r.ok){const c=r.clone();caches.open(CACHE).then(x=>x.put(e.request,c));}return r})
+      .catch(()=>caches.match(e.request).then(r=>r||caches.match('/')))
   );
 });
