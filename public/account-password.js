@@ -14,18 +14,18 @@ function addStyles() {
     .kp-account-password>p{margin:-5px 0 2px;color:#8f9aad;font-size:13px;line-height:1.45}
     .kp-account-password label{display:grid;gap:7px;color:#919bad;font-size:12px;font-weight:700}
     .kp-account-password input{width:100%;box-sizing:border-box;border:1px solid rgba(148,163,184,.18);background:#0c1626;color:#fff;border-radius:13px;padding:13px 14px;font:700 18px/1.2 system-ui,-apple-system,sans-serif;letter-spacing:.28em;outline:none}
-    .kp-account-password input:focus{border-color:rgba(142,92,255,.75);box-shadow:0 0 0 3px rgba(142,92,255,.10)}
-    .kp-account-password button{border:0;border-radius:13px;padding:14px 16px;background:linear-gradient(100deg,#7047ff,#a054ff);color:white;font:800 14px/1 system-ui,-apple-system,sans-serif}
+    .kp-account-password input:focus{border-color:rgba(67,184,115,.75);box-shadow:0 0 0 3px rgba(67,184,115,.12)}
+    .kp-account-password button{border:0;border-radius:13px;padding:14px 16px;background:linear-gradient(100deg,#0f6b40,#43b873);color:white;font:800 14px/1 system-ui,-apple-system,sans-serif}
     .kp-account-password small{min-height:16px;color:#9aa5b7;font-size:12px}
     .kp-password-prompt-overlay{position:fixed;inset:0;z-index:10050;background:rgba(2,7,18,.72);backdrop-filter:blur(14px);display:grid;place-items:end center;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
     .kp-password-prompt{width:min(100%,520px);box-sizing:border-box;background:#091424;border:1px solid rgba(148,163,184,.18);border-radius:24px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.5);color:#fff}
-    .kp-password-prompt .kp-prompt-kicker{color:#a66bff;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+    .kp-password-prompt .kp-prompt-kicker{color:#5fcf94;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
     .kp-password-prompt h2{font-size:28px;line-height:1.02;margin:8px 0 8px;letter-spacing:-.035em}
     .kp-password-prompt p{color:#98a4b7;font-size:14px;line-height:1.5;margin:0 0 18px}
     .kp-password-prompt label{display:grid;gap:7px;color:#a1aabd;font-size:12px;font-weight:800;margin-top:11px}
     .kp-password-prompt input{width:100%;box-sizing:border-box;border:1px solid rgba(148,163,184,.20);background:#0d1728;color:#fff;border-radius:14px;padding:14px;font:800 20px/1.2 system-ui,-apple-system,sans-serif;letter-spacing:.32em;outline:none}
-    .kp-password-prompt input:focus{border-color:#8d5cff;box-shadow:0 0 0 3px rgba(141,92,255,.12)}
-    .kp-password-prompt .kp-prompt-save{width:100%;margin-top:17px;border:0;border-radius:14px;padding:15px;background:linear-gradient(100deg,#7047ff,#a054ff);color:#fff;font:900 15px/1 system-ui,-apple-system,sans-serif}
+    .kp-password-prompt input:focus{border-color:#43b873;box-shadow:0 0 0 3px rgba(67,184,115,.15)}
+    .kp-password-prompt .kp-prompt-save{width:100%;margin-top:17px;border:0;border-radius:14px;padding:15px;background:linear-gradient(100deg,#0f6b40,#43b873);color:#fff;font:900 15px/1 system-ui,-apple-system,sans-serif}
     .kp-password-prompt .kp-prompt-later{width:100%;margin-top:9px;border:0;background:transparent;color:#8f9aad;padding:11px;font:700 13px/1 system-ui,-apple-system,sans-serif}
     .kp-password-prompt .kp-prompt-status{display:block;min-height:17px;margin-top:9px;color:#ff9ab5;font-size:12px;text-align:center}
   `;
