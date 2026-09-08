@@ -65,7 +65,7 @@
   }
   if (!document.querySelector('script[data-kp-matchday-hero-img]')) {
     const script = document.createElement('script');
-    script.src = '/matchday-hero-img.js?v=1&studio=20260908k';
+    script.src = '/matchday-hero-img.js?v=2&studio=20260908final';
     script.defer = true;
     script.dataset.kpMatchdayHeroImg = '1';
     document.head.appendChild(script);
