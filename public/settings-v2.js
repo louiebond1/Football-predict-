@@ -272,7 +272,18 @@ async function refreshGroupFeatures(force = false) {
 }
 
 function scheduleRefresh() {
-  [0,80,240,650].forEach(ms => setTimeout(() => refreshGroupFeatures(ms === 650).catch(() => {}), ms));
+  // Slower connections can take well over half a second for the Group/Admin
+  // screens to finish their data-driven render (group switch, cold start).
+  // The old fixed delays here ([0,80,240,650]) could all fire before that DOM
+  // existed, silently skipping the mode-dependent enhancements (the Play mode
+  // row, hiding Payment control in a for-fun group, etc.) for the rest of
+  // that view's lifetime - the group/admin screen would then show stale or
+  // inconsistent wording depending on how slow that particular load was.
+  // Extend the tail so a slow render still gets enhanced once its target
+  // elements show up; every call here is already idempotent (each enhancer
+  // checks for its own "already applied" marker before touching the DOM), so
+  // the extra attempts are cheap no-ops once the earlier ones have caught up.
+  [0,80,240,650,1200,2000,3200,5000].forEach(ms => setTimeout(() => refreshGroupFeatures(ms === 650 || ms === 5000).catch(() => {}), ms));
 }
 
 document.addEventListener('click', event => {

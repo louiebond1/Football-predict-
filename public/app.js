@@ -361,7 +361,26 @@ function bindGroupSwitcher() {
   const el = document.querySelector('#groupSwitch');
   if (!el || el.dataset.bound === '1') return;
   el.dataset.bound = '1';
-  el.addEventListener('change', async e => { state.activeGroupId = e.target.value; await loadGroupData(); render() });
+  el.addEventListener('change', async e => {
+    state.activeGroupId = e.target.value;
+    // Switching groups refetches that group's members/payments/predictions from
+    // Supabase, which can take a second or more on a slow connection. Without
+    // this, the previous group's fully-rendered screen just sits there
+    // untouched (looks frozen/unresponsive) and then snaps to the new group's
+    // content all at once once the fetch resolves - the exact "words change
+    // out of nowhere" feel we're trying to eliminate. Show a lightweight
+    // in-place loading state on the switcher itself for that gap; the wrap
+    // element is destroyed and rebuilt fresh by render(), so nothing needs to
+    // clean this back up.
+    const wrap = el.closest('.select-wrap');
+    el.disabled = true;
+    if (wrap) wrap.classList.add('kp-group-switching');
+    try {
+      await loadGroupData();
+    } finally {
+      render();
+    }
+  });
 }
 
 function paymentBanner() {
