@@ -193,15 +193,21 @@
     bindSubnav();
   }
 
+  async function refreshAndRender(){
+    await load();
+    render();
+  }
+
   document.querySelectorAll('.bottom-nav .nav-item').forEach(btn=>btn.addEventListener('click',()=>{
     setTimeout(async()=>{
-      if(btn.dataset.tab==='live'){ if(!S.loaded)await load(); render(); }
+      if(btn.dataset.tab==='live') await refreshAndRender();
       else document.body.classList.remove('kp-native-live');
     },0);
   }));
 
   const mo=new MutationObserver(()=>{if(isLive()&&!$('#screen .kp-live-screen')&&S.loaded)setTimeout(render,0)});
   const screenEl=$('#screen'); if(screenEl)mo.observe(screenEl,{childList:true});
-  if(isLive()){load().then(render)}
-  window.addEventListener('pageshow',()=>{if(isLive())render()});
+  if(isLive())refreshAndRender();
+  window.addEventListener('pageshow',()=>{if(isLive())refreshAndRender()});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isLive())refreshAndRender()});
 })();
