@@ -76,6 +76,21 @@ function clearLiveMask() {
   } else el.remove();
 }
 
+function makeExitMask() {
+  clearLiveMask();
+  const el = document.createElement('div');
+  el.id = 'kpLiveEntryMask';
+  el.setAttribute('aria-hidden', 'true');
+  Object.assign(el.style, {
+    position:'fixed', left:'50%', transform:'translateX(-50%)', top:'0', bottom:'0',
+    width:'min(100vw,430px)', zIndex:'90', background:'#f4efe4', pointerEvents:'none'
+  });
+  document.body.appendChild(el);
+  liveMask = el;
+  clearTimeout(liveMaskTimer);
+  liveMaskTimer = setTimeout(clearLiveMask, 400);
+}
+
 function destinationIsStable(tab) {
   if (tab === 'live') return Boolean(screen?.querySelector('.kp-live-screen'));
   const cls = STABLE_CLASS[tab];
@@ -93,7 +108,7 @@ function finishArrival(force = false) {
   clearTimeout(arrivalTimer);
   arrivalTimer = 0;
   arrivalAnimation?.cancel();
-  if (completedTab === 'live') clearLiveMask();
+  clearLiveMask();
   if (reduceMotion || typeof screen.animate !== 'function') return;
 
   arrivalAnimation = screen.animate([
@@ -129,6 +144,7 @@ document.addEventListener('click', event => {
   arrivalAnimation?.cancel();
 
   if (toTab === 'live' && fromTab !== 'live') makeLiveMask();
+  else if (fromTab === 'live' && toTab !== 'live') makeExitMask();
   else clearLiveMask();
 
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });

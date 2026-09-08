@@ -1,4 +1,4 @@
-const CACHE='kickpot-v105-20260908-live-timeout-fix';
+const CACHE='kickpot-v106-20260908-live-exit-mask';
 const CORE=[
   '/',
   '/styles.css',
@@ -26,7 +26,7 @@ const CORE=[
   '/supabase-singleton.js?v=5',
   '/smooth-runtime.js?v=1',
   '/render-stability.js?v=1',
-  '/same-tab-scroll.js?v=4',
+  '/same-tab-scroll.js?v=5',
   '/auth-ux.js?v=3',
   '/app.js?v=2',
   '/prewarm-ui.js?v=1',
