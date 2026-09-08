@@ -5,6 +5,31 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));
   const sb=()=>window.__kickpotSupabase;
   const isLive=()=>$('.bottom-nav .nav-item.active')?.dataset?.tab==='live';
+
+  // app.js still runs its own, older Live renderer (renderLive() in app.js,
+  // recognisable by the "<h1>Live Matchday</h1>" markup it writes). It repaints
+  // that old UI into #screen once immediately on every tab entry, again a few
+  // hundred ms later when its own score fetch resolves, and then every 30s on
+  // a timer for as long as the user stays on the Live tab. Each of those writes
+  // used to get immediately stomped back to the markup below by the
+  // MutationObserver further down this file, so the user saw the old UI flash
+  // in and out — including well after the entry mask had already cleared. This
+  // script owns the Live tab's fixtures/table data independently of app.js, so
+  // nothing is lost by simply refusing to paint app.js's copy once we have our
+  // own data ready to show.
+  (() => {
+    const screenEl = $('#screen');
+    const upstream = screenEl ? Object.getOwnPropertyDescriptor(screenEl, 'innerHTML') : null;
+    if (!screenEl || !upstream?.get || !upstream?.set) return;
+    Object.defineProperty(screenEl, 'innerHTML', {
+      configurable: true,
+      get() { return upstream.get.call(this); },
+      set(value) {
+        if (S.loaded && isLive() && String(value).includes('<h1>Live Matchday</h1>')) return;
+        upstream.set.call(this, value);
+      }
+    });
+  })();
   const displayName=n=>String(n||'').trim()==='Nottingham'?'Nottingham Forest':String(n||'');
   const fmtDayTime=iso=>new Intl.DateTimeFormat('en-GB',{weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso));
   const fmtTime=iso=>new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso));
@@ -199,10 +224,18 @@
     render();
   }
 
+  let liveRefreshInterval=0;
   document.querySelectorAll('.bottom-nav .nav-item').forEach(btn=>btn.addEventListener('click',()=>{
+    clearInterval(liveRefreshInterval);
     setTimeout(async()=>{
-      if(btn.dataset.tab==='live') await refreshAndRender();
-      else document.body.classList.remove('kp-native-live');
+      if(btn.dataset.tab==='live'){
+        await refreshAndRender();
+        // Mirrors app.js's own 30s live-score poll, just routed through this
+        // screen's own render() instead of the old one we now suppress above.
+        liveRefreshInterval=setInterval(()=>{if(isLive())refreshAndRender()},30000);
+      } else {
+        document.body.classList.remove('kp-native-live');
+      }
     },0);
   }));
 
