@@ -17,19 +17,28 @@
   // script owns the Live tab's fixtures/table data independently of app.js, so
   // nothing is lost by simply refusing to paint app.js's copy once we have our
   // own data ready to show.
-  (() => {
+  //
+  // Guard on hasRenderedLiveOnce (set below, once render() has actually drawn
+  // the .kp-live-screen markup) rather than on S.loaded directly: S.loaded
+  // gets reset to false by load() on a failed background refresh (see below),
+  // and guarding on that would let app.js's old UI flash back in on every
+  // transient network hiccup even after we'd already shown good data once.
+  let hasRenderedLiveOnce = false;
+  if (!window.__kpLiveWriteGuardInstalled) {
+    window.__kpLiveWriteGuardInstalled = true;
     const screenEl = $('#screen');
     const upstream = screenEl ? Object.getOwnPropertyDescriptor(screenEl, 'innerHTML') : null;
-    if (!screenEl || !upstream?.get || !upstream?.set) return;
-    Object.defineProperty(screenEl, 'innerHTML', {
-      configurable: true,
-      get() { return upstream.get.call(this); },
-      set(value) {
-        if (S.loaded && isLive() && String(value).includes('<h1>Live Matchday</h1>')) return;
-        upstream.set.call(this, value);
-      }
-    });
-  })();
+    if (screenEl && upstream?.get && upstream?.set) {
+      Object.defineProperty(screenEl, 'innerHTML', {
+        configurable: true,
+        get() { return upstream.get.call(this); },
+        set(value) {
+          if (hasRenderedLiveOnce && isLive() && String(value).includes('<h1>Live Matchday</h1>')) return;
+          upstream.set.call(this, value);
+        }
+      });
+    }
+  }
   const displayName=n=>String(n||'').trim()==='Nottingham'?'Nottingham Forest':String(n||'');
   const fmtDayTime=iso=>new Intl.DateTimeFormat('en-GB',{weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso));
   const fmtTime=iso=>new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso));
@@ -217,6 +226,7 @@
     const roster=rankedRoster();
     screen.innerHTML=`<div class="kp-live-screen">${heroHTML(roster)}${subnavHTML()}<div class="kp-live-body">${bodyHTML(roster)}</div></div>`;
     bindSubnav();
+    hasRenderedLiveOnce=true;
   }
 
   async function refreshAndRender(){
