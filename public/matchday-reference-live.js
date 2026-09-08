@@ -20,7 +20,8 @@
     const session=await waitForSession(client); if(!session)throw new Error('KickPot session did not initialise');
     const {data:groups,error:groupsError}=await client.from('groups').select('*').order('created_at'); if(groupsError)throw groupsError;
     const stored=(()=>{try{return sessionStorage.getItem('kp-active-group-v1')||localStorage.getItem('kp-active-group-v1')||''}catch{return''}})();
-    S.groupId=(groups||[]).find(g=>g.id===stored)?.id||(groups||[])[0]?.id||null; if(!S.groupId)throw new Error('No active group found');
+    const activeGroup=(groups||[]).find(g=>g.id===stored)||(groups||[])[0]||null;
+    S.groupId=activeGroup?.id||null; if(!S.groupId)throw new Error('No active group found');
     const {data:gw,error:gwError}=await client.rpc('ensure_current_gameweek',{p_group_id:S.groupId}); if(gwError)throw gwError; S.gameweekId=gw;
     const uid=session.user.id;
     const [{data:payments,error:paymentsError},fx]=await Promise.all([
@@ -33,7 +34,13 @@
     if(fixtureIds.length){
       const res=await client.from('predictions').select('*').eq('group_id',S.groupId).eq('user_id',uid).in('fixture_id',fixtureIds); if(res.error)throw res.error; preds=res.data||[];
     }
-    S.paid=!!payments?.[0]?.confirmed_paid_at; S.predictions=Object.fromEntries(preds.map(p=>[String(p.fixture_id),p]));
+    // A "for fun" group (payments_required === false) never needs a confirmed
+    // payment record to unlock predictions - without this check every for-fun
+    // group's fixtures showed "Payment required" and locked score entry for
+    // everyone, since confirmed_paid_at is naturally never set when there's
+    // nothing to pay. Mirrors the same payments_required-aware unlock check
+    // already used in gameweek-rollover.js.
+    S.paid=activeGroup?.payments_required===false||!!payments?.[0]?.confirmed_paid_at; S.predictions=Object.fromEntries(preds.map(p=>[String(p.fixture_id),p]));
     const rn=Number((String(S.round).match(/\d+/)||[])[0]);
     if(Number.isFinite(rn)){
       const rounds=[];for(let n=Math.max(1,rn-5);n<rn;n++)rounds.push(n);

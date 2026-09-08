@@ -405,7 +405,12 @@ function startLockTicker() {
 
 function renderGW() {
   if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
-  const locked = !myPayment()?.confirmed_paid_at;
+  // A "for fun" group (payments_required === false) never needs a confirmed
+  // payment to unlock predictions - matches the same check in
+  // matchday-reference-live.js and gameweek-rollover.js, so this legacy
+  // renderer's brief first paint (before the reference skin takes over)
+  // doesn't show a contradictory locked state for for-fun groups.
+  const locked = activeGroup()?.payments_required !== false && !myPayment()?.confirmed_paid_at;
   screen.innerHTML = `<section class="hero"><h1>${esc(state.round || 'Gameweek')}</h1>${meta()}</section>
   ${groupSwitcher()}
   ${paymentBanner()}
