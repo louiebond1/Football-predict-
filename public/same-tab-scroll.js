@@ -1,112 +1,113 @@
 const ROUTE_PREFIX = 'kp-route-v1:';
 const SCROLL_PREFIX = 'kp-scroll-v1:';
+const screen = document.querySelector('#screen');
 const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+const STABLE_CLASS = { gw:'kp3-gw', live:'kp3-live', history:'kp3-history', group:'kp3-group' };
+let pendingTab = '';
+let pendingSince = 0;
+let arrivalAnimation = null;
+let arrivalTimer = 0;
 
-let running = false;
-let targetButton = null;
-let bypass = false;
-let waitFrame = 0;
-let waitToken = 0;
+function currentTab() {
+  return document.querySelector('.nav-item.active')?.dataset.tab || '';
+}
 
-function resetTabRoot(tab) {
-  if (!tab) return;
+function currentRoute(tab) {
+  try { return sessionStorage.getItem(`${ROUTE_PREFIX}${tab}`) || ''; }
+  catch { return ''; }
+}
+
+function clearDestinationState(tab) {
   try {
     sessionStorage.removeItem(`${ROUTE_PREFIX}${tab}`);
     sessionStorage.setItem(`${SCROLL_PREFIX}${tab}:root`, '0');
   } catch {}
 }
 
-function finishNavigation(token) {
-  if (token !== waitToken) return;
-  cancelAnimationFrame(waitFrame);
-  waitFrame = 0;
-
-  const target = targetButton;
-  targetButton = null;
-  running = false;
-
-  const currentButton = document.querySelector('.nav-item.active');
-  const currentTab = currentButton?.dataset.tab || '';
-  const destinationTab = target?.dataset.tab || '';
-
-  resetTabRoot(currentTab);
-  resetTabRoot(destinationTab);
-  window.scrollTo({ top: 0, behavior: 'auto' });
-
-  // Re-tapping the active tab is just a return-to-top action. Do not rebuild it.
-  if (!target || target === currentButton) return;
-
-  // Hand the actual tab change back to KickPot's existing navigation handler.
-  bypass = true;
-  try {
-    target.click();
-  } finally {
-    bypass = false;
+function fixVisibleRenderArtifacts() {
+  const head = screen?.querySelector('.kp3-fixtures-card .card-head');
+  if (head?.querySelector('.kp3-count')) {
+    head.querySelector(':scope > .muted')?.remove();
   }
 }
 
-function waitForNativeScroll(token, startedAt) {
-  if (token !== waitToken) return;
-
-  if (window.scrollY <= 2) {
-    finishNavigation(token);
-    return;
-  }
-
-  // Native smooth scrolling is controlled by Safari. We only observe it; we do
-  // not write scrollY on every frame. The timeout is a fail-safe, not an animation.
-  if (performance.now() - startedAt > 1200) {
-    window.scrollTo({ top: 0, behavior: 'auto' });
-    finishNavigation(token);
-    return;
-  }
-
-  waitFrame = requestAnimationFrame(() => waitForNativeScroll(token, startedAt));
+function destinationIsStable(tab) {
+  const cls = STABLE_CLASS[tab];
+  return !cls || screen?.classList.contains(cls);
 }
 
-function startNativeReturnToTop() {
-  if (running) return;
-  running = true;
-  const token = ++waitToken;
+function finishArrival(force = false) {
+  if (!screen || !pendingTab) return;
+  const active = currentTab();
+  if (active !== pendingTab) return;
+  if (!force && !destinationIsStable(pendingTab)) return;
 
-  if (reduceMotion || window.scrollY <= 2) {
-    finishNavigation(token);
-    return;
-  }
+  pendingTab = '';
+  clearTimeout(arrivalTimer);
+  arrivalTimer = 0;
+  arrivalAnimation?.cancel();
+  if (reduceMotion || typeof screen.animate !== 'function') return;
 
-  // Let iOS/Safari perform the actual scrolling. This produces the visible
-  // glide through the current page instead of fading and teleporting to the top.
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  waitFrame = requestAnimationFrame(() => waitForNativeScroll(token, performance.now()));
+  arrivalAnimation = screen.animate([
+    { opacity: 0.96, transform: 'translateY(2px)' },
+    { opacity: 1, transform: 'translateY(0)' }
+  ], {
+    duration: 120,
+    easing: 'cubic-bezier(.22,.61,.36,1)'
+  });
 }
 
-// Only intercept a bottom-tab tap when there is a real scroll-to-top to perform.
-// At the top, different-tab navigation is left completely untouched.
-window.addEventListener('click', event => {
-  if (bypass) return;
+document.addEventListener('click', event => {
+  const nav = event.target.closest('.nav-item[data-tab]');
+  if (!nav) return;
 
-  const rawTarget = event.target;
-  const button = rawTarget instanceof Element ? rawTarget.closest('.nav-item[data-tab]') : null;
-  if (!button) return;
+  const toTab = nav.dataset.tab;
+  const fromTab = currentTab();
+  const sameTab = toTab === fromTab;
+  const hasSubroute = Boolean(currentRoute(toTab));
 
-  const sameTab = button.classList.contains('active');
-  const atTop = window.scrollY <= 2;
+  clearDestinationState(toTab);
 
-  // Avoid an unnecessary full re-render when the active tab is tapped at top.
-  if (sameTab && atTop && !running) {
+  if (sameTab && !hasSubroute) {
     event.preventDefault();
-    event.stopPropagation();
-    resetTabRoot(button.dataset.tab);
+    event.stopImmediatePropagation();
+    pendingTab = '';
+    clearTimeout(arrivalTimer);
+    arrivalAnimation?.cancel();
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     return;
   }
 
-  // When already at the top, switching tabs uses the original app navigation.
-  if (atTop && !running) return;
+  pendingTab = toTab;
+  pendingSince = performance.now();
+  clearTimeout(arrivalTimer);
+  arrivalAnimation?.cancel();
 
-  // While Safari is gliding upward, repeated taps only change the final target.
-  targetButton = button;
-  event.preventDefault();
-  event.stopPropagation();
-  resetTabRoot(button.dataset.tab);
-  startNativeReturnToTop();
+  // Reset scroll synchronously before the destination render so Safari never
+  // paints the next tab at the previous tab's vertical offset.
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+
+  // Repeat once after app.js has replaced the screen DOM. iOS can otherwise
+  // restore the old offset during the same navigation frame.
+  requestAnimationFrame(() => {
+    if (currentTab() === toTab) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  });
+
+  arrivalTimer = setTimeout(() => finishArrival(true), 180);
 }, true);
+
+const observer = new MutationObserver(() => {
+  fixVisibleRenderArtifacts();
+  if (!pendingTab) return;
+  if (performance.now() - pendingSince > 180) finishArrival(true);
+  else queueMicrotask(() => finishArrival(false));
+});
+if (screen) observer.observe(screen, { childList: true, subtree: true, attributes:true, attributeFilter:['class'] });
+
+fixVisibleRenderArtifacts();
