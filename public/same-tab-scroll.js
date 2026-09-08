@@ -61,7 +61,7 @@ function makeLiveMask() {
   document.body.appendChild(el);
   liveMask = el;
   clearTimeout(liveMaskTimer);
-  liveMaskTimer = setTimeout(clearLiveMask, 1800);
+  liveMaskTimer = setTimeout(clearLiveMask, 5200);
 }
 
 function clearLiveMask() {
@@ -143,7 +143,7 @@ document.addEventListener('click', event => {
     }
   });
 
-  arrivalTimer = setTimeout(() => finishArrival(true), toTab === 'live' ? 1600 : 180);
+  arrivalTimer = setTimeout(() => finishArrival(true), toTab === 'live' ? 5000 : 180);
 }, true);
 
 const observer = new MutationObserver(() => {
@@ -153,7 +153,7 @@ const observer = new MutationObserver(() => {
     queueMicrotask(() => finishArrival(false));
     return;
   }
-  if (performance.now() - pendingSince > (pendingTab === 'live' ? 1600 : 180)) finishArrival(true);
+  if (performance.now() - pendingSince > (pendingTab === 'live' ? 5000 : 180)) finishArrival(true);
   else queueMicrotask(() => finishArrival(false));
 });
 if (screen) observer.observe(screen, { childList: true, subtree: true, attributes:true, attributeFilter:['class'] });

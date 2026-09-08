@@ -1,4 +1,4 @@
-const CACHE='kickpot-v104-20260908-live-entry';
+const CACHE='kickpot-v105-20260908-live-timeout-fix';
 const CORE=[
   '/',
   '/styles.css',

@@ -20,6 +20,10 @@
   async function load(){
     if(S.loading)return; S.loading=true;
     try{
+      // Fixtures don't depend on session/group data, so fetch them in parallel
+      // with everything else instead of after — one fewer round-trip on the
+      // critical path before the tab can render.
+      const fixturesPromise=fetch('/api/football/fixtures',{cache:'no-store'}).then(r=>r.json());
       const client=await waitForClient(); if(!client)throw new Error('KickPot client did not initialise');
       const session=await waitForSession(client); if(!session)throw new Error('KickPot session did not initialise');
       const uid=session.user.id; S.myId=uid;
@@ -28,26 +32,23 @@
       S.groupId=(groups||[]).find(g=>g.id===stored)?.id||(groups||[])[0]?.id||null; if(!S.groupId)throw new Error('No active group found');
       const {data:gw,error:gwError}=await client.rpc('ensure_current_gameweek',{p_group_id:S.groupId}); if(gwError)throw gwError; S.gameweekId=gw;
 
-      const [{data:members,error:membersError},{data:profiles,error:profilesError},{data:leaderboard,error:lbError},{data:pickStatus,error:psError},fx]=await Promise.all([
+      const [{data:members,error:membersError},{data:profiles,error:profilesError},{data:leaderboard,error:lbError},{data:pickStatus,error:psError},{data:preds,error:predsError},fx]=await Promise.all([
         client.from('group_members').select('user_id').eq('group_id',S.groupId),
         client.from('profiles').select('id,display_name'),
         client.from('group_leaderboard').select('*').eq('group_id',S.groupId).eq('gameweek_id',S.gameweekId),
         client.rpc('group_pick_status',{p_group_id:S.groupId,p_gameweek_id:S.gameweekId}),
-        fetch('/api/football/fixtures',{cache:'no-store'}).then(r=>r.json())
+        client.from('predictions').select('*').eq('group_id',S.groupId).eq('user_id',uid),
+        fixturesPromise
       ]);
-      if(membersError)throw membersError; if(profilesError)throw profilesError; if(lbError)throw lbError;
+      if(membersError)throw membersError; if(profilesError)throw profilesError; if(lbError)throw lbError; if(predsError)throw predsError;
       const nameOf=new Map((profiles||[]).map(p=>[p.id,p.display_name]));
       S.members=(members||[]).map(m=>({user_id:m.user_id,display_name:nameOf.get(m.user_id)||'Player'}));
       S.leaderboard=Object.fromEntries((leaderboard||[]).map(r=>[r.user_id,r.points]));
       S.pickStatus=psError?{}:Object.fromEntries((pickStatus||[]).map(r=>[r.user_id,Number(r.submitted_count)||0]));
 
       S.fixtures=fx?.fixtures||[]; S.round=fx?.round||'Matchday 4';
-      const fixtureIds=S.fixtures.map(f=>f.id).filter(Boolean);
-      let preds=[];
-      if(fixtureIds.length){
-        const res=await client.from('predictions').select('*').eq('group_id',S.groupId).eq('user_id',uid).in('fixture_id',fixtureIds); if(res.error)throw res.error; preds=res.data||[];
-      }
-      S.predictions=Object.fromEntries(preds.map(p=>[String(p.fixture_id),p]));
+      const fixtureIds=new Set(S.fixtures.map(f=>String(f.id)));
+      S.predictions=Object.fromEntries((preds||[]).filter(p=>fixtureIds.has(String(p.fixture_id))).map(p=>[String(p.fixture_id),p]));
       S.loaded=true;
     }catch(e){console.error('KickPot Live table load',e);S.loaded=false}
     finally{S.loading=false}
