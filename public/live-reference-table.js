@@ -143,14 +143,20 @@
   function myPickRowHTML(f){
     const p=S.predictions[f.id];
     const locked=Date.now()>=new Date(f.kickoff).getTime();
+    // Home/away are rendered as two separate columns (rather than one combined
+    // "Home v Away" string) so each crest sits directly beside its own team's
+    // name - previously the away crest landed after the score, well past the
+    // end of the (left-aligned) team-name text, and looked stranded/unrelated
+    // to either team.
     return `<div class="kp-live-pickrow">
-      <img class="kp-live-pick-crest" src="${esc(f.home?.logo||'')}" alt="" onerror="this.style.visibility='hidden'">
-      <div class="kp-live-pick-mid">
-        <div class="kp-live-pick-teams">${esc(displayName(f.home?.name))} v ${esc(displayName(f.away?.name))}</div>
-        <div class="kp-live-pick-time">${fmtDayTime(f.kickoff)} · ${locked?'Locked':`Locks in ${rel(f.kickoff)}`}</div>
+      <div class="kp-live-pick-main">
+        <img class="kp-live-pick-crest" src="${esc(f.home?.logo||'')}" alt="" onerror="this.style.visibility='hidden'">
+        <div class="kp-live-pick-team home">${esc(displayName(f.home?.name))}</div>
+        <div class="kp-live-pick-score">${p?`${p.predicted_home}-${p.predicted_away}`:'—'}</div>
+        <div class="kp-live-pick-team away">${esc(displayName(f.away?.name))}</div>
+        <img class="kp-live-pick-crest" src="${esc(f.away?.logo||'')}" alt="" onerror="this.style.visibility='hidden'">
       </div>
-      <div class="kp-live-pick-score">${p?`${p.predicted_home}-${p.predicted_away}`:'—'}</div>
-      <img class="kp-live-pick-crest" src="${esc(f.away?.logo||'')}" alt="" onerror="this.style.visibility='hidden'">
+      <div class="kp-live-pick-time">${fmtDayTime(f.kickoff)} · ${locked?'Locked':`Locks in ${rel(f.kickoff)}`}</div>
     </div>`;
   }
 

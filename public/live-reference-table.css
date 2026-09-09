@@ -83,13 +83,33 @@ body.kp-native-live .bottom-nav .nav-item:before{display:none!important}
 
 /* ---- My Picks ---- */
 .kp-live-picks{padding:14px 20px 4px}
-.kp-live-pickrow{display:grid;grid-template-columns:28px minmax(0,1fr) auto 28px;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--kp-line)}
+.kp-live-pickrow{padding:12px 0;border-bottom:1px solid var(--kp-line)}
 .kp-live-pickrow:last-child{border-bottom:0}
+/* Home crest+name on the left, away name+crest on the right, score centred -
+   each crest now sits directly beside its own team's name (see the comment
+   in myPickRowHTML for the "crest stranded past the name" bug this replaces). */
+.kp-live-pick-main{display:grid;grid-template-columns:26px minmax(0,1fr) auto minmax(0,1fr) 26px;align-items:center;gap:8px}
 .kp-live-pick-crest{width:26px;height:26px;object-fit:contain}
-.kp-live-pick-mid{min-width:0}
-.kp-live-pick-teams{font:700 12.5px/1.2 Georgia,"Times New Roman",serif;color:var(--kp-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kp-live-pick-time{margin-top:2px;font-size:10px;color:#9c9b99}
-.kp-live-pick-score{font:700 15px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink)}
+.kp-live-pick-team{min-width:0;font:700 12.5px/1.2 Georgia,"Times New Roman",serif;color:var(--kp-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kp-live-pick-team.away{text-align:right}
+.kp-live-pick-score{padding:0 2px;font:700 15px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink);white-space:nowrap}
+.kp-live-pick-time{margin-top:4px;font-size:10px;color:#9c9b99;padding-left:34px}
+
+/* These cards use literal #fff/cream colours rather than --kp-paper, so the
+   --kp-ink dark redefinition above (now light-coloured) would otherwise land
+   on top of a background that never changed - near-white text on a white
+   card. Give the cards themselves a dark surface to match. */
+html[data-kp-theme="dark"] body.kp-native-live .kp-live-fxc,
+html[data-kp-theme="dark"] body.kp-native-live .kp-live-board,
+html[data-kp-theme="dark"] body.kp-native-live .kp-live-trow{
+  background:#15191a!important;
+}
+html[data-kp-theme="dark"] body.kp-native-live .kp-live-trow.top{
+  background:rgba(167,134,67,.14)!important;
+}
+html[data-kp-theme="dark"] body.kp-native-live .kp-live-tip{
+  background:#15191a!important;
+}
 
 @media(max-width:395px){
   body.kp-native-live .topbar{padding-left:22px!important;padding-right:22px!important}
