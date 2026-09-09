@@ -14,6 +14,16 @@ function currentTab() {
   return document.querySelector('.nav-item.active')?.dataset.tab || '';
 }
 
+// Masks below were built cream/light-only, before dark mode was wired up for
+// the screens they cover - reading the live theme keeps them from flashing a
+// light rectangle over an otherwise-dark app on every tab switch.
+function isDarkTheme() {
+  return document.documentElement.getAttribute('data-kp-theme') === 'dark';
+}
+function maskBg() {
+  return isDarkTheme() ? '#0d100f' : '#f4efe4';
+}
+
 function currentRoute(tab) {
   try { return sessionStorage.getItem(`${ROUTE_PREFIX}${tab}`) || ''; }
   catch { return ''; }
@@ -33,30 +43,40 @@ function fixVisibleRenderArtifacts() {
 
 function makeLiveMask() {
   hardClearLiveMask();
+  // Colours below were hardcoded cream/light-only, before dark mode existed for
+  // this screen - compute them per-theme so the mask matches whatever's showing
+  // through underneath instead of always flashing light.
+  const dark = isDarkTheme();
+  const bg = dark ? '#0d100f' : '#f4efe4';
+  const ink = dark ? '#f4f1ea' : '#161713';
+  const muted = dark ? '#6f6f6a' : '#9c9b99';
+  const lineColor = dark ? 'rgba(244,241,234,.12)' : 'rgba(20,20,20,.1)';
+  const skeletonBg = dark ? 'rgba(244,241,234,.08)' : 'rgba(20,20,20,.07)';
+  const cardBg = dark ? '#15191a' : '#fff';
   const el = document.createElement('div');
   el.id = 'kpLiveEntryMask';
   el.setAttribute('aria-hidden', 'true');
   el.innerHTML = `
-    <div style="height:100%;background:#f4efe4;overflow:hidden">
+    <div style="height:100%;background:${bg};overflow:hidden">
       <div style="height:214px;position:relative;background:#202329 url('/kickpot-hero-final.jpg') center 55%/cover no-repeat;color:white;padding:24px 22px 20px;box-sizing:border-box">
         <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,6,9,.78),rgba(4,6,9,.4) 62%,rgba(4,6,9,.14))"></div>
         <div style="position:relative;z-index:1;font:800 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:#d2b76f">MATCHDAY</div>
         <div style="position:relative;z-index:1;margin-top:10px;font:500 56px/.86 Georgia,'Times New Roman',serif;letter-spacing:-.03em">Live</div>
         <div style="position:relative;z-index:1;margin-top:10px;font:800 10.5px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:.2em">REAL GAMES. REAL POINTS.</div>
       </div>
-      <div style="height:47px;border-bottom:1px solid rgba(20,20,20,.1);display:flex;align-items:flex-end;gap:18px;padding:0 22px;box-sizing:border-box;background:#f4efe4">
-        <div style="padding-bottom:12px;border-bottom:2px solid #a2833e;font:600 13.5px/1 Georgia,'Times New Roman',serif;color:#161713">Live Fixtures</div>
-        <div style="padding-bottom:13px;font:600 13.5px/1 Georgia,'Times New Roman',serif;color:#9c9b99">Live Table</div>
-        <div style="padding-bottom:13px;font:600 13.5px/1 Georgia,'Times New Roman',serif;color:#9c9b99">My Picks</div>
+      <div style="height:47px;border-bottom:1px solid ${lineColor};display:flex;align-items:flex-end;gap:18px;padding:0 22px;box-sizing:border-box;background:${bg}">
+        <div style="padding-bottom:12px;border-bottom:2px solid #a2833e;font:600 13.5px/1 Georgia,'Times New Roman',serif;color:${ink}">Live Fixtures</div>
+        <div style="padding-bottom:13px;font:600 13.5px/1 Georgia,'Times New Roman',serif;color:${muted}">Live Table</div>
+        <div style="padding-bottom:13px;font:600 13.5px/1 Georgia,'Times New Roman',serif;color:${muted}">My Picks</div>
       </div>
-      <div style="padding:22px;background:#f4efe4">
-        <div style="height:28px;width:128px;border-radius:8px;background:rgba(20,20,20,.07)"></div>
-        <div style="margin-top:14px;height:160px;border:1px solid rgba(20,20,20,.1);border-radius:16px;background:#fff"></div>
+      <div style="padding:22px;background:${bg}">
+        <div style="height:28px;width:128px;border-radius:8px;background:${skeletonBg}"></div>
+        <div style="margin-top:14px;height:160px;border:1px solid ${lineColor};border-radius:16px;background:${cardBg}"></div>
       </div>
     </div>`;
   Object.assign(el.style, {
     position:'fixed', left:'50%', transform:'translateX(-50%)', top:'0', bottom:'0',
-    width:'min(100vw,430px)', zIndex:'90', background:'#f4efe4', pointerEvents:'none'
+    width:'min(100vw,430px)', zIndex:'90', background:bg, pointerEvents:'none'
   });
   document.body.appendChild(el);
   liveMask = el;
@@ -93,6 +113,13 @@ function hardClearLiveMask() {
   document.querySelectorAll('#kpLiveEntryMask').forEach(el => el.remove());
 }
 
+// Also used (via the click handler below) as the generic cover for EVERY
+// tab-to-tab transition that isn't an entry into Live - Matchday/History/
+// Group switches used to get no mask at all, so whatever stale DOM briefly
+// existed during the ~180ms arrival window (a leftover screen, or a label
+// from the previous tab) was directly visible. A flat cover in the current
+// theme's colour for that short window hides the same in-between state that
+// the Live-tab masks already hide, instead of only protecting Live.
 function makeExitMask() {
   hardClearLiveMask();
   const el = document.createElement('div');
@@ -100,7 +127,7 @@ function makeExitMask() {
   el.setAttribute('aria-hidden', 'true');
   Object.assign(el.style, {
     position:'fixed', left:'50%', transform:'translateX(-50%)', top:'0', bottom:'0',
-    width:'min(100vw,430px)', zIndex:'90', background:'#f4efe4', pointerEvents:'none'
+    width:'min(100vw,430px)', zIndex:'90', background:maskBg(), pointerEvents:'none'
   });
   document.body.appendChild(el);
   liveMask = el;
@@ -160,9 +187,12 @@ document.addEventListener('click', event => {
   clearTimeout(arrivalTimer);
   arrivalAnimation?.cancel();
 
+  // Entering Live gets the full cinematic mask (makeLiveMask); every other
+  // transition - including leaving Live, and switching directly between any
+  // of Matchday/History/Group - gets the quick flat cover instead of no
+  // protection at all (see the comment on makeExitMask).
   if (toTab === 'live' && fromTab !== 'live') makeLiveMask();
-  else if (fromTab === 'live' && toTab !== 'live') makeExitMask();
-  else clearLiveMask();
+  else makeExitMask();
 
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   document.documentElement.scrollTop = 0;
