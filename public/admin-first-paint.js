@@ -51,7 +51,7 @@ function placeholder() {
   const entry = document.createElement('button');
   entry.type = 'button';
   entry.className = 'kp3-nav-row kp-admin-first-paint';
-  entry.innerHTML = `<span class="kp3-nav-icon">${adminIcon}</span><span class="kp3-nav-copy"><strong>Admin</strong><small>Payments, members & scoring controls</small></span><span class="kp3-nav-meta">Treasurer</span><span class="kp3-nav-chevron">${chevron}</span>`;
+  entry.innerHTML = `<span class="kp3-nav-icon">${adminIcon}</span><span class="kp3-nav-copy"><strong>Admin</strong><small>Payments, members & scoring controls</small></span><span class="kp3-nav-meta" style="text-transform:uppercase">Treasurer</span><span class="kp3-nav-chevron">${chevron}</span>`;
   entry.addEventListener('click', () => {
     pendingClick = true;
     const real = screen?.querySelector('.kp-admin-entry');
@@ -81,6 +81,10 @@ function apply() {
     fake?.remove();
     return;
   }
+
+  const settingsRow = [...screen.querySelectorAll('.kp3-nav-row')].find(r => r.querySelector('.kp3-nav-copy strong')?.textContent.trim() === 'Group settings');
+  const settingsSmall = settingsRow?.querySelector('.kp3-nav-copy small');
+  if (settingsSmall) settingsSmall.textContent = 'Invite code & group access';
 
   const menu = screen.querySelector('.kp3-group-overview .kp3-group-menu');
   if (!menu || fake) return;
