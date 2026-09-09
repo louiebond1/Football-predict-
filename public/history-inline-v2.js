@@ -2,6 +2,7 @@
   const ROOT_ID = 'kpHistoryInlineV2';
   let renderSeq = 0;
   let resolvedGroupId = '';
+  const boardCache = new Map();
   const esc = (v='') => String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const historyActive = () => document.querySelector('.nav-item[data-tab="history"]')?.classList.contains('active') === true;
   function candidateGroupId(){const s=document.querySelector('#groupSwitch');if(s?.value)return String(s.value);try{return String(sessionStorage.getItem('kp-active-group-v1')||localStorage.getItem('kp-active-group-v1')||'')}catch{return''}}
@@ -42,23 +43,43 @@
     if(!historyActive())return;
     const card=historyCard();if(!card||card.querySelector(`#${ROOT_ID}`))return;
     card.querySelectorAll('.payment-row').forEach(r=>r.remove());card.querySelector('.empty')?.remove();
-    const root=document.createElement('div');root.id=ROOT_ID;root.innerHTML='<div class="kp-hi-loading">Loading previous Matchdays…</div>';card.appendChild(root);
+    const root=document.createElement('div');root.id=ROOT_ID;card.appendChild(root);
+    let weeks=[],byWeek=new Map(),selected='';
+    const renderWeek=()=>{
+      if(!weeks.length)return;
+      const week=weeks.find(w=>String(w.id)===selected)||weeks[0];
+      selected=String(week.id);
+      root.innerHTML=`<div class="kp-hi-weekbar">${weeks.map(w=>`<button type="button" class="kp-hi-week${String(w.id)===selected?' active':''}" data-hi-week="${esc(w.id)}">${esc(weekLabel(w))}</button>`).join('')}</div><div class="kp-hi-subhead"><strong>${esc(weekLabel(week))} table</strong><small>Tap a player to see their predictions</small></div>${tableHtml(byWeek.get(selected)||[],selected)}`;
+    };
+    root.addEventListener('click',e=>{const w=e.target.closest('[data-hi-week]');if(w){selected=String(w.dataset.hiWeek);renderWeek();return}const p=e.target.closest('[data-hi-user]');if(p){showPlayer(root,p);return}if(e.target.closest('.kp-hi-back'))renderWeek()});
+
     const seq=++renderSeq,sb=await client();
     if(!root.isConnected||seq!==renderSeq||!historyActive())return;
-    const gid=await resolveGroupId(sb);
-    if(!sb||!gid){root.innerHTML='<div class="kp-hi-empty">Couldn’t load previous Matchdays.</div>';return}
+    const gid=await getGroupId(sb);
+    const cached=gid?boardCache.get(gid):null;
+    if(cached){
+      weeks=cached.weeks;byWeek=cached.byWeek;selected=String(weeks[0]?.id||'');
+      renderWeek();
+    } else {
+      root.innerHTML='<div class="kp-hi-loading">Loading previous Matchdays…</div>';
+    }
+
+    if(!sb||!gid){if(!cached)root.innerHTML='<div class="kp-hi-empty">Couldn’t load previous Matchdays.</div>';return}
     const {data:board,error:boardErr}=await sb.from('group_leaderboard').select('*').eq('group_id',gid);
-    if(boardErr||!root.isConnected){console.warn('[history-v2] leaderboard failed',{gid,boardErr});root.innerHTML='<div class="kp-hi-empty">Couldn’t load previous Matchdays.</div>';return}
+    if(seq!==renderSeq||!root.isConnected)return;
+    if(boardErr){console.warn('[history-v2] leaderboard failed',{gid,boardErr});if(!cached)root.innerHTML='<div class="kp-hi-empty">Couldn’t load previous Matchdays.</div>';return}
     const ids=[...new Set((board||[]).map(r=>r.gameweek_id).filter(Boolean))];
-    if(!ids.length){root.innerHTML='<div class="kp-hi-empty">No completed Matchdays yet.</div>';return}
+    if(!ids.length){if(!cached)root.innerHTML='<div class="kp-hi-empty">No completed Matchdays yet.</div>';return}
     const {data:weekRows,error:weekErr}=await sb.from('gameweeks').select('id,round_name,starts_at,ends_at').in('id',ids).order('starts_at',{ascending:false});
-    if(weekErr||!root.isConnected){console.warn('[history-v2] gameweeks failed',weekErr);root.innerHTML='<div class="kp-hi-empty">Couldn’t load previous Matchdays.</div>';return}
-    const now=Date.now(),weeks=(weekRows||[]).filter(w=>!w.ends_at||new Date(w.ends_at).getTime()<now);
-    if(!weeks.length){root.innerHTML='<div class="kp-hi-empty">No completed Matchdays yet.</div>';return}
-    const byWeek=new Map(weeks.map(w=>[String(w.id),(board||[]).filter(r=>String(r.gameweek_id)===String(w.id))]));
-    let selected=String(weeks[0].id);
-    const renderWeek=()=>{const week=weeks.find(w=>String(w.id)===selected)||weeks[0];root.innerHTML=`<div class="kp-hi-weekbar">${weeks.map(w=>`<button type="button" class="kp-hi-week${String(w.id)===selected?' active':''}" data-hi-week="${esc(w.id)}">${esc(weekLabel(w))}</button>`).join('')}</div><div class="kp-hi-subhead"><strong>${esc(weekLabel(week))} table</strong><small>Tap a player to see their predictions</small></div>${tableHtml(byWeek.get(selected)||[],selected)}`};
-    root.addEventListener('click',e=>{const w=e.target.closest('[data-hi-week]');if(w){selected=String(w.dataset.hiWeek);renderWeek();return}const p=e.target.closest('[data-hi-user]');if(p){showPlayer(root,p);return}if(e.target.closest('.kp-hi-back'))renderWeek()});
+    if(seq!==renderSeq||!root.isConnected)return;
+    if(weekErr){console.warn('[history-v2] gameweeks failed',weekErr);if(!cached)root.innerHTML='<div class="kp-hi-empty">Couldn’t load previous Matchdays.</div>';return}
+    const now=Date.now(),freshWeeks=(weekRows||[]).filter(w=>!w.ends_at||new Date(w.ends_at).getTime()<now);
+    if(!freshWeeks.length){if(!cached)root.innerHTML='<div class="kp-hi-empty">No completed Matchdays yet.</div>';return}
+    const freshByWeek=new Map(freshWeeks.map(w=>[String(w.id),(board||[]).filter(r=>String(r.gameweek_id)===String(w.id))]));
+    boardCache.set(gid,{weeks:freshWeeks,byWeek:freshByWeek});
+    if(!historyActive())return;
+    const keepSelected=cached&&freshWeeks.some(w=>String(w.id)===selected);
+    weeks=freshWeeks;byWeek=freshByWeek;if(!keepSelected)selected=String(freshWeeks[0].id);
     renderWeek();
   }
   const screen=document.querySelector('#screen');if(screen)new MutationObserver(()=>queueMicrotask(mount)).observe(screen,{childList:true,subtree:true});

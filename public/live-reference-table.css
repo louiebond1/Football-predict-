@@ -14,12 +14,10 @@ body.kp-native-live .bottom-nav .nav-item.active{color:#a2833e!important}
 body.kp-native-live .bottom-nav .nav-item:before{display:none!important}
 
 /* ---- Hero ---- */
-.kp-live-hero{position:relative;min-height:214px;margin:0;padding:24px 22px 20px;color:#fff;overflow:hidden;background-color:#3a3d40}
-.kp-live-hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 55%;z-index:0}
+.kp-live-hero{position:relative;height:244px;margin:0;padding:24px 22px 20px;color:#fff;overflow:hidden;background-color:#3a3d40}
+.kp-live-hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 50%;z-index:0}
 .kp-live-hero:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(4,6,9,.78),rgba(4,6,9,.4) 62%,rgba(4,6,9,.14))}
 .kp-live-hero>*{position:relative;z-index:2}
-.kp-live-hero-crown{position:absolute;top:24px;right:22px;z-index:2;text-align:center;font-size:26px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
-.kp-live-hero-tag{margin-top:4px;font-size:9px;font-weight:700;letter-spacing:.02em;line-height:1.35;color:#fff;opacity:.92}
 .kp-live-eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#d2b76f}
 .kp-live-hero h1{margin:10px 0 0;font:500 56px/.86 Georgia,"Times New Roman",serif;letter-spacing:-.03em;color:#fff}
 .kp-live-hero-sub{margin-top:10px;font-size:10.5px;font-weight:800;letter-spacing:.2em;color:#fff;opacity:.9}

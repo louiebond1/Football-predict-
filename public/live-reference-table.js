@@ -166,7 +166,6 @@
     const fullyLocked=roster.filter(m=>m.total>0&&m.submitted===m.total).length;
     return `<section class="kp-live-hero">
       <img class="kp-live-hero-photo" src="/kickpot-hero-final.jpg" alt="">
-      <div class="kp-live-hero-crown">👑<div class="kp-live-hero-tag">Same passion.<br>New predictions.</div></div>
       <div class="kp-live-eyebrow">Matchday ${esc(roundShort(S.round))}</div>
       <h1>Live</h1>
       <div class="kp-live-hero-sub">REAL GAMES. REAL POINTS.</div>
