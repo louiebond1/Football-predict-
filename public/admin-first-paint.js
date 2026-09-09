@@ -84,7 +84,7 @@ function apply() {
 
   const settingsRow = [...screen.querySelectorAll('.kp3-nav-row')].find(r => r.querySelector('.kp3-nav-copy strong')?.textContent.trim() === 'Group settings');
   const settingsSmall = settingsRow?.querySelector('.kp3-nav-copy small');
-  if (settingsSmall) settingsSmall.textContent = 'Invite code & group access';
+  if (settingsSmall && settingsSmall.textContent !== 'Invite code & group access') settingsSmall.textContent = 'Invite code & group access';
 
   const menu = screen.querySelector('.kp3-group-overview .kp3-group-menu');
   if (!menu || fake) return;

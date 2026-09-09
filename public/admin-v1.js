@@ -295,7 +295,7 @@ async function enhanceAdmin() {
     if (menu.querySelector('.kp-admin-entry')) return;
 
     const settingsRow = [...menu.querySelectorAll('.kp3-nav-row')].find(r => /^Group settings/i.test(r.textContent.trim()));
-    const settingsSmall = settingsRow?.querySelector('.kp3-nav-copy small'); if (settingsSmall) settingsSmall.textContent = 'Invite code & group access';
+    const settingsSmall = settingsRow?.querySelector('.kp3-nav-copy small'); if (settingsSmall && settingsSmall.textContent !== 'Invite code & group access') settingsSmall.textContent = 'Invite code & group access';
 
     const view = document.createElement('section'); view.className = 'kp3-view kp-admin-view'; view.hidden = true; root.append(view);
     const entry = document.createElement('button'); entry.type = 'button'; entry.className = 'kp3-nav-row kp-admin-entry';
