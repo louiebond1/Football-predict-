@@ -3,7 +3,7 @@
   const screen = document.querySelector('#screen');
   if (!screen) return;
 
-  const esc = (s='') => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));
+  const esc = (s='') => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const clean = (s='') => String(s).replace(/\s+/g,' ').trim();
   const svg = {
     lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>',
@@ -18,7 +18,7 @@
 
   function groupTabActive(){ return !!document.querySelector('.nav-item[data-tab="group"]')?.classList.contains('active'); }
   function findSource(){
-    if (screen.dataset.groupReference === 'v3') return null;
+    if (screen.dataset.groupReference === 'v4') return null;
     const head = screen.querySelector('.group-head');
     const h1 = head?.querySelector('h1');
     return head && h1 ? {head,h1} : null;
@@ -43,38 +43,58 @@
     return {title,memberCount,treasurer,stake,initials,children:[...screen.children]};
   }
 
-  function closePanel(){
+  function resetPanel(scrollHome=true){
     const panel = screen.querySelector('.group-reference-panel');
     const legacy = screen.querySelector('.group-reference-legacy');
     if (panel && legacy) {
-      const moved = panel.querySelector('.card');
-      if (moved) legacy.appendChild(moved);
+      const moved = panel.querySelector('[data-group-original-card="1"]');
+      if (moved) {
+        moved.removeAttribute('data-group-original-card');
+        legacy.appendChild(moved);
+      }
       panel.remove();
     }
     screen.querySelector('.group-reference-hub')?.classList.remove('group-reference-hub--compact');
-    window.scrollTo({top:0,behavior:'smooth'});
+    if (scrollHome) window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function cardTitle(card){ return clean(card.querySelector('.card-title')?.textContent || card.textContent || ''); }
+
+  function findTarget(legacy,label){
+    const cards=[...legacy.querySelectorAll('.card')];
+    if(label==='members') return cards.find(c=>/member payments|members/i.test(cardTitle(c)));
+    if(label==='rules') return cards.find(c=>/this week|rules/i.test(cardTitle(c)));
+    if(label==='settings') return cards.find(c=>/pay the treasurer|group settings/i.test(cardTitle(c)));
+    if(label==='admin') return cards.find(c=>/treasurer.*bank details|admin/i.test(cardTitle(c))) || cards.find(c=>/treasurer/i.test(cardTitle(c)));
+    return null;
   }
 
   function openLegacy(label){
-    closePanel();
+    resetPanel(false);
     const legacy = screen.querySelector('.group-reference-legacy');
     if (!legacy) return;
-    const cards=[...legacy.querySelectorAll(':scope > .card')];
-    let target=null, title='';
-    if(label==='members'){ target=cards.find(c=>/member payments/i.test(clean(c.textContent))); title='Members'; }
-    if(label==='rules'){ target=cards.find(c=>/this week/i.test(clean(c.textContent))); title='Rules'; }
-    if(label==='settings'){ target=cards.find(c=>/pay the treasurer/i.test(clean(c.textContent))); title='Group settings'; }
-    if(label==='admin'){ target=cards.find(c=>/treasurer/i.test(clean(c.textContent))); title='Admin'; }
-    if (!target) return;
+    const target=findTarget(legacy,label);
+    const titles={members:'Members',rules:'Rules',settings:'Group settings',admin:'Admin'};
+    if (!target) {
+      console.warn('[KickPot Group] panel target not found:', label);
+      return;
+    }
+
+    target.hidden=false;
+    target.removeAttribute('hidden');
+    target.style.removeProperty('display');
+    target.style.removeProperty('visibility');
+    target.style.removeProperty('opacity');
+    target.dataset.groupOriginalCard='1';
 
     const panel=document.createElement('section');
     panel.className='group-reference-panel';
-    panel.innerHTML=`<div class="group-reference-panel-head"><button type="button" class="group-reference-back">${svg.back}</button><div><small>GROUP</small><h2>${esc(title)}</h2></div></div>`;
-    panel.appendChild(target); /* move, don't clone: keeps the original event listeners alive */
+    panel.innerHTML=`<div class="group-reference-panel-head"><button type="button" class="group-reference-back" aria-label="Back to Group">${svg.back}</button><div><small>GROUP</small><h2>${esc(titles[label]||'Group')}</h2></div></div>`;
+    panel.appendChild(target);
     screen.querySelector('.group-reference-hub')?.classList.add('group-reference-hub--compact');
     screen.appendChild(panel);
-    panel.querySelector('.group-reference-back')?.addEventListener('click',closePanel);
-    requestAnimationFrame(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}));
+    panel.querySelector('.group-reference-back')?.addEventListener('click',()=>resetPanel(true));
+    requestAnimationFrame(()=>requestAnimationFrame(()=>panel.scrollIntoView({behavior:'smooth',block:'start'})));
   }
 
   function render(){
@@ -87,7 +107,7 @@
     const legacy=document.createElement('div'); legacy.className='group-reference-legacy'; legacy.hidden=true;
     data.children.forEach(el=>legacy.appendChild(el));
 
-    screen.innerHTML=''; screen.dataset.groupReference='v3'; screen.classList.add('group-reference-screen');
+    screen.innerHTML=''; screen.dataset.groupReference='v4'; screen.classList.add('group-reference-screen');
     const hub=document.createElement('section'); hub.className='group-reference-hub';
     hub.innerHTML=`
       <section class="group-reference-hero"><div class="group-reference-hero-content"><div class="group-reference-private">${svg.lock}<span>Private group</span></div><h1>${esc(data.title)}</h1><p>${mode} · ${data.memberCount} member${data.memberCount===1?'':'s'}${data.treasurer?` · Treasurer: ${esc(data.treasurer)}`:''}</p><button type="button" data-open="members">View group ${svg.arrow}</button></div></section>
@@ -106,7 +126,7 @@
 
   let queued=false;
   const schedule=()=>{ if(queued) return; queued=true; requestAnimationFrame(()=>{queued=false;render();}); };
-  new MutationObserver(()=>{ if(screen.dataset.groupReference!=='v3') schedule(); }).observe(screen,{childList:true,subtree:false});
+  new MutationObserver(()=>{ if(screen.dataset.groupReference!=='v4') schedule(); }).observe(screen,{childList:true,subtree:false});
   document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click',()=>setTimeout(schedule,0)));
   setTimeout(schedule,0);
 })();
