@@ -1,0 +1,81 @@
+/* Final UI audit fixes — 10 Sep 2026 */
+
+/* One header rhythm across Matchday, Live and Group. */
+body.kp-native-matchday .topbar,
+body.kp-native-live .topbar,
+body:has(#screen.group-reference-screen) .topbar{
+  position:relative!important;inset:auto!important;height:auto!important;
+  padding:44px 28px 13px!important;background:var(--kp-paper,#f7f3ea)!important;
+  border:0!important;box-shadow:none!important;display:flex!important;
+  align-items:center!important;justify-content:space-between!important;
+}
+body:has(#screen.group-reference-screen) .topbar .brand{display:flex!important;align-items:center!important;gap:14px!important;color:#171717!important}
+body:has(#screen.group-reference-screen) .topbar .brand-mark{width:24px!important;height:19px!important;color:#a58a48!important;background:none!important;border:0!important}
+body:has(#screen.group-reference-screen) .topbar .brand-mark svg{width:24px!important;height:19px!important}
+body:has(#screen.group-reference-screen) .topbar .brand>span{font-size:16px!important;font-weight:650!important;letter-spacing:.31em!important;text-transform:uppercase!important}
+body:has(#screen.group-reference-screen) #installBtn,
+body:has(#screen.group-reference-screen) #bellBtn{display:none!important}
+body:has(#screen.group-reference-screen) #userChip{display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;border:1px solid rgba(20,20,20,.18)!important;border-radius:50%!important;background:transparent!important;color:#171717!important;font-size:13px!important;font-weight:700!important;box-shadow:none!important}
+
+/* Stronger but still quiet bottom navigation. */
+body.kp-native-matchday .bottom-nav .nav-item,
+body.kp-native-live .bottom-nav .nav-item,
+body:has(#screen.group-reference-screen) .bottom-nav .nav-item{color:#787a76!important}
+body.kp-native-matchday .bottom-nav .nav-item.active,
+body.kp-native-live .bottom-nav .nav-item.active,
+body:has(#screen.group-reference-screen) .bottom-nav .nav-item.active{color:#267a50!important}
+
+/* Live: remove spreadsheet/card-library feel. */
+.kp-live-table-cols{display:none!important}
+.kp-live-board{margin:8px 20px 0!important;border:0!important;border-top:1px solid var(--kp-line)!important;border-bottom:1px solid var(--kp-line)!important;border-radius:0!important;background:transparent!important;overflow:visible!important}
+.kp-live-trow{grid-template-columns:30px minmax(0,1fr) 42px 14px!important;gap:10px!important;padding:16px 2px!important;background:transparent!important;border-bottom:1px solid var(--kp-line)!important;box-shadow:none!important}
+.kp-live-trow.top{background:transparent!important;box-shadow:none!important}
+.kp-live-trow.me{box-shadow:none!important}
+.kp-live-trow.top.me{box-shadow:none!important}
+.kp-live-trow.top:before{content:'1';position:absolute;left:-3px;top:50%;transform:translateY(-50%);width:3px;height:28px;background:var(--kp-gold);font-size:0;border-radius:2px}
+.kp-live-tpos{font-size:13px!important;color:#8a8a86!important}
+.kp-live-trow.top .kp-live-tpos{color:var(--kp-ink)!important}
+.kp-live-tname{font-size:15px!important;font-weight:650!important}
+.kp-live-tstatus{margin-top:4px!important;font-size:10.5px!important}
+.kp-live-tpts{font-size:18px!important}
+.kp-live-tpicks{display:none!important}
+.kp-live-tchevron{font-size:18px!important;color:#aaa8a4!important}
+.kp-live-tip{margin:18px 20px 0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important}
+.kp-live-tip-icon{display:none!important}
+.kp-live-tip-text{font-size:11.5px!important;color:#7b7c77!important}
+
+/* Live fixtures: same restrained language as Matchday, less boxed. */
+.kp-live-fx-scroll{gap:0!important;padding:8px 20px 4px!important}
+.kp-live-fxc{width:122px!important;min-height:110px!important;padding:14px 12px!important;border:0!important;border-right:1px solid var(--kp-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.kp-live-fxc:last-child{border-right:0!important}
+.kp-live-fxc-crests img{width:28px!important;height:28px!important}
+.kp-live-fxc-abbr{font-size:12.5px!important}
+.kp-live-fxc-time{font-size:10.5px!important}
+.kp-live-fxc-lock{font-size:9px!important;color:#989995!important}
+
+/* Group: a little more air before the fixed nav. */
+#screen.group-reference-screen{padding-bottom:148px!important}
+.group-reference-menu{margin-bottom:34px!important}
+.group-reference-banner{margin-bottom:20px!important}
+.group-reference-menu-copy small,
+.group-reference-mode p{letter-spacing:0!important}
+.group-reference-eyebrow,
+.group-reference-private,
+.group-reference-sidecopy{letter-spacing:.2em!important}
+
+/* Purpose-built route hold: keeps navigation from flashing blank/legacy UI. */
+#kp-route-hold{position:fixed;z-index:90;left:50%;transform:translateX(-50%);top:76px;bottom:83px;width:min(100vw,430px);overflow:hidden;background:#f7f3ea;pointer-events:none}
+#kp-route-hold .kp-route-hold-scroll{height:100%;overflow:hidden;background:#f7f3ea}
+#kp-route-hold .kp-route-skeleton{height:100%;background:#f7f3ea}
+#kp-route-hold .kp-route-skeleton-hero{height:244px;background:linear-gradient(110deg,#303538,#555c5e 55%,#373c3e)}
+#kp-route-hold .kp-route-skeleton-tabs{height:47px;border-bottom:1px solid rgba(24,24,24,.06)}
+#kp-route-hold .kp-route-skeleton-row{height:76px;margin:0 20px;border-bottom:1px solid rgba(24,24,24,.06);position:relative}
+#kp-route-hold .kp-route-skeleton-row:before{content:'';position:absolute;left:0;right:28%;top:27px;height:9px;border-radius:6px;background:rgba(24,24,24,.07)}
+#kp-route-hold.kp-route-hold-group{top:76px}
+#kp-route-hold .group-reference-hub{padding:10px 28px 0!important;box-sizing:border-box!important}
+
+@media(max-width:395px){
+  body.kp-native-matchday .topbar,body.kp-native-live .topbar,body:has(#screen.group-reference-screen) .topbar{padding-left:22px!important;padding-right:22px!important}
+  .kp-live-board{margin-left:16px!important;margin-right:16px!important}
+  .kp-live-fx-scroll{padding-left:16px!important;padding-right:16px!important}
+}
