@@ -1,97 +1,143 @@
-/* Screenshot-led Group hub enhancement. Leaves original Group controls/events in DOM. */
+/* Authoritative screenshot-led Group screen renderer. Runs last and re-applies after any legacy renderer. */
 (() => {
   const screen = document.querySelector('#screen');
   if (!screen) return;
 
-  const icons = {
+  const esc = (s='') => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const clean = (s='') => String(s).replace(/\s+/g,' ').trim();
+  const svg = {
     lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>',
     arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h13M13 7l5 5-5 5"/></svg>',
     chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5l7 7-7 7"/></svg>',
-    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.8a4.5 4.5 0 0 1 4.7 4.2v1"/></svg>',
+    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><circle cx="17.2" cy="8.8" r="2.4"/><path d="M16.2 14.4a4.5 4.5 0 0 1 4.4 4.5V20"/></svg>',
     rules:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h5"/></svg>',
     link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/></svg>',
     shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l7 3v5c0 4.7-2.8 8-7 10-4.2-2-7-5.3-7-10V6l7-3z"/><path d="M8.5 12l2.2 2.2 4.8-5"/></svg>'
   };
 
-  function cleanText(s=''){ return s.replace(/\s+/g,' ').trim(); }
-
-  function findCard(label) {
-    return [...screen.querySelectorAll('.card')].find(card => cleanText(card.querySelector('.card-title')?.textContent || '').toLowerCase().includes(label));
+  function groupTabActive(){
+    const btn = document.querySelector('.nav-item[data-tab="group"]');
+    return !!btn?.classList.contains('active');
   }
 
-  function focusLegacy(label) {
-    screen.querySelectorAll('.group-ref-focus').forEach(el => el.classList.remove('group-ref-focus'));
-    const card = findCard(label);
-    if (!card) return;
-    card.classList.add('group-ref-focus');
-    screen.classList.add('group-ref-show-legacy');
-    requestAnimationFrame(() => card.scrollIntoView({behavior:'smooth',block:'start'}));
+  function findSource(){
+    if (screen.dataset.groupReference === 'v2') return null;
+    const head = screen.querySelector('.group-head');
+    if (!head) return null;
+    const h1 = head.querySelector('h1');
+    if (!h1) return null;
+    return {head,h1};
   }
 
-  function enhance() {
-    const head = screen.querySelector(':scope > .group-head');
-    if (!head || screen.querySelector(':scope > .group-ref-hub')) {
-      if (!head && screen.classList.contains('group-ref-screen')) {
-        screen.classList.remove('group-ref-screen','group-ref-show-legacy');
-      }
+  function collect(){
+    const src = findSource();
+    if (!src) return null;
+    const title = clean(src.h1.textContent) || 'Your group';
+    const headMeta = clean(src.head.querySelector('.hero-sub')?.textContent || '');
+    const memberMatch = headMeta.match(/(\d+)\s+members?/i);
+    let memberCount = memberMatch ? Number(memberMatch[1]) : 0;
+    const treasurerMatch = headMeta.match(/Treasurer:\s*(.+)$/i);
+    const treasurer = treasurerMatch ? clean(treasurerMatch[1]) : '';
+    const stakeMatch = headMeta.match(/£\s*([\d.]+)/);
+    const stake = stakeMatch ? Number(stakeMatch[1]) : 0;
+    const paymentRows = [...screen.querySelectorAll('.payment-row')];
+    if (!memberCount) memberCount = paymentRows.length || 1;
+    const names = paymentRows.map(r => clean(r.querySelector('strong')?.textContent || '')).filter(Boolean);
+    const initials = names.slice(0,5).map(n => {
+      const bits=n.replace(/\s*\(you\)\s*/i,'').trim().split(/\s+/).filter(Boolean);
+      return (bits.length>1 ? bits[0][0]+bits[bits.length-1][0] : (bits[0]||'?').slice(0,2)).toUpperCase();
+    });
+    while(initials.length < Math.min(memberCount,5)) initials.push('?');
+    const children=[...screen.children];
+    return {title,memberCount,treasurer,stake,initials,children};
+  }
+
+  function openLegacy(label){
+    const legacy = screen.querySelector('.group-reference-legacy');
+    if (!legacy) return;
+    const cards=[...legacy.querySelectorAll('.card')];
+    let target=null;
+    if(label==='members') target=cards.find(c=>/member payments/i.test(clean(c.textContent)));
+    if(label==='rules') target=cards.find(c=>/this week/i.test(clean(c.textContent)));
+    if(label==='settings') target=cards.find(c=>/pay the treasurer/i.test(clean(c.textContent)));
+    if(label==='admin') target=cards.find(c=>/treasurer/i.test(clean(c.textContent)));
+    if (!target) return;
+    screen.querySelector('.group-reference-hub')?.classList.add('group-reference-hub--compact');
+    legacy.hidden=false;
+    [...legacy.children].forEach(el=>{ el.hidden = el!==target; });
+    target.hidden=false;
+    requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
+  }
+
+  function render(){
+    if (!groupTabActive()) {
+      delete screen.dataset.groupReference;
+      screen.classList.remove('group-reference-screen');
       return;
     }
+    const data=collect();
+    if (!data) return;
 
-    const title = cleanText(head.querySelector('h1')?.textContent || 'Your group');
-    const meta = cleanText(head.querySelector('.hero-sub')?.textContent || '');
-    const memberMatch = meta.match(/(\d+)\s+members?/i);
-    const memberCount = memberMatch ? Number(memberMatch[1]) : screen.querySelectorAll('.payment-row').length;
-    const treasurerMatch = meta.match(/Treasurer:\s*(.+)$/i);
-    const treasurer = treasurerMatch ? treasurerMatch[1] : '';
-    const stakeMatch = meta.match(/£\s*([\d.]+)/);
-    const stake = stakeMatch ? Number(stakeMatch[1]) : 0;
-    const mode = stake > 0 ? `£${stake % 1 ? stake.toFixed(2) : stake}/week` : 'For fun';
-    const modeSub = stake > 0 ? 'Weekly stake enabled' : 'No payment required';
+    const mode = data.stake>0 ? `£${Number.isInteger(data.stake)?data.stake:data.stake.toFixed(2)}/week` : 'For fun';
+    const modeSub = data.stake>0 ? 'Weekly stake enabled' : 'No payment required';
+    const avatarHtml=data.initials.map((x,i)=>`<span class="group-reference-avatar" style="z-index:${20-i}">${esc(x)}</span>`).join('');
+    const extra=Math.max(0,data.memberCount-data.initials.length);
 
-    const avatarNodes = [...screen.querySelectorAll('.payment-row .avatar')];
-    const avatars = avatarNodes.slice(0,5).map(a => a.outerHTML).join('') || '<span class="avatar">K</span>';
-    const extra = Math.max(0, memberCount - Math.min(5, Math.max(1, avatarNodes.length)));
-    const extraHtml = extra ? `<span class="group-ref-more">+${extra}</span>` : '';
+    const legacy=document.createElement('div');
+    legacy.className='group-reference-legacy';
+    legacy.hidden=true;
+    data.children.forEach(el=>legacy.appendChild(el));
 
-    [...screen.children].forEach(el => el.classList.add('group-ref-legacy'));
-    screen.classList.add('group-ref-screen');
+    screen.innerHTML='';
+    screen.dataset.groupReference='v2';
+    screen.classList.add('group-reference-screen');
 
-    const hub = document.createElement('section');
-    hub.className = 'group-ref-hub';
-    hub.innerHTML = `
-      <div class="group-ref-hero">
-        <div class="group-ref-hero-inner">
-          <div class="group-ref-private">${icons.lock}<span>Private group</span></div>
-          <h1 class="group-ref-title">${title.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}</h1>
-          <div class="group-ref-meta">${mode} · ${memberCount} member${memberCount===1?'':'s'}${treasurer ? ` · Treasurer: ${treasurer}` : ''}</div>
-          <button class="group-ref-view" type="button" data-group-ref-target="member payments">View group ${icons.arrow}</button>
+    const hub=document.createElement('section');
+    hub.className='group-reference-hub';
+    hub.innerHTML=`
+      <section class="group-reference-hero">
+        <div class="group-reference-hero-content">
+          <div class="group-reference-private">${svg.lock}<span>Private group</span></div>
+          <h1>${esc(data.title)}</h1>
+          <p>${mode} · ${data.memberCount} member${data.memberCount===1?'':'s'}${data.treasurer?` · Treasurer: ${esc(data.treasurer)}`:''}</p>
+          <button type="button" data-open="members">View group ${svg.arrow}</button>
         </div>
-      </div>
-      <div class="group-ref-members">
-        <div class="group-ref-avatar-stack">${avatars}${extraHtml}</div>
-        <button class="group-ref-member-link" type="button" data-group-ref-target="member payments">${memberCount} member${memberCount===1?'':'s'} ${icons.chev}</button>
-      </div>
-      <div class="group-ref-mode">
+      </section>
+
+      <section class="group-reference-members-strip">
+        <div class="group-reference-avatars">${avatarHtml}${extra?`<span class="group-reference-avatar group-reference-avatar-more">+${extra}</span>`:''}</div>
+        <button type="button" data-open="members"><span>${data.memberCount} member${data.memberCount===1?'':'s'}</span>${svg.chev}</button>
+      </section>
+
+      <section class="group-reference-mode">
         <div>
-          <div class="group-ref-eyebrow">Play mode</div>
-          <h2 class="group-ref-mode-title">${mode}</h2>
-          <div class="group-ref-mode-sub">${modeSub}</div>
+          <div class="group-reference-eyebrow">Play mode</div>
+          <h2>${esc(mode)}</h2>
+          <p>${esc(modeSub)}</p>
         </div>
-        <div class="group-ref-kicker">Same game<br>different<br>friends</div>
-      </div>
-      <div class="group-ref-menu">
-        <button class="group-ref-menu-row" type="button" data-group-ref-target="member payments"><span class="group-ref-menu-icon">${icons.users}</span><span class="group-ref-menu-copy"><b>Members</b><span>Manage your group</span></span><span class="group-ref-menu-tail">${icons.chev}</span></button>
-        <button class="group-ref-menu-row" type="button" data-group-ref-target="this week"><span class="group-ref-menu-icon">${icons.rules}</span><span class="group-ref-menu-copy"><b>Rules</b><span>Scoring & lock times</span></span><span class="group-ref-menu-tail">${icons.chev}</span></button>
-        <button class="group-ref-menu-row" type="button" data-group-ref-target="pay the treasurer"><span class="group-ref-menu-icon">${icons.link}</span><span class="group-ref-menu-copy"><b>Group settings</b><span>Invite code & group access</span></span><span class="group-ref-menu-tail">${icons.chev}</span></button>
-        <button class="group-ref-menu-row" type="button" data-group-ref-target="treasurer"><span class="group-ref-menu-icon">${icons.shield}</span><span class="group-ref-menu-copy"><b>Admin</b><span>Payments, members & scoring controls</span></span><span class="group-ref-menu-tail">${treasurer ? '<span class="group-ref-role">Treasurer</span>' : ''}${icons.chev}</span></button>
-      </div>
-      <div class="group-ref-banner"><div class="group-ref-banner-copy">Good football<br>better friends</div><div class="group-ref-banner-brand">KickPot</div></div>`;
+        <div class="group-reference-sidecopy">Same game<br>different<br>friends<span></span></div>
+      </section>
 
-    screen.prepend(hub);
-    hub.querySelectorAll('[data-group-ref-target]').forEach(btn => btn.addEventListener('click', () => focusLegacy(btn.dataset.groupRefTarget)));
+      <section class="group-reference-menu">
+        <button type="button" data-open="members"><span class="group-reference-menu-icon">${svg.users}</span><span class="group-reference-menu-copy"><b>Members</b><small>Manage your group</small></span><span class="group-reference-menu-tail">${svg.chev}</span></button>
+        <button type="button" data-open="rules"><span class="group-reference-menu-icon">${svg.rules}</span><span class="group-reference-menu-copy"><b>Rules</b><small>Scoring & lock times</small></span><span class="group-reference-menu-tail">${svg.chev}</span></button>
+        <button type="button" data-open="settings"><span class="group-reference-menu-icon">${svg.link}</span><span class="group-reference-menu-copy"><b>Group settings</b><small>Invite code & group access</small></span><span class="group-reference-menu-tail">${svg.chev}</span></button>
+        <button type="button" data-open="admin"><span class="group-reference-menu-icon">${svg.shield}</span><span class="group-reference-menu-copy"><b>Admin</b><small>Payments, members & scoring controls</small></span><span class="group-reference-menu-tail">${data.treasurer?'<em>Treasurer</em>':''}${svg.chev}</span></button>
+      </section>
+
+      <section class="group-reference-banner"><div>Good football<br>better friends</div><span>KickPot</span></section>`;
+
+    screen.append(hub,legacy);
+    hub.querySelectorAll('[data-open]').forEach(btn=>btn.addEventListener('click',()=>openLegacy(btn.dataset.open)));
   }
 
-  const observer = new MutationObserver(() => requestAnimationFrame(enhance));
-  observer.observe(screen,{childList:true,subtree:true});
-  enhance();
+  let queued=false;
+  const schedule=()=>{
+    if(queued) return;
+    queued=true;
+    requestAnimationFrame(()=>{queued=false;render();});
+  };
+  new MutationObserver(schedule).observe(screen,{childList:true,subtree:false});
+  document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click',()=>setTimeout(schedule,0)));
+  setTimeout(schedule,0);
 })();
