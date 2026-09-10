@@ -1,0 +1,40 @@
+/* KickPot Group hub — screenshot-led reference pass, 10 Sep 2026 */
+#screen.group-ref-screen{padding-top:10px;padding-bottom:116px}
+#screen.group-ref-screen>.group-ref-legacy{display:none!important}
+#screen.group-ref-screen.group-ref-show-legacy>.group-ref-legacy.group-ref-focus{display:block!important;margin-top:16px}
+.group-ref-hub{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:#111612}
+.group-ref-hero{position:relative;min-height:318px;margin:0 0 14px;border-radius:18px;overflow:hidden;background-image:linear-gradient(90deg,rgba(4,10,7,.84) 0%,rgba(4,9,7,.57) 48%,rgba(4,9,7,.12) 100%),url('/kickpot-hero-final.jpg');background-size:cover;background-position:center 44%;box-shadow:0 1px 0 rgba(17,22,18,.08)}
+.group-ref-hero-inner{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:27px 27px 28px;color:#fff}
+.group-ref-private{display:flex;align-items:center;gap:8px;margin-bottom:15px;font-size:11px;font-weight:650;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.84)}
+.group-ref-private svg{width:15px;height:15px}
+.group-ref-title{margin:0 0 12px;font-family:Georgia,"Times New Roman",serif;font-size:43px;font-weight:400;letter-spacing:-1.6px;line-height:.98}
+.group-ref-meta{margin:0 0 21px;font-size:15px;line-height:1.35;color:rgba(255,255,255,.9)}
+.group-ref-view{width:max-content;display:inline-flex;align-items:center;gap:10px;padding:11px 18px;border:1px solid rgba(255,255,255,.78);border-radius:999px;background:rgba(10,15,12,.14);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);color:#fff;font:500 14px/1 inherit;cursor:pointer}
+.group-ref-view svg{width:17px;height:17px}
+.group-ref-members{display:flex;align-items:center;justify-content:space-between;min-height:64px;padding:0 8px 15px;border-bottom:1px solid rgba(17,22,18,.14)}
+.group-ref-avatar-stack{display:flex;align-items:center;min-width:0}
+.group-ref-avatar-stack .avatar{width:42px!important;height:42px!important;margin-left:-9px!important;border:2px solid #f4efe4!important;background:#dedfd8!important;color:#111612!important;font-size:14px!important;font-weight:650!important;box-shadow:none!important}
+.group-ref-avatar-stack .avatar:first-child{margin-left:0!important}
+.group-ref-more{display:grid;place-items:center;width:42px;height:42px;margin-left:-9px;border:2px solid #f4efe4;border-radius:50%;background:#dedfd8;font-size:13px;font-weight:600;color:#2c312d}
+.group-ref-member-link{display:flex;align-items:center;gap:13px;padding-left:24px;border-left:1px solid rgba(17,22,18,.14);font-size:15px;font-weight:600;white-space:nowrap}
+.group-ref-member-link svg{width:18px;height:18px}
+.group-ref-mode{position:relative;display:flex;justify-content:space-between;gap:24px;padding:29px 11px 25px;border-bottom:1px solid rgba(17,22,18,.14)}
+.group-ref-eyebrow{margin-bottom:8px;font-size:10px;font-weight:650;letter-spacing:.28em;text-transform:uppercase;color:#686b66}
+.group-ref-mode-title{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:45px;font-weight:400;letter-spacing:-1.6px;line-height:.95;color:#101411}
+.group-ref-mode-sub{margin-top:9px;font-size:14px;color:#777973}
+.group-ref-kicker{align-self:center;width:82px;font-size:10px;font-weight:650;letter-spacing:.24em;line-height:1.65;text-transform:uppercase;color:#656863}
+.group-ref-kicker:after{content:"";display:block;width:23px;height:2px;margin-top:8px;background:#3d765e}
+.group-ref-menu{margin:0 0 29px}
+.group-ref-menu-row{width:100%;min-height:86px;display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:14px;padding:0 9px;border:0;border-bottom:1px solid rgba(17,22,18,.13);background:transparent;color:#101411;text-align:left;cursor:pointer;font:inherit}
+.group-ref-menu-icon{width:30px;height:30px;display:grid;place-items:center;color:#111612}
+.group-ref-menu-icon svg{width:27px;height:27px;stroke-width:1.8}
+.group-ref-menu-copy b{display:block;margin-bottom:4px;font-size:15px;font-weight:650;letter-spacing:-.12px}
+.group-ref-menu-copy span{display:block;font-size:13px;color:#7a7c77}
+.group-ref-menu-tail{display:flex;align-items:center;gap:10px}
+.group-ref-menu-tail svg{width:18px;height:18px}
+.group-ref-role{padding:7px 11px;border-radius:10px;background:#dce8df;color:#47725f;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.group-ref-banner{position:relative;height:117px;margin:0 0 3px;border-radius:14px;overflow:hidden;background:linear-gradient(90deg,#ebe8df 0 43%,transparent 43%),url('/kickpot-hero-final.jpg');background-size:auto,62% auto;background-position:left,100% 56%;background-repeat:no-repeat}
+.group-ref-banner:before{content:"";position:absolute;left:38%;top:-20px;width:56px;height:160px;background:#ebe8df;transform:skewX(-18deg)}
+.group-ref-banner-copy{position:absolute;z-index:1;left:22px;top:31px;font-size:9px;font-weight:650;letter-spacing:.25em;line-height:1.65;text-transform:uppercase;color:#5f625e}
+.group-ref-banner-brand{position:absolute;z-index:1;right:18%;top:52px;color:rgba(255,255,255,.78);font-size:8px;font-weight:600;letter-spacing:.28em;text-transform:uppercase}
+@media(max-width:390px){.group-ref-hero{min-height:294px}.group-ref-hero-inner{padding:23px}.group-ref-title{font-size:39px}.group-ref-mode-title{font-size:41px}.group-ref-menu-row{min-height:81px}.group-ref-kicker{width:72px}}
