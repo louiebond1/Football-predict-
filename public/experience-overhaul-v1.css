@@ -1,0 +1,116 @@
+/* KickPot Experience Overhaul v1 — unified interaction + visual system */
+:root{
+  --kp-bg:#f4efe4;--kp-ink:#121713;--kp-muted:#6f716b;--kp-line:rgba(18,23,19,.12);
+  --kp-surface:#fbf8f0;--kp-surface-2:#eee8db;--kp-green:#123b2a;--kp-gold:#aa8739;
+  --kp-r1:10px;--kp-r2:16px;--kp-r3:22px;--kp-shadow:0 14px 40px rgba(27,31,25,.08);
+  --kp-ease:cubic-bezier(.22,.72,.18,1);--kp-fast:180ms;--kp-med:320ms;
+}
+html{background:var(--kp-bg);scroll-behavior:auto}
+body{background:var(--kp-bg);color:var(--kp-ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+*{box-sizing:border-box}
+button,input,textarea,select{font:inherit}
+button{-webkit-tap-highlight-color:transparent}
+
+/* App chrome */
+.topbar{height:56px!important;min-height:56px!important;padding:env(safe-area-inset-top) 16px 0!important;background:rgba(244,239,228,.92)!important;backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);border-bottom:1px solid rgba(18,23,19,.08)!important;position:sticky!important;top:0;z-index:80}
+.brand{gap:7px!important;font-size:12px!important;font-weight:800!important;letter-spacing:-.02em;text-transform:none!important}
+.brand-mark{display:none!important}
+.topbar-actions{gap:6px!important}
+.icon-btn,.user-chip{width:34px!important;height:34px!important;border-radius:50%!important;border:1px solid rgba(18,23,19,.10)!important;background:rgba(255,255,255,.24)!important;transition:transform var(--kp-fast) var(--kp-ease),background var(--kp-fast) ease!important}
+.icon-btn:active,.user-chip:active{transform:scale(.94);background:rgba(18,23,19,.06)!important}
+.screen{min-height:calc(100dvh - 118px);padding-bottom:96px!important;overflow-x:hidden}
+
+.bottom-nav{left:10px!important;right:10px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;width:auto!important;height:62px!important;padding:5px 6px!important;border:1px solid rgba(18,23,19,.10)!important;border-radius:20px!important;background:rgba(250,247,239,.94)!important;box-shadow:0 12px 34px rgba(19,23,18,.13)!important;backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);z-index:100}
+.nav-item{position:relative;border-radius:15px!important;gap:2px!important;color:#74766f!important;transition:color var(--kp-fast) ease,background var(--kp-fast) ease,transform var(--kp-fast) var(--kp-ease)!important}
+.nav-item svg{width:18px;height:18px;transition:transform var(--kp-fast) var(--kp-ease)}
+.nav-item small{font-size:9px!important;font-weight:650!important;letter-spacing:-.01em!important}
+.nav-item.active{color:var(--kp-green)!important;background:rgba(18,59,42,.075)!important}
+.nav-item.active svg{transform:translateY(-1px)}
+.nav-item:active{transform:scale(.96)}
+
+/* Motion system */
+#screen.kp-page-enter{animation:kpPageIn 320ms var(--kp-ease) both}
+#screen.kp-page-enter[data-kp-dir="back"]{animation-name:kpPageBack}
+@keyframes kpPageIn{from{opacity:.18;transform:translate3d(13px,0,0)}to{opacity:1;transform:none}}
+@keyframes kpPageBack{from{opacity:.18;transform:translate3d(-13px,0,0)}to{opacity:1;transform:none}}
+.kp-motion-row{transition:transform 150ms var(--kp-ease),background 150ms ease!important}
+.kp-motion-row:active{transform:scale(.985);background:rgba(18,23,19,.035)!important}
+@media(prefers-reduced-motion:reduce){#screen.kp-page-enter{animation:none!important}.kp-motion-row,.nav-item,.icon-btn,.user-chip{transition:none!important}}
+
+/* Universal hierarchy */
+.eyebrow,.kp3-count,.group-reference-eyebrow{font-size:9px!important;font-weight:800!important;letter-spacing:.12em!important;text-transform:uppercase!important;color:#7e7d74!important}
+h1,h2,h3,.card-title{letter-spacing:-.035em!important}
+.card{border:0!important;border-top:1px solid var(--kp-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.muted{color:var(--kp-muted)!important}
+
+/* Matchday */
+.kp3-gw-root,.matchday-reference-root{max-width:680px;margin:0 auto}
+.kp3-page-hero,.matchday-reference-hero{margin:0 14px 14px!important;border-radius:0 0 var(--kp-r3) var(--kp-r3)!important;overflow:hidden!important;box-shadow:var(--kp-shadow)}
+.kp3-fixtures-card,.matchday-reference-fixtures{margin:0!important;padding-left:14px!important;padding-right:14px!important}
+.kp3-pick-fixture,.matchday-reference-fixture{padding:15px 0!important;border-bottom:1px solid rgba(18,23,19,.09)!important;background:transparent!important;border-radius:0!important}
+.kp3-score-stepper{border:1px solid rgba(18,23,19,.12)!important;border-radius:12px!important;overflow:hidden;background:rgba(255,255,255,.24)!important}
+.kp3-step{width:31px!important;height:34px!important;border-radius:0!important;background:transparent!important}
+.kp3-score-stepper input{width:30px!important;font-weight:800!important;font-variant-numeric:tabular-nums}
+.kp3-vs{font-size:9px!important;color:#92938c!important;text-transform:uppercase;font-weight:750}
+#lockPicks,.lock-picks,.kp-lock-button{min-height:48px!important;border-radius:14px!important;background:var(--kp-green)!important;box-shadow:0 8px 18px rgba(18,59,42,.18)!important;font-weight:750!important;transition:transform var(--kp-fast) var(--kp-ease),box-shadow var(--kp-fast) ease!important}
+#lockPicks:active,.lock-picks:active,.kp-lock-button:active{transform:scale(.985);box-shadow:0 4px 12px rgba(18,59,42,.14)!important}
+
+/* Live */
+.live-reference-root,.kp-live-root{max-width:680px;margin:0 auto}
+.live-reference-hero{margin:0!important;border-radius:0!important}
+.live-reference-tabs{position:sticky!important;top:56px!important;z-index:35;background:rgba(244,239,228,.96)!important;backdrop-filter:blur(12px);border-bottom:1px solid rgba(18,23,19,.08)!important}
+.live-reference-tabs button{min-height:42px!important;font-size:11px!important;font-weight:700!important}
+.live-reference-fixture-strip{scroll-snap-type:x mandatory;padding:10px 14px!important;gap:8px!important;scrollbar-width:none}
+.live-reference-fixture-strip>*{scroll-snap-align:start}
+.live-reference-table{margin:0 14px!important}
+.live-reference-table-row{min-height:52px!important;border-bottom:1px solid rgba(18,23,19,.08)!important}
+
+/* History */
+.kp3-history-root{max-width:680px;margin:0 auto;padding:14px!important}
+.kp3-history-root .kp3-page-hero{margin:0 0 14px!important}
+.kp3-history-tabs{display:inline-flex!important;padding:3px!important;border:1px solid rgba(18,23,19,.10)!important;border-radius:12px!important;background:rgba(255,255,255,.20)!important}
+.kp3-history-tabs button{border-radius:9px!important;min-height:32px!important;padding:0 13px!important;font-weight:700!important;transition:all var(--kp-fast) ease!important}
+.kp3-history-tabs button.active{background:var(--kp-ink)!important;color:var(--kp-bg)!important;box-shadow:0 3px 10px rgba(18,23,19,.12)!important}
+
+/* Group hub — make game mode a first-class part of the product */
+.group-reference-screen{padding-bottom:100px!important}
+.group-reference-hub{max-width:680px;margin:0 auto}
+.group-reference-hero{margin:0 14px 12px!important;border-radius:0 0 20px 20px!important;min-height:180px!important;box-shadow:var(--kp-shadow)!important;overflow:hidden}
+.group-reference-hero-content{padding:24px 18px 18px!important}
+.group-reference-hero h1{font-size:33px!important;line-height:.96!important;max-width:86%;margin-top:22px!important}
+.group-reference-hero p{font-size:11px!important;opacity:.85}
+.group-reference-hero button{border-radius:999px!important;min-height:37px!important;padding:0 16px!important;background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.30)!important}
+.group-reference-members-strip{margin:0 14px!important;padding:11px 2px 14px!important;border-bottom:1px solid var(--kp-line)!important}
+.group-reference-mode{margin:0 14px!important;padding:20px 2px!important;border-bottom:1px solid var(--kp-line)!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:end!important;gap:14px!important}
+.group-reference-mode h2{font-size:30px!important;line-height:1!important;margin:5px 0 5px!important}
+.group-reference-mode p{font-size:11px!important;color:var(--kp-muted)!important;margin:0!important}
+.group-reference-mode .kp-overhaul-mode-hint{display:block;margin-top:7px;font-size:10px;color:#77786f;font-weight:650}
+.kp-overhaul-mode-action{display:inline-flex;align-items:center;gap:6px;margin-top:11px;padding:0;border:0;background:none;color:var(--kp-green);font-size:11px;font-weight:800;letter-spacing:-.01em}
+.group-reference-menu{margin:0 14px!important}
+.group-reference-menu>button{min-height:65px!important;padding:0 2px!important;border-bottom:1px solid rgba(18,23,19,.09)!important;border-radius:0!important;background:transparent!important;transition:transform 150ms var(--kp-ease),background 150ms ease!important}
+.group-reference-menu>button:active{transform:scale(.99);background:rgba(18,23,19,.025)!important}
+.group-reference-menu-icon{width:30px!important;height:30px!important;border-radius:9px!important;background:rgba(18,59,42,.07)!important}
+.group-reference-menu-copy b{font-size:13px!important;letter-spacing:-.02em!important}
+.group-reference-menu-copy small{font-size:10px!important;color:#85867f!important}
+.group-reference-banner{margin:20px 14px!important;border-radius:16px!important}
+
+/* Group drill-ins: replace scroll-jump behaviour with a true in-app route */
+.group-reference-panel{position:fixed!important;inset:56px 0 0!important;z-index:72!important;background:var(--kp-bg)!important;overflow-y:auto!important;padding:0 14px 110px!important;animation:kpDrillIn 300ms var(--kp-ease) both!important;-webkit-overflow-scrolling:touch}
+.group-reference-panel.kp-panel-closing{animation:kpDrillOut 220ms var(--kp-ease) both!important;pointer-events:none}
+@keyframes kpDrillIn{from{transform:translate3d(100%,0,0);opacity:.5}to{transform:none;opacity:1}}
+@keyframes kpDrillOut{from{transform:none;opacity:1}to{transform:translate3d(100%,0,0);opacity:.55}}
+.group-reference-panel-head{position:sticky!important;top:0!important;z-index:2;margin:0 -14px 8px!important;padding:12px 14px 10px!important;background:rgba(244,239,228,.94)!important;backdrop-filter:blur(16px);border-bottom:1px solid rgba(18,23,19,.08)!important}
+.group-reference-back{width:34px!important;height:34px!important;border-radius:50%!important;border:1px solid rgba(18,23,19,.10)!important;background:rgba(255,255,255,.22)!important}
+.group-reference-panel>.card{margin:0!important;border-top:0!important}
+body.kp-group-panel-open{overflow:hidden!important}
+
+/* Forms/settings */
+.kp3-setting-row,.kp-admin-nav-row,.kp-create-group-row{min-height:58px!important;border-bottom:1px solid rgba(18,23,19,.08)!important;border-radius:0!important;background:transparent!important}
+.kp-mode-form label,.kp-account-form label,.kp-create-group-form label{font-size:10px!important;font-weight:750!important;color:#6e706a!important}
+.kp-mode-form input,.kp-mode-form textarea,.kp-account-form input,.kp-create-group-form input{border:1px solid rgba(18,23,19,.12)!important;border-radius:12px!important;background:rgba(255,255,255,.28)!important;box-shadow:none!important}
+.kp-mode-save,.kp-account-primary,.kp-create-submit{min-height:46px!important;border-radius:13px!important;background:var(--kp-green)!important;font-weight:750!important}
+
+/* Loading/state polish */
+.kp-overhaul-skeleton{animation:kpPulse 1.15s ease-in-out infinite alternate;background:rgba(18,23,19,.06);border-radius:8px}
+@keyframes kpPulse{to{opacity:.45}}
+.toast{left:14px!important;right:14px!important;bottom:84px!important;border-radius:13px!important;box-shadow:0 12px 28px rgba(18,23,19,.16)!important}
