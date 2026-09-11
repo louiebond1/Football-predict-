@@ -16,7 +16,26 @@
     shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l7 3v5c0 4.7-2.8 8-7 10-4.2-2-7-5.3-7-10V6l7-3z"/><path d="M8.5 12l2.2 2.2 4.8-5"/></svg>'
   };
 
+  let lastSignature = '';
   function groupTabActive(){ return !!document.querySelector('.nav-item[data-tab="group"]')?.classList.contains('active'); }
+  function signatureFrom(head, legacyRoot){
+    const h1 = head?.querySelector('h1');
+    if (!head || !h1) return '';
+    const title = clean(h1.textContent) || 'Your group';
+    const headMeta = clean(head.querySelector('.hero-sub')?.textContent || '');
+    const memberMatch = headMeta.match(/(\d+)\s+members?/i);
+    const treasurerMatch = headMeta.match(/Treasurer:\s*(.+)$/i);
+    const stakeMatch = headMeta.match(/£\s*([\d.]+)/);
+    const funMode = /^for fun\b/i.test(headMeta) || !(stakeMatch && Number(stakeMatch[1])>0);
+    const isTreasurer = !!legacyRoot.querySelector('.kp-admin-entry, .kp-admin-first-paint');
+    return `${title}|${funMode}|${memberMatch?memberMatch[1]:''}|${treasurerMatch?clean(treasurerMatch[1]):''}|${isTreasurer}`;
+  }
+  function currentSignature(){
+    const legacy = screen.querySelector('.group-reference-legacy');
+    const head = legacy?.querySelector('.group-head');
+    if (!legacy || !head) return '';
+    return signatureFrom(head, legacy);
+  }
   function findSource(){
     if (screen.dataset.groupReference === 'v4') return null;
     const head = screen.querySelector('.group-head');
@@ -130,6 +149,7 @@
     if (!groupTabActive()) { delete screen.dataset.groupReference; screen.classList.remove('group-reference-screen'); return; }
     const data=collect(); if (!data) return;
     const isFun = data.funMode || !(data.stake>0);
+    lastSignature = `${data.title}|${isFun}|${data.memberCount}|${data.treasurer}|${data.isTreasurer}`;
     const mode = isFun ? 'For fun' : `£${Number.isInteger(data.stake)?data.stake:data.stake.toFixed(2)}/week`;
     const modeSub = isFun ? 'No weekly payment' : 'Weekly payment enabled';
     const avatarHtml=data.initials.map((x,i)=>`<span class="group-reference-avatar" style="z-index:${20-i}">${esc(x)}</span>`).join('');
@@ -158,6 +178,16 @@
   new MutationObserver(()=>{ if(screen.dataset.groupReference!=='v4') schedule(); }).observe(screen,{childList:true,subtree:false});
   document.addEventListener('kp:group-refresh', () => {
     if (!groupTabActive() || screen.querySelector('.group-reference-panel')) return;
+    if (screen.dataset.groupReference === 'v4') {
+      // Hub is already up: only rebuild if the underlying data actually
+      // changed. Without this check, the normal 8-step data-load retry
+      // cascade in settings-v2.js (which mostly re-confirms the same
+      // state) would tear down and rebuild the whole hub up to 8 times
+      // in a few seconds - visible flicker, lost scroll position, and a
+      // tap on Admin landing on an element that gets replaced mid-click.
+      const sig = currentSignature();
+      if (!sig || sig === lastSignature) return;
+    }
     delete screen.dataset.groupReference;
     schedule();
   });
