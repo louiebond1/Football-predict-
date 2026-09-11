@@ -24,6 +24,19 @@ function maskBg() {
   return isDarkTheme() ? '#0d100f' : '#f4efe4';
 }
 
+// Both masks are position:fixed and previously started at top:0 - the very
+// top of the viewport, level with the phone's status bar - with no space
+// reserved for the app's own <header class="topbar"> (KickPot wordmark),
+// which sits outside #screen and stays on screen throughout the transition.
+// Starting the mask at the topbar's real, live bottom edge instead means it
+// only ever covers the area the topbar doesn't already own, so the mask's
+// own hardcoded hero text can never overlap the status bar or the real
+// topbar - and this stays correct even if the topbar's height changes later,
+// since it's measured, not guessed.
+function topbarOffset() {
+  return document.querySelector('.topbar')?.getBoundingClientRect().bottom || 0;
+}
+
 function currentRoute(tab) {
   try { return sessionStorage.getItem(`${ROUTE_PREFIX}${tab}`) || ''; }
   catch { return ''; }
@@ -58,7 +71,7 @@ function makeLiveMask() {
   el.setAttribute('aria-hidden', 'true');
   el.innerHTML = `
     <div style="height:100%;background:${bg};overflow:hidden">
-      <div style="height:214px;position:relative;background:#202329 url('/kickpot-hero-final.jpg') center 55%/cover no-repeat;color:white;padding:24px 22px 20px;box-sizing:border-box">
+      <div style="height:244px;position:relative;background:#202329 url('/kickpot-hero-final.jpg') center 50%/cover no-repeat;color:white;padding:24px 22px 20px;box-sizing:border-box">
         <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,6,9,.78),rgba(4,6,9,.4) 62%,rgba(4,6,9,.14))"></div>
         <div style="position:relative;z-index:1;font:800 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:#d2b76f">MATCHDAY</div>
         <div style="position:relative;z-index:1;margin-top:10px;font:500 56px/.86 Georgia,'Times New Roman',serif;letter-spacing:-.03em">Live</div>
@@ -75,7 +88,7 @@ function makeLiveMask() {
       </div>
     </div>`;
   Object.assign(el.style, {
-    position:'fixed', left:'50%', transform:'translateX(-50%)', top:'0', bottom:'0',
+    position:'fixed', left:'50%', transform:'translateX(-50%)', top:`${topbarOffset()}px`, bottom:'0',
     width:'min(100vw,430px)', zIndex:'90', background:bg, pointerEvents:'none'
   });
   document.body.appendChild(el);
@@ -126,7 +139,7 @@ function makeExitMask() {
   el.id = 'kpLiveEntryMask';
   el.setAttribute('aria-hidden', 'true');
   Object.assign(el.style, {
-    position:'fixed', left:'50%', transform:'translateX(-50%)', top:'0', bottom:'0',
+    position:'fixed', left:'50%', transform:'translateX(-50%)', top:`${topbarOffset()}px`, bottom:'0',
     width:'min(100vw,430px)', zIndex:'90', background:maskBg(), pointerEvents:'none'
   });
   document.body.appendChild(el);
