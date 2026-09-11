@@ -1,124 +1,68 @@
 body.kp-native-live{background:#eee9df!important;color:var(--kp-ink)!important}
-body.kp-native-live #app{width:min(100vw,430px)!important;min-height:100vh!important;margin:0 auto!important;background:var(--kp-paper)!important;padding-bottom:86px!important}
+body.kp-native-live #app{width:min(100vw,430px)!important;min-height:100vh!important;margin:0 auto!important;background:var(--kp-paper)!important;padding-bottom:86px!important;overflow:hidden!important}
 body.kp-native-live .topbar{position:relative!important;inset:auto!important;height:auto!important;padding:44px 28px 13px!important;background:var(--kp-paper)!important;border:0!important;box-shadow:none!important;display:flex!important;align-items:center!important;justify-content:space-between!important}
 body.kp-native-live .topbar .brand{display:flex!important;align-items:center!important;gap:14px!important;color:var(--kp-ink)!important}
-body.kp-native-live .topbar .brand-mark{width:24px!important;height:19px!important;color:var(--kp-gold)!important;background:none!important;border:0!important}
+body.kp-native-live .topbar .brand-mark{display:block!important;width:24px!important;height:19px!important;color:var(--kp-gold)!important;background:none!important;border:0!important}
 body.kp-native-live .topbar .brand-mark svg{width:24px!important;height:19px!important}
-body.kp-native-live .topbar .brand>span{font-size:16px!important;font-weight:650!important;letter-spacing:.31em!important;text-transform:uppercase!important}
+body.kp-native-live .topbar .brand>span{font-size:16px!important;font-weight:650!important;letter-spacing:0!important;text-transform:none!important}
 body.kp-native-live #installBtn,body.kp-native-live #bellBtn{display:none!important}
 body.kp-native-live #userChip{display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;border:1px solid rgba(20,20,20,.18)!important;border-radius:50%!important;background:transparent!important;color:var(--kp-ink)!important;font-size:13px!important;font-weight:700!important;box-shadow:none!important}
 body.kp-native-live #screen{display:block!important;padding:0!important;margin:0!important;max-width:none!important;background:var(--kp-paper)!important}
-body.kp-native-live .bottom-nav{position:fixed!important;left:50%!important;transform:translateX(-50%)!important;bottom:0!important;width:min(100vw,430px)!important;height:83px!important;background:rgba(247,243,234,.98)!important;border-top:1px solid var(--kp-line)!important;display:grid!important;grid-template-columns:repeat(4,1fr)!important;padding:0 0 max(9px,env(safe-area-inset-bottom))!important;z-index:100!important;box-shadow:none!important}
+body.kp-native-live .bottom-nav{position:fixed!important;left:50%!important;transform:translateX(-50%)!important;bottom:0!important;width:min(100vw,430px)!important;height:83px!important;background:rgba(247,243,234,.98)!important;border-top:1px solid var(--kp-line)!important;display:grid!important;grid-template-columns:repeat(4,1fr)!important;padding:0 0 max(9px,env(safe-area-inset-bottom))!important;z-index:100!important;box-shadow:none!important;border-radius:0!important}
 body.kp-native-live .bottom-nav .nav-item{border:0!important;background:none!important;color:#9c9b99!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important;padding:0!important;border-radius:0!important;box-shadow:none!important}
-body.kp-native-live .bottom-nav .nav-item.active{color:#a2833e!important}
+body.kp-native-live .bottom-nav .nav-item.active{color:#a2833e!important;background:none!important}
 body.kp-native-live .bottom-nav .nav-item:before{display:none!important}
 
-/* ---- Hero ---- */
-.kp-live-hero{position:relative;height:244px;margin:0;padding:24px 22px 20px;color:#fff;overflow:hidden;background-color:#3a3d40}
+/* Live now deliberately shares Matchday's exact 244px editorial hero geometry. */
+.kp-live-hero{position:relative;height:244px;margin:0;padding:27px 28px 22px;color:#fff;overflow:hidden;background:#4e4f50}
 .kp-live-hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 50%;z-index:0}
-.kp-live-hero:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(4,6,9,.78),rgba(4,6,9,.4) 62%,rgba(4,6,9,.14))}
+.kp-live-hero:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(3,5,8,.72),rgba(3,5,8,.18) 64%,rgba(3,5,8,0))}
 .kp-live-hero>*{position:relative;z-index:2}
-.kp-live-eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#d2b76f}
-.kp-live-hero h1{margin:10px 0 0;font:500 56px/.86 Georgia,"Times New Roman",serif;letter-spacing:-.03em;color:#fff}
-.kp-live-hero-sub{margin-top:10px;font-size:10.5px;font-weight:800;letter-spacing:.2em;color:#fff;opacity:.9}
-.kp-live-stats{margin-top:16px;display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#fff}
-.kp-live-stats .sep{opacity:.4;font-weight:400}
+.kp-live-eyebrow{font-size:9px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:#d2b76f}
+.kp-live-eyebrow:after{content:"";display:block;width:28px;height:2px;background:#c9a95d;margin-top:11px}
+.kp-live-hero h1{margin:20px 0 0;width:220px;font:500 42px/.93 Georgia,"Times New Roman",serif;letter-spacing:-.035em;color:#fff!important;text-transform:none!important}
+/* old slogan removed; JS may still emit the node for compatibility */
+.kp-live-hero-sub{display:none!important}
+.kp-live-stats{position:absolute!important;left:28px;bottom:20px;margin:0!important;display:flex;align-items:center;gap:7px;font-size:8px;font-weight:780;letter-spacing:.13em;text-transform:uppercase;color:#fff}
+.kp-live-stats .sep{opacity:.45;font-weight:400}
 .kp-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#9c9b99;flex:none}
 .kp-live-dot.on{background:#e0473f;box-shadow:0 0 0 3px rgba(224,71,63,.18)}
 .kp-live-tstatus .kp-live-dot.on{background:var(--kp-green);box-shadow:none}
 
-/* ---- Subnav (matches Matchday tabs) ---- */
-.kp-live-subnav{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 22px 0;border-bottom:1px solid var(--kp-line)}
-.kp-live-subtabs{display:flex;gap:18px}
-.kp-live-subtab{background:none;border:0;padding:0 0 12px;font:600 13.5px/1.05 Georgia,"Times New Roman",serif;color:#9c9b99;position:relative}
+/* Same cream, gutters, type scale and gold underline as Matchday. */
+.kp-live-subnav{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:0 28px 0;background:var(--kp-paper);border-bottom:1px solid var(--kp-line)}
+.kp-live-subtabs{display:flex;gap:24px}
+.kp-live-subtab{background:none;border:0;padding:15px 0 13px;font:600 14px/1.05 Georgia,"Times New Roman",serif;color:#9c9b99;position:relative;white-space:nowrap}
 .kp-live-subtab.active{color:var(--kp-ink)}
 .kp-live-subtab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--kp-gold)}
-
 .kp-live-body{padding-bottom:8px}
 
-/* ---- Fixture strip ---- */
-.kp-live-fx-scroll{display:flex;gap:10px;overflow-x:auto;padding:14px 22px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+/* Fixture strip is editorial/flat rather than unrelated rounded cards. */
+.kp-live-fx-scroll{display:flex;gap:0;overflow-x:auto;padding:0 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--kp-line)}
 .kp-live-fx-scroll::-webkit-scrollbar{display:none}
-.kp-live-fxc{flex:0 0 auto;width:112px;border:1px solid var(--kp-line);border-radius:14px;padding:12px 10px;background:#fff;text-align:center}
+.kp-live-fxc{flex:0 0 126px;width:126px;min-height:112px;border:0!important;border-right:1px solid var(--kp-line)!important;border-radius:0!important;padding:16px 12px 14px;background:transparent!important;text-align:center}
 .kp-live-fxc-crests{display:flex;align-items:center;justify-content:center;gap:10px}
-.kp-live-fxc-crests img{width:26px;height:26px;object-fit:contain}
-.kp-live-fxc-abbr{margin-top:8px;display:flex;align-items:baseline;justify-content:center;gap:5px;font:700 12.5px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink)}
+.kp-live-fxc-crests img{width:27px;height:27px;object-fit:contain}
+.kp-live-fxc-abbr{margin-top:8px;display:flex;align-items:baseline;justify-content:center;gap:5px;font:700 13px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink)}
 .kp-live-fxc-abbr .v{font-size:9px;font-weight:600;color:#9c9b99}
-.kp-live-fxc-time{margin-top:8px;font-size:10.5px;color:#8e8f92}
-.kp-live-fxc-lock{margin-top:2px;font-size:8.5px;color:#aaa8a4}
+.kp-live-fxc-time{margin-top:8px;font-size:10px;color:#8e8f92}
+.kp-live-fxc-lock{margin-top:3px;font-size:8px;color:#aaa8a4;white-space:nowrap}
 
-/* ---- Live Table section ---- */
-.kp-live-table-head{padding:22px 22px 4px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.kp-live-table-head{padding:24px 28px 7px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
 .kp-live-table-head h1{margin:0;font:500 30px/1 Georgia,"Times New Roman",serif;letter-spacing:-.02em}
 .kp-live-locked{font-size:11px;font-weight:700;color:var(--kp-green);white-space:nowrap}
-.kp-live-table-cols{display:grid;grid-template-columns:34px minmax(0,1fr) 54px 46px 14px;gap:8px;padding:10px 22px 6px;font-size:9px;font-weight:800;letter-spacing:.1em;color:#9c9b99}
-.kp-live-table-cols span:nth-child(3){text-align:right}
-.kp-live-table-cols span:nth-child(4){text-align:right}
-
-.kp-live-board{margin:0 20px;border-radius:16px;overflow:hidden;border:1px solid var(--kp-line);background:#fff}
-.kp-live-trow{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) 54px 46px 14px;align-items:center;gap:8px;padding:13px 12px;background:#fff;border-bottom:1px solid var(--kp-line)}
-.kp-live-trow:last-child{border-bottom:0}
-.kp-live-trow.top{background:#f3ead2;box-shadow:inset 3px 0 0 var(--kp-gold)}
-.kp-live-trow.me{box-shadow:inset 3px 0 0 var(--kp-green)}
-.kp-live-trow.top.me{box-shadow:inset 3px 0 0 var(--kp-gold)}
-.kp-live-tpos{font:700 14px/1 Georgia,"Times New Roman",serif;color:#8a8a86}
+.kp-live-table-cols{display:none!important}
+.kp-live-board{margin:0 20px;border-radius:0!important;overflow:visible;border:0!important;border-top:1px solid var(--kp-line)!important;background:transparent!important}
+.kp-live-trow{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) 42px 14px;align-items:center;gap:8px;min-height:66px;padding:10px 4px;background:transparent!important;border-bottom:1px solid var(--kp-line)}
+.kp-live-trow.top{background:transparent!important;box-shadow:none!important}
+.kp-live-trow.top:before{content:"";position:absolute;left:-4px;top:17px;bottom:17px;width:3px;border-radius:2px;background:var(--kp-gold)}
+.kp-live-trow.me{box-shadow:none!important}.kp-live-trow.top.me{box-shadow:none!important}
+.kp-live-tpos{font:700 13px/1 Georgia,"Times New Roman",serif;color:#9c9b99;text-align:center}
 .kp-live-trow.top .kp-live-tpos{color:var(--kp-ink)}
-.kp-live-tplayer{min-width:0}
-.kp-live-tname{font:700 14.5px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--kp-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kp-live-you{font-weight:600;color:#9c9b99;font-size:12px}
-.kp-live-tstatus{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:10.5px;color:#9c9b99}
-.kp-live-tpts{font:700 17px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink);text-align:right}
-.kp-live-tpicks{font-size:11px;color:#9c9b99;text-align:right}
-.kp-live-tchevron{color:#c9c7c2;font-size:16px;text-align:right}
+.kp-live-tplayer{min-width:0}.kp-live-tname{font:700 14.5px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--kp-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kp-live-you{font-weight:600;color:#9c9b99;font-size:12px}.kp-live-tstatus{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:10.5px;color:#9c9b99}.kp-live-tpts{font:700 17px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink);text-align:right}.kp-live-tpicks{display:none!important}.kp-live-tchevron{color:#c9c7c2;font-size:16px;text-align:right}
+/* No filler/marketing card below the table. */
+.kp-live-tip,.kp-live-need-title,.kp-live-need{display:none!important}
 
-.kp-live-tip{display:flex;align-items:flex-start;gap:10px;margin:16px 20px 0;padding:13px 14px;border:1px solid var(--kp-line);border-radius:14px;background:#fbf8f1}
-.kp-live-tip-icon{font-size:17px;line-height:1}
-.kp-live-tip-text{font-size:11.5px;line-height:1.45;color:var(--kp-ink)}
-.kp-live-tip-text strong{font-weight:700}
-
-.kp-live-need-title{margin:22px 22px 6px;font:700 18px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink)}
-.kp-live-need{margin:0 22px 22px;font-size:13px;line-height:1.5;color:var(--kp-ink)}
-
-/* ---- My Picks ---- */
-.kp-live-picks{padding:14px 20px 4px}
-.kp-live-pickrow{padding:12px 0;border-bottom:1px solid var(--kp-line)}
-.kp-live-pickrow:last-child{border-bottom:0}
-/* Home crest+name on the left, away name+crest on the right, score centred -
-   each crest now sits directly beside its own team's name (see the comment
-   in myPickRowHTML for the "crest stranded past the name" bug this replaces). */
-.kp-live-pick-main{display:grid;grid-template-columns:26px minmax(0,1fr) auto minmax(0,1fr) 26px;align-items:center;gap:8px}
-.kp-live-pick-crest{width:26px;height:26px;object-fit:contain}
-.kp-live-pick-team{min-width:0;font:700 12.5px/1.2 Georgia,"Times New Roman",serif;color:var(--kp-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kp-live-pick-team.away{text-align:right}
-.kp-live-pick-score{padding:0 2px;font:700 15px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink);white-space:nowrap}
-.kp-live-pick-time{margin-top:4px;font-size:10px;color:#9c9b99;padding-left:34px}
-
-/* These cards use literal #fff/cream colours rather than --kp-paper, so the
-   --kp-ink dark redefinition above (now light-coloured) would otherwise land
-   on top of a background that never changed - near-white text on a white
-   card. Give the cards themselves a dark surface to match. */
-html[data-kp-theme="dark"] body.kp-native-live .kp-live-fxc,
-html[data-kp-theme="dark"] body.kp-native-live .kp-live-board,
-html[data-kp-theme="dark"] body.kp-native-live .kp-live-trow{
-  background:#15191a!important;
-}
-html[data-kp-theme="dark"] body.kp-native-live .kp-live-trow.top{
-  background:rgba(167,134,67,.14)!important;
-}
-html[data-kp-theme="dark"] body.kp-native-live .kp-live-tip{
-  background:#15191a!important;
-}
-
-@media(max-width:395px){
-  body.kp-native-live .topbar{padding-left:22px!important;padding-right:22px!important}
-  .kp-live-hero{padding-left:18px;padding-right:18px}
-  .kp-live-hero h1{font-size:50px}
-  .kp-live-subnav{padding-left:18px;padding-right:18px}
-  .kp-live-fx-scroll{padding-left:18px;padding-right:18px}
-  .kp-live-table-head{padding-left:18px;padding-right:18px}
-  .kp-live-table-cols{padding-left:18px;padding-right:18px}
-  .kp-live-board{margin-left:16px;margin-right:16px}
-  .kp-live-tip{margin-left:16px;margin-right:16px}
-  .kp-live-need-title,.kp-live-need{margin-left:18px;margin-right:18px}
-  .kp-live-picks{padding-left:18px;padding-right:18px}
-}
+.kp-live-picks{padding:14px 20px 4px}.kp-live-pickrow{padding:12px 0;border-bottom:1px solid var(--kp-line)}.kp-live-pickrow:last-child{border-bottom:0}.kp-live-pick-main{display:grid;grid-template-columns:26px minmax(0,1fr) auto minmax(0,1fr) 26px;align-items:center;gap:8px}.kp-live-pick-crest{width:26px;height:26px;object-fit:contain}.kp-live-pick-team{min-width:0;font:700 12.5px/1.2 Georgia,"Times New Roman",serif;color:var(--kp-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kp-live-pick-team.away{text-align:right}.kp-live-pick-score{padding:0 2px;font:700 15px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink);white-space:nowrap}.kp-live-pick-time{margin-top:4px;font-size:10px;color:#9c9b99;padding-left:34px}
+html[data-kp-theme="dark"] body.kp-native-live .kp-live-fxc,html[data-kp-theme="dark"] body.kp-native-live .kp-live-board,html[data-kp-theme="dark"] body.kp-native-live .kp-live-trow{background:transparent!important}
+@media(max-width:395px){body.kp-native-live .topbar{padding-left:22px!important;padding-right:22px!important}.kp-live-hero{padding-left:22px;padding-right:22px}.kp-live-stats{left:22px}.kp-live-subnav{padding-left:22px;padding-right:22px}.kp-live-subtabs{gap:19px}.kp-live-fx-scroll{padding-left:16px}.kp-live-table-head{padding-left:22px;padding-right:22px}.kp-live-board{margin-left:16px;margin-right:16px}.kp-live-picks{padding-left:18px;padding-right:18px}}
