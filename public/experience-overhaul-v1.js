@@ -24,7 +24,7 @@
     void screen.offsetWidth;
     screen.classList.add('kp-page-enter');
     clearTimeout(mutationTimer);
-    mutationTimer = setTimeout(()=>screen.classList.remove('kp-page-enter'),360);
+    mutationTimer = setTimeout(()=>screen.classList.remove('kp-page-enter'),330);
   }
   function markInteractiveRows(){
     screen.querySelectorAll('.kp3-nav-row,.kp3-setting-row,.kp-admin-nav-row,.payment-row,.live-reference-table-row,.group-reference-menu>button').forEach(el=>el.classList.add('kp-motion-row'));
@@ -47,38 +47,52 @@
     if (nav) currentTab = nav.dataset.tab;
   }, true);
 
+  function cleanProductCopy(){
+    // Product UI only: remove decorative/tagline copy so every line earns its place.
+    screen.querySelectorAll('.group-reference-sidecopy,.group-reference-banner').forEach(el=>el.remove());
+
+    const mode = screen.querySelector('.group-reference-mode');
+    if (mode) {
+      mode.querySelectorAll('.kp-overhaul-mode-hint').forEach(el=>el.remove());
+      const p = mode.querySelector('p');
+      const title = mode.querySelector('h2');
+      const isFun = /for fun/i.test(title?.textContent || '');
+      if (p) p.textContent = isFun ? 'No weekly payment' : 'Weekly payment enabled';
+    }
+
+    document.querySelectorAll('.kp-playmode-page').forEach(page => {
+      const head = page.querySelector('.kp-admin-header p');
+      if (head) head.textContent = 'Choose whether this group uses a weekly payment.';
+      const toggle = page.querySelector('.kp-mode-toggle-copy small');
+      if (toggle) toggle.textContent = 'Turn off to play without payments.';
+    });
+  }
+
   function enhanceGroupMode(){
     if (!document.querySelector('.nav-item[data-tab="group"]')?.classList.contains('active')) return;
     const mode = screen.querySelector('.group-reference-mode');
-    if (!mode || mode.dataset.overhaulMode === '1') return;
-    mode.dataset.overhaulMode = '1';
+    if (!mode) return;
     const title = mode.querySelector('h2');
     const isFun = /for fun/i.test(title?.textContent || '');
-    const copy = mode.querySelector('p');
-    if (copy) {
-      const hint = document.createElement('span');
-      hint.className = 'kp-overhaul-mode-hint';
-      hint.textContent = isFun ? 'Predictions, tables and bragging rights — no money needed.' : 'Money mode is optional. This group can switch to Play for Fun at any time.';
-      copy.after(hint);
-    }
-    if (!isFun) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'kp-overhaul-mode-action';
-      btn.innerHTML = 'Play for fun <span aria-hidden="true">→</span>';
-      btn.addEventListener('click', () => {
-        const admin = screen.querySelector('.group-reference-menu [data-open="admin"]');
-        if (!admin) return;
-        admin.click();
-        const openMode = (tries=0) => {
-          const modeNav = screen.querySelector('.kp-playmode-nav');
-          if (modeNav) { modeNav.click(); return; }
-          if (tries < 12) setTimeout(()=>openMode(tries+1),80);
-        };
-        setTimeout(()=>openMode(),40);
-      });
-      mode.querySelector('div')?.append(btn);
-    }
+    let btn = mode.querySelector('.kp-overhaul-mode-action');
+    if (isFun) { btn?.remove(); return; }
+    if (btn) return;
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'kp-overhaul-mode-action';
+    btn.innerHTML = 'Change play mode <span aria-hidden="true">›</span>';
+    btn.addEventListener('click', () => {
+      const admin = screen.querySelector('.group-reference-menu [data-open="admin"]');
+      if (!admin) return;
+      admin.click();
+      const openMode = (tries=0) => {
+        const modeNav = screen.querySelector('.kp-playmode-nav');
+        if (modeNav) { modeNav.click(); return; }
+        if (tries < 12) setTimeout(()=>openMode(tries+1),80);
+      };
+      setTimeout(()=>openMode(),40);
+    });
+    mode.querySelector('div')?.append(btn);
   }
 
   function enhanceGroupPanelMotion(){
@@ -89,7 +103,6 @@
     const back = panel.querySelector('.group-reference-back');
     if (!back) return;
     back.addEventListener('click', e => {
-      // Let the underlying renderer handle state, but make the exit read as a route pop.
       const p = e.currentTarget.closest('.group-reference-panel');
       if (p) p.classList.add('kp-panel-closing');
     }, true);
@@ -98,23 +111,21 @@
   function rewritePlayModeLanguage(){
     document.querySelectorAll('.kp-playmode-nav').forEach(row => {
       const title = row.querySelector('.kp3-nav-copy strong');
-      const meta = row.querySelector('.kp3-nav-copy small');
       if (title) title.textContent = 'Play mode';
-      if (meta && !/for fun/i.test(meta.textContent||'')) meta.textContent = `${meta.textContent.replace(/\s+/g,' ').trim()} · Play for Fun available`;
-    });
-    document.querySelectorAll('.kp-playmode-page').forEach(page => {
-      const head = page.querySelector('.kp-admin-header p');
-      if (head) head.textContent = 'Choose a weekly pot or Play for Fun — same predictions, same table.';
-      const toggle = page.querySelector('.kp-mode-toggle-copy small');
-      if (toggle) toggle.textContent = 'On = weekly pot. Off = Play for Fun with no payment required.';
     });
   }
 
+  function standardiseBackLabels(){
+    screen.querySelectorAll('.group-reference-panel-head small').forEach(el=>{ el.textContent = 'Group'; });
+  }
+
   function polish(){
+    cleanProductCopy();
     markInteractiveRows();
     enhanceGroupMode();
     enhanceGroupPanelMotion();
     rewritePlayModeLanguage();
+    standardiseBackLabels();
     animateScreen();
   }
 
