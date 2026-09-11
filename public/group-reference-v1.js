@@ -79,14 +79,22 @@
     if (scrollHome) window.scrollTo({top:0,behavior:'smooth'});
   }
 
-  function cardTitle(card){ return clean(card.querySelector('.card-title')?.textContent || card.textContent || ''); }
-
-  function findTarget(legacy,label){
-    const cards=[...legacy.querySelectorAll('.card')];
-    if(label==='members') return cards.find(c=>/member payments|members/i.test(cardTitle(c)));
-    if(label==='rules') return cards.find(c=>/this week|rules/i.test(cardTitle(c)));
-    if(label==='settings') return cards.find(c=>/pay the treasurer|group settings/i.test(cardTitle(c)));
-    return null;
+  // Members/Rules/Settings each live in their own .kp3-view with a
+  // <h1> title in their .kp3-drill-header - matching by that view's own
+  // title (rather than hunting for a single .card by title text) picks up
+  // that view's ENTIRE content. Card-title matching used to grab only the
+  // Members-payments/This-week cards and, for Settings, actually matched
+  // the wrong card ("Pay the Treasurer", which also happens to contain
+  // "Treasurer") instead of the real Group Settings view - silently
+  // dropping the invite code, "Join another group" and the admin/leave
+  // controls that live alongside it in that view but outside any .card.
+  function findTargetView(legacy,label){
+    const match={members:/^members$/i,rules:/^rules$/i,settings:/^group settings$/i}[label];
+    if(!match) return null;
+    return [...legacy.querySelectorAll('.kp3-view')].find(v=>{
+      const h1=v.querySelector('.kp3-drill-header h1');
+      return h1 && match.test(clean(h1.textContent));
+    });
   }
 
   function mountPanel(target,title,dark=false){
@@ -132,7 +140,7 @@
     resetPanel(false);
     const legacy = screen.querySelector('.group-reference-legacy');
     if (!legacy) return;
-    const target=findTarget(legacy,label);
+    const target=findTargetView(legacy,label);
     const titles={members:'Members',rules:'Rules',settings:'Group settings'};
     if (!target) {
       console.warn('[KickPot Group] panel target not found:', label);
