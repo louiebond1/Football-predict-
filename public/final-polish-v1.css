@@ -56,12 +56,10 @@ body:has(#screen.group-reference-screen) .bottom-nav .nav-item.active{color:#267
 /* Group: a little more air before the fixed nav. */
 #screen.group-reference-screen{padding-bottom:148px!important}
 .group-reference-menu{margin-bottom:34px!important}
-.group-reference-banner{margin-bottom:20px!important}
 .group-reference-menu-copy small,
 .group-reference-mode p{letter-spacing:0!important}
 .group-reference-eyebrow,
-.group-reference-private,
-.group-reference-sidecopy{letter-spacing:.2em!important}
+.group-reference-private{letter-spacing:.2em!important}
 
 /* Purpose-built route hold: keeps navigation from flashing blank/legacy UI. */
 #kp-route-hold{position:fixed;z-index:90;left:50%;transform:translateX(-50%);top:76px;bottom:83px;width:min(100vw,430px);overflow:hidden;background:#f7f3ea;pointer-events:none}
@@ -79,3 +77,9 @@ body:has(#screen.group-reference-screen) .bottom-nav .nav-item.active{color:#267
   .kp-live-board{margin-left:16px!important;margin-right:16px!important}
   .kp-live-fx-scroll{padding-left:16px!important;padding-right:16px!important}
 }
+
+/* Explicit play-mode choice at group creation (Play for Fun vs Play for a Pot),
+   shared between first-run onboarding and the "Create new group" form. */
+.kp-mode-pick{display:flex;gap:8px;margin:12px 0}
+.kp-mode-pick-btn{flex:1;min-height:44px;padding:0 10px;border:1px solid var(--kp-line,rgba(255,255,255,.16));border-radius:12px;background:transparent;color:var(--kp-muted,#8c97aa);font:inherit;font-size:12.5px;font-weight:750}
+.kp-mode-pick-btn.is-active{background:var(--kp-text,#fff);color:var(--kp-bg,#0b141a);border-color:transparent}

@@ -94,33 +94,5 @@
   });
   observer.observe(screen,{childList:true,subtree:true,characterData:true});
 
-  function stabiliseGroupMode(){
-    if(activeTab() !== 'group') return;
-    const hub = screen.querySelector('.group-reference-hub');
-    if(!hub) return;
-    const select = screen.querySelector('.group-reference-legacy #groupSwitch, #groupSwitch');
-    const gid = select?.value || 'default';
-    const modeEl = hub.querySelector('.group-reference-mode h2');
-    const subEl = hub.querySelector('.group-reference-mode p');
-    const heroMeta = hub.querySelector('.group-reference-hero p');
-    if(!modeEl || !heroMeta) return;
-    const current = modeEl.textContent.trim();
-    const key = `kp-group-mode:${gid}`;
-    let saved = '';
-    try { saved = sessionStorage.getItem(key) || localStorage.getItem(key) || ''; } catch {}
-
-    if(current !== 'For fun') {
-      try { sessionStorage.setItem(key,current); localStorage.setItem(key,current); } catch {}
-      return;
-    }
-    if(!saved || saved === 'For fun') return;
-    modeEl.textContent = saved;
-    if(subEl) subEl.textContent = 'Weekly stake enabled';
-    heroMeta.textContent = heroMeta.textContent.replace(/^For fun\s*·/, `${saved} ·`);
-  }
-
-  const modeObserver = new MutationObserver(() => requestAnimationFrame(stabiliseGroupMode));
-  modeObserver.observe(screen,{childList:true,subtree:true,characterData:true});
-  stabiliseGroupMode();
   cacheCurrent();
 })();

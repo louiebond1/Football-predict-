@@ -103,14 +103,21 @@ function createGroupForm(list) {
   row.innerHTML = '<span><strong>Create new group</strong><small>Start another private competition</small></span><em>＋</em>';
   const form = document.createElement('div');
   form.className = 'kp-create-group-form'; form.hidden = true;
-  form.innerHTML = `<label>Group name<input class="kp-create-name" maxlength="40" placeholder="e.g. Sunday League Legends"></label><label>Weekly stake (£)<input class="kp-create-stake" type="number" min="0" max="1000" step="1" value="5"></label><button type="button" class="kp-create-submit">Create group</button><small class="kp-create-group-status"></small>`;
+  form.innerHTML = `<label>Group name<input class="kp-create-name" maxlength="40" placeholder="e.g. Sunday League Legends"></label><div class="kp-mode-pick" role="group" aria-label="Play mode"><button type="button" class="kp-mode-pick-btn is-active" data-mode="pot">Play for a Pot</button><button type="button" class="kp-mode-pick-btn" data-mode="fun">Play for Fun</button></div><label class="kp-create-stake-row">Weekly stake (£)<input class="kp-create-stake" type="number" min="0" max="1000" step="1" value="5"></label><button type="button" class="kp-create-submit">Create group</button><small class="kp-create-group-status"></small>`;
   row.addEventListener('click', () => { form.hidden = !form.hidden; if (!form.hidden) form.querySelector('input')?.focus(); });
+  const modeButtons = [...form.querySelectorAll('.kp-mode-pick-btn')];
+  const stakeRow = form.querySelector('.kp-create-stake-row');
+  modeButtons.forEach(btn => btn.addEventListener('click', () => {
+    modeButtons.forEach(b => b.classList.toggle('is-active', b === btn));
+    stakeRow.hidden = btn.dataset.mode === 'fun';
+  }));
   form.querySelector('.kp-create-submit').addEventListener('click', async () => {
     const sb = await getClient(); if (!sb) return;
     const status = form.querySelector('.kp-create-group-status');
     const button = form.querySelector('.kp-create-submit');
     const name = form.querySelector('.kp-create-name').value.trim();
-    const stake = Math.max(0, Math.round(Number(form.querySelector('.kp-create-stake').value || 0) * 100));
+    const isFun = form.querySelector('.kp-mode-pick-btn[data-mode="fun"]')?.classList.contains('is-active');
+    const stake = isFun ? 0 : Math.max(0, Math.round(Number(form.querySelector('.kp-create-stake').value || 0) * 100));
     if (!name) { status.textContent = 'Give the group a name.'; return; }
     button.disabled = true; status.textContent = 'Creating…';
     const { data, error } = await sb.rpc('create_group', { p_name: name, p_stake_pence: stake });
@@ -184,6 +191,7 @@ function applyFunPresentation(group) {
     if (/^Payment control$/i.test(row.querySelector('.kp3-nav-copy strong')?.textContent?.trim() || '')) row.classList.toggle('kp-admin-payment-disabled', fun);
   });
   document.querySelector('.kp-admin-summary')?.classList.toggle('kp-mode-hidden', fun);
+  document.dispatchEvent(new CustomEvent('kp:group-refresh'));
 }
 
 async function enhanceGroupSettings() {

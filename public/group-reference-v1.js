@@ -30,17 +30,19 @@
     const memberMatch = headMeta.match(/(\d+)\s+members?/i);
     const treasurerMatch = headMeta.match(/Treasurer:\s*(.+)$/i);
     const stakeMatch = headMeta.match(/£\s*([\d.]+)/);
+    const funMode = /^for fun\b/i.test(headMeta);
     const paymentRows = [...screen.querySelectorAll('.payment-row')];
     const memberCount = memberMatch ? Number(memberMatch[1]) : (paymentRows.length || 1);
     const treasurer = treasurerMatch ? clean(treasurerMatch[1]) : '';
     const stake = stakeMatch ? Number(stakeMatch[1]) : 0;
+    const isTreasurer = !!screen.querySelector('.kp-admin-entry, .kp-admin-first-paint');
     const names = paymentRows.map(r => clean(r.querySelector('strong')?.textContent || '')).filter(Boolean);
     const initials = names.slice(0,5).map(n => {
       const bits=n.replace(/\s*\(you\)\s*/i,'').trim().split(/\s+/).filter(Boolean);
       return (bits.length>1 ? bits[0][0]+bits[bits.length-1][0] : (bits[0]||'?').slice(0,2)).toUpperCase();
     });
     while(initials.length < Math.min(memberCount,5)) initials.push('?');
-    return {title,memberCount,treasurer,stake,initials,children:[...screen.children]};
+    return {title,memberCount,treasurer,stake,funMode,isTreasurer,initials,children:[...screen.children]};
   }
 
   function resetPanel(scrollHome=true){
@@ -65,16 +67,51 @@
     if(label==='members') return cards.find(c=>/member payments|members/i.test(cardTitle(c)));
     if(label==='rules') return cards.find(c=>/this week|rules/i.test(cardTitle(c)));
     if(label==='settings') return cards.find(c=>/pay the treasurer|group settings/i.test(cardTitle(c)));
-    if(label==='admin') return cards.find(c=>/treasurer.*bank details|admin/i.test(cardTitle(c))) || cards.find(c=>/treasurer/i.test(cardTitle(c)));
     return null;
   }
 
+  function mountPanel(target,title){
+    const panel=document.createElement('section');
+    panel.className='group-reference-panel';
+    panel.innerHTML=`<div class="group-reference-panel-head"><button type="button" class="group-reference-back" aria-label="Back to Group">${svg.back}</button><div><small>GROUP</small><h2>${esc(title)}</h2></div></div>`;
+    panel.appendChild(target);
+    screen.querySelector('.group-reference-hub')?.classList.add('group-reference-hub--compact');
+    screen.appendChild(panel);
+    panel.querySelector('.group-reference-back')?.addEventListener('click',()=>{
+      resetPanel(true);
+      document.dispatchEvent(new CustomEvent('kp:group-refresh'));
+    });
+    requestAnimationFrame(()=>requestAnimationFrame(()=>panel.scrollIntoView({behavior:'smooth',block:'start'})));
+  }
+
+  function openAdmin(){
+    resetPanel(false);
+    const legacy = screen.querySelector('.group-reference-legacy');
+    const entry = legacy?.querySelector('.kp-admin-entry');
+    if (!entry) {
+      console.warn('[KickPot Group] admin console not available (not the treasurer)');
+      return;
+    }
+    entry.click();
+    const tryMount = (tries=0) => {
+      const view = legacy.querySelector('.kp-admin-view');
+      if (view && !view.hidden) {
+        view.dataset.groupOriginalCard='1';
+        mountPanel(view,'Admin');
+        return;
+      }
+      if (tries < 25) setTimeout(()=>tryMount(tries+1), 60);
+    };
+    tryMount();
+  }
+
   function openLegacy(label){
+    if (label === 'admin') { openAdmin(); return; }
     resetPanel(false);
     const legacy = screen.querySelector('.group-reference-legacy');
     if (!legacy) return;
     const target=findTarget(legacy,label);
-    const titles={members:'Members',rules:'Rules',settings:'Group settings',admin:'Admin'};
+    const titles={members:'Members',rules:'Rules',settings:'Group settings'};
     if (!target) {
       console.warn('[KickPot Group] panel target not found:', label);
       return;
@@ -86,22 +123,15 @@
     target.style.removeProperty('visibility');
     target.style.removeProperty('opacity');
     target.dataset.groupOriginalCard='1';
-
-    const panel=document.createElement('section');
-    panel.className='group-reference-panel';
-    panel.innerHTML=`<div class="group-reference-panel-head"><button type="button" class="group-reference-back" aria-label="Back to Group">${svg.back}</button><div><small>GROUP</small><h2>${esc(titles[label]||'Group')}</h2></div></div>`;
-    panel.appendChild(target);
-    screen.querySelector('.group-reference-hub')?.classList.add('group-reference-hub--compact');
-    screen.appendChild(panel);
-    panel.querySelector('.group-reference-back')?.addEventListener('click',()=>resetPanel(true));
-    requestAnimationFrame(()=>requestAnimationFrame(()=>panel.scrollIntoView({behavior:'smooth',block:'start'})));
+    mountPanel(target,titles[label]||'Group');
   }
 
   function render(){
     if (!groupTabActive()) { delete screen.dataset.groupReference; screen.classList.remove('group-reference-screen'); return; }
     const data=collect(); if (!data) return;
-    const mode = data.stake>0 ? `£${Number.isInteger(data.stake)?data.stake:data.stake.toFixed(2)}/week` : 'For fun';
-    const modeSub = data.stake>0 ? 'Weekly stake enabled' : 'No payment required';
+    const isFun = data.funMode || !(data.stake>0);
+    const mode = isFun ? 'For fun' : `£${Number.isInteger(data.stake)?data.stake:data.stake.toFixed(2)}/week`;
+    const modeSub = isFun ? 'No weekly payment' : 'Weekly payment enabled';
     const avatarHtml=data.initials.map((x,i)=>`<span class="group-reference-avatar" style="z-index:${20-i}">${esc(x)}</span>`).join('');
     const extra=Math.max(0,data.memberCount-data.initials.length);
     const legacy=document.createElement('div'); legacy.className='group-reference-legacy'; legacy.hidden=true;
@@ -112,14 +142,13 @@
     hub.innerHTML=`
       <section class="group-reference-hero"><div class="group-reference-hero-content"><div class="group-reference-private">${svg.lock}<span>Private group</span></div><h1>${esc(data.title)}</h1><p>${mode} · ${data.memberCount} member${data.memberCount===1?'':'s'}${data.treasurer?` · Treasurer: ${esc(data.treasurer)}`:''}</p><button type="button" data-open="members">View group ${svg.arrow}</button></div></section>
       <section class="group-reference-members-strip"><div class="group-reference-avatars">${avatarHtml}${extra?`<span class="group-reference-avatar group-reference-avatar-more">+${extra}</span>`:''}</div><button type="button" data-open="members"><span>${data.memberCount} member${data.memberCount===1?'':'s'}</span>${svg.chev}</button></section>
-      <section class="group-reference-mode"><div><div class="group-reference-eyebrow">Play mode</div><h2>${esc(mode)}</h2><p>${esc(modeSub)}</p></div><div class="group-reference-sidecopy">Same game<br>different<br>friends<span></span></div></section>
+      <section class="group-reference-mode"><div><div class="group-reference-eyebrow">Play mode</div><h2>${esc(mode)}</h2><p>${esc(modeSub)}</p></div></section>
       <section class="group-reference-menu">
         <button type="button" data-open="members"><span class="group-reference-menu-icon">${svg.users}</span><span class="group-reference-menu-copy"><b>Members</b><small>Manage your group</small></span><span class="group-reference-menu-tail">${svg.chev}</span></button>
         <button type="button" data-open="rules"><span class="group-reference-menu-icon">${svg.rules}</span><span class="group-reference-menu-copy"><b>Rules</b><small>Scoring & lock times</small></span><span class="group-reference-menu-tail">${svg.chev}</span></button>
         <button type="button" data-open="settings"><span class="group-reference-menu-icon">${svg.link}</span><span class="group-reference-menu-copy"><b>Group settings</b><small>Invite code & group access</small></span><span class="group-reference-menu-tail">${svg.chev}</span></button>
-        <button type="button" data-open="admin"><span class="group-reference-menu-icon">${svg.shield}</span><span class="group-reference-menu-copy"><b>Admin</b><small>Payments, members & scoring controls</small></span><span class="group-reference-menu-tail">${data.treasurer?'<em>Treasurer</em>':''}${svg.chev}</span></button>
-      </section>
-      <section class="group-reference-banner"><div>Good football<br>better friends</div><span>KickPot</span></section>`;
+        ${data.isTreasurer?`<button type="button" data-open="admin"><span class="group-reference-menu-icon">${svg.shield}</span><span class="group-reference-menu-copy"><b>Admin</b><small>Payments, members & scoring controls</small></span><span class="group-reference-menu-tail"><em>Treasurer</em>${svg.chev}</span></button>`:''}
+      </section>`;
     screen.append(hub,legacy);
     hub.querySelectorAll('[data-open]').forEach(btn=>btn.addEventListener('click',()=>openLegacy(btn.dataset.open)));
   }
@@ -127,6 +156,11 @@
   let queued=false;
   const schedule=()=>{ if(queued) return; queued=true; requestAnimationFrame(()=>{queued=false;render();}); };
   new MutationObserver(()=>{ if(screen.dataset.groupReference!=='v4') schedule(); }).observe(screen,{childList:true,subtree:false});
+  document.addEventListener('kp:group-refresh', () => {
+    if (!groupTabActive() || screen.querySelector('.group-reference-panel')) return;
+    delete screen.dataset.groupReference;
+    schedule();
+  });
   document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click',()=>setTimeout(schedule,0)));
   setTimeout(schedule,0);
 })();

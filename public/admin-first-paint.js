@@ -7,6 +7,7 @@ let pendingClick = false;
 let adminGroupId = '';
 let adminKnown = false;
 let loading = false;
+let adminEntryAnnounced = false;
 
 const adminIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l7 2.7v5.3c0 5-3.1 7.9-7 9-3.9-1.1-7-4-7-9V6.2l7-2.7z"/><path d="M9 12h6M12 9v6"/></svg>';
 const chevron = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
@@ -74,8 +75,13 @@ function apply() {
       pendingClick = false;
       queueMicrotask(() => real.click());
     }
+    if (!adminEntryAnnounced) {
+      adminEntryAnnounced = true;
+      document.dispatchEvent(new CustomEvent('kp:group-refresh'));
+    }
     return;
   }
+  adminEntryAnnounced = false;
 
   if (!adminKnown || !document.querySelector('.nav-item[data-tab="group"].active')) {
     fake?.remove();

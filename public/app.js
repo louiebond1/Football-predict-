@@ -592,7 +592,8 @@ function renderGroup() {
   const p = myPayment();
   const { pot, paidCount, total } = potMeta();
   const anyUnconfirmed = Object.values(state.payments).some(x => !x.confirmed_paid_at);
-  screen.innerHTML = `<section class="group-head"><div class="group-emblem">${initials(g.name)}</div><div><div class="private-badge">${ic('shield', 13)} Private Group</div><h1 style="margin:4px 0 2px;font-size:26px;letter-spacing:-1px;line-height:1.1">${esc(g.name)}</h1><div class="hero-sub">${gbp(g.stake_pence)} / week · ${state.members.length} members · Treasurer: ${esc(profileName(g.treasurer_id))}</div></div></section>
+  const modeText = g.payments_required === false ? 'For fun' : `${gbp(g.stake_pence)} / week`;
+  screen.innerHTML = `<section class="group-head"><div class="group-emblem">${initials(g.name)}</div><div><div class="private-badge">${ic('shield', 13)} Private Group</div><h1 style="margin:4px 0 2px;font-size:26px;letter-spacing:-1px;line-height:1.1">${esc(g.name)}</h1><div class="hero-sub">${modeText} · ${state.members.length} members · Treasurer: ${esc(profileName(g.treasurer_id))}</div></div></section>
   <div class="pill" style="margin:4px 0 14px">Join code <strong class="accent" style="letter-spacing:3px;margin-left:5px">${esc(g.join_code)}</strong></div>
   ${groupSwitcher()}
   <section class="card"><div class="card-head"><div class="card-title">${ic('wallet')} ${esc(state.round || 'Gameweek')} Pot</div><span class="badge">${paidCount}/${total} paid</span></div><div class="pot-hero"><div class="pot-amount">${pot}</div><div class="pot-icon">${ic('wallet', 26)}</div></div></section>
@@ -665,12 +666,19 @@ function renderGroup() {
 
 function renderOnboarding() {
   screen.innerHTML = `<section class="hero"><h1>Start a Pot</h1><div class="hero-sub">Create a private group or join one with a code.</div></section>
-  <section class="card"><div class="card-title">${ic('users')} Create a Group</div><div class="scorer-row"><input class="scorer-select" id="newGroupName" placeholder="Group name, e.g. VAR Is Corrupt"></div><div class="scorer-row"><input class="scorer-select" id="newGroupStake" inputmode="numeric" placeholder="Stake per Gameweek (£)" value="5"></div><button class="primary" id="createGroupBtn">Create Group</button></section>
+  <section class="card"><div class="card-title">${ic('users')} Create a Group</div><div class="scorer-row"><input class="scorer-select" id="newGroupName" placeholder="Group name, e.g. VAR Is Corrupt"></div><div class="kp-mode-pick" role="group" aria-label="Play mode"><button type="button" class="kp-mode-pick-btn is-active" data-mode="pot">Play for a Pot</button><button type="button" class="kp-mode-pick-btn" data-mode="fun">Play for Fun</button></div><div class="scorer-row" id="newGroupStakeRow"><input class="scorer-select" id="newGroupStake" inputmode="numeric" placeholder="Stake per Gameweek (£)" value="5"></div><button class="primary" id="createGroupBtn">Create Group</button></section>
   <section class="card"><div class="card-title">${ic('shield')} Join a Group</div><div class="scorer-row"><input class="scorer-select" id="joinCode" placeholder="6-character join code" style="text-transform:uppercase"></div><button class="secondary" id="joinGroupBtn">Join Group</button></section>
   <div id="onboardStatus"></div>`;
+  const modeButtons = [...screen.querySelectorAll('.kp-mode-pick-btn')];
+  const stakeRow = screen.querySelector('#newGroupStakeRow');
+  modeButtons.forEach(btn => btn.addEventListener('click', () => {
+    modeButtons.forEach(b => b.classList.toggle('is-active', b === btn));
+    stakeRow.hidden = btn.dataset.mode === 'fun';
+  }));
   document.querySelector('#createGroupBtn').addEventListener('click', async () => {
     const name = document.querySelector('#newGroupName').value.trim();
-    const stake = Math.max(0, Number(document.querySelector('#newGroupStake').value) || 0) * 100;
+    const isFun = screen.querySelector('.kp-mode-pick-btn[data-mode="fun"]')?.classList.contains('is-active');
+    const stake = isFun ? 0 : Math.max(0, Number(document.querySelector('#newGroupStake').value) || 0) * 100;
     const statusEl = document.querySelector('#onboardStatus');
     if (!name) { statusEl.className = 'status error'; statusEl.textContent = 'Give your group a name.'; return; }
     const { data, error } = await state.supabase.rpc('create_group', { p_name: name, p_stake_pence: stake });
