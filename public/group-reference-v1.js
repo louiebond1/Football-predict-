@@ -89,9 +89,9 @@
     return null;
   }
 
-  function mountPanel(target,title){
+  function mountPanel(target,title,dark=false){
     const panel=document.createElement('section');
-    panel.className='group-reference-panel';
+    panel.className='group-reference-panel'+(dark?' group-reference-panel--dark':'');
     panel.innerHTML=`<div class="group-reference-panel-head"><button type="button" class="group-reference-back" aria-label="Back to Group">${svg.back}</button><div><small>GROUP</small><h2>${esc(title)}</h2></div></div>`;
     panel.appendChild(target);
     screen.querySelector('.group-reference-hub')?.classList.add('group-reference-hub--compact');
@@ -116,7 +116,10 @@
       const view = legacy.querySelector('.kp-admin-view');
       if (view && !view.hidden) {
         view.dataset.groupOriginalCard='1';
-        mountPanel(view,'Admin');
+        view.style.removeProperty('display');
+        view.style.removeProperty('visibility');
+        view.style.removeProperty('opacity');
+        mountPanel(view,'Admin',true);
         return;
       }
       if (tries < 25) setTimeout(()=>tryMount(tries+1), 60);
