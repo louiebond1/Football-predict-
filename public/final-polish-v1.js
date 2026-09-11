@@ -1,3 +1,21 @@
+/* Load the authoritative experience layer last so it can unify legacy renderers without touching scoring/data logic. */
+(() => {
+  if (!document.querySelector('link[data-kp-experience="v1"]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/experience-overhaul-v1.css?v=20260911a';
+    link.dataset.kpExperience = 'v1';
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector('script[data-kp-experience="v1"]')) {
+    const script = document.createElement('script');
+    script.src = '/experience-overhaul-v1.js?v=20260911a';
+    script.defer = true;
+    script.dataset.kpExperience = 'v1';
+    document.head.appendChild(script);
+  }
+})();
+
 /* Final audit polish: route holds, snapshot caching, group-mode stabilisation. */
 (() => {
   const screen = document.querySelector('#screen');
