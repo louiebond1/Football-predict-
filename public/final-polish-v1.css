@@ -9,6 +9,16 @@ body:has(#screen.group-reference-screen) .topbar{
   border:0!important;box-shadow:none!important;display:flex!important;
   align-items:center!important;justify-content:space-between!important;
 }
+/* The 44px above is a fixed guess at clearing the status bar. iOS reports a
+   taller safe-area-inset-top while screen recording is active (to make room
+   for the recording indicator pill), and this fixed value doesn't grow with
+   it - so the KickPot wordmark and account chip end up rendered partly
+   behind the indicator during a recording, even though the same layout is
+   fine otherwise. #app > .topbar (an ID selector) outranks every other
+   topbar rule regardless of which body/screen class is or isn't present, so
+   this floor always applies: never less than 44px, but grows to clear a
+   taller real safe area whenever the OS reports one. */
+#app > .topbar{ padding-top:max(44px, calc(env(safe-area-inset-top, 0px) + 12px))!important; }
 body:has(#screen.group-reference-screen) .topbar .brand{display:flex!important;align-items:center!important;gap:14px!important;color:#171717!important}
 body:has(#screen.group-reference-screen) .topbar .brand-mark{width:24px!important;height:19px!important;color:#a58a48!important;background:none!important;border:0!important}
 body:has(#screen.group-reference-screen) .topbar .brand-mark svg{width:24px!important;height:19px!important}
