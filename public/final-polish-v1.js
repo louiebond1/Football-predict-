@@ -3,13 +3,13 @@
   if (!document.querySelector('link[data-kp-experience="v1"]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/experience-overhaul-v1.css?v=20260911a';
+    link.href = '/experience-overhaul-v1.css?v=20260911b';
     link.dataset.kpExperience = 'v1';
     document.head.appendChild(link);
   }
   if (!document.querySelector('script[data-kp-experience="v1"]')) {
     const script = document.createElement('script');
-    script.src = '/experience-overhaul-v1.js?v=20260911a';
+    script.src = '/experience-overhaul-v1.js?v=20260911b';
     script.defer = true;
     script.dataset.kpExperience = 'v1';
     document.head.appendChild(script);
@@ -70,7 +70,6 @@
     requestAnimationFrame(() => requestAnimationFrame(removeHold));
   }
 
-  /* Capture before app.js/tab renderers start repainting the screen. */
   document.addEventListener('click', e => {
     const btn = e.target.closest?.('.bottom-nav .nav-item');
     if(!btn) return;
@@ -82,7 +81,6 @@
     setTimeout(() => releaseWhenReady(next), 0);
   }, true);
 
-  /* Avoid presenting old/blank Live markup during async refreshes. */
   const observer = new MutationObserver(() => {
     cacheCurrent();
     const tab = activeTab();
@@ -96,8 +94,6 @@
   });
   observer.observe(screen,{childList:true,subtree:true,characterData:true});
 
-  /* Freeze the visible Group play-mode text to the latest resolved value for
-     this active group so the user never sees For fun -> £5/week morphing. */
   function stabiliseGroupMode(){
     if(activeTab() !== 'group') return;
     const hub = screen.querySelector('.group-reference-hub');
