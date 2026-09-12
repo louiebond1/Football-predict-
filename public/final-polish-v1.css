@@ -71,6 +71,17 @@ body:has(#screen.group-reference-screen) .bottom-nav .nav-item.active{color:#267
 .group-reference-eyebrow,
 .group-reference-private{letter-spacing:.2em!important}
 
+/* Purpose-built route hold: keeps navigation from flashing blank/legacy UI. */
+#kp-route-hold{position:fixed;z-index:90;left:50%;transform:translateX(-50%);top:76px;bottom:83px;width:min(100vw,430px);overflow:hidden;background:#f7f3ea;pointer-events:none}
+#kp-route-hold .kp-route-hold-scroll{height:100%;overflow:hidden;background:#f7f3ea}
+#kp-route-hold .kp-route-skeleton{height:100%;background:#f7f3ea}
+#kp-route-hold .kp-route-skeleton-hero{height:244px;background:linear-gradient(110deg,#303538,#555c5e 55%,#373c3e)}
+#kp-route-hold .kp-route-skeleton-tabs{height:47px;border-bottom:1px solid rgba(24,24,24,.06)}
+#kp-route-hold .kp-route-skeleton-row{height:76px;margin:0 20px;border-bottom:1px solid rgba(24,24,24,.06);position:relative}
+#kp-route-hold .kp-route-skeleton-row:before{content:'';position:absolute;left:0;right:28%;top:27px;height:9px;border-radius:6px;background:rgba(24,24,24,.07)}
+#kp-route-hold.kp-route-hold-group{top:76px}
+#kp-route-hold .group-reference-hub{padding:10px 28px 0!important;box-sizing:border-box!important}
+
 @media(max-width:395px){
   body.kp-native-matchday .topbar,body.kp-native-live .topbar,body:has(#screen.group-reference-screen) .topbar{padding-left:22px!important;padding-right:22px!important}
   .kp-live-board{margin-left:16px!important;margin-right:16px!important}
