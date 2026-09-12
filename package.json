@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node start.mjs",
-    "check": "node --check server.mjs && node --check start.mjs"
+    "check": "node --check server.mjs && node --check start.mjs",
+    "test": "node --test test/live-controller.test.mjs"
   },
   "engines": {
     "node": ">=22"
