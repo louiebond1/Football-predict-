@@ -1,4 +1,4 @@
-const CACHE='kickpot-v107-20260912-live-single-owner';
+const CACHE='kickpot-v108-20260912-live-group-picks';
 const CORE=[
   '/',
   '/styles.css',
@@ -19,7 +19,7 @@ const CORE=[
   '/matchday-reference-live.css?v=8',
   '/matchday-hero-photo.css?v=3',
   '/live-reference-table.css?v=3',
-  '/live-hierarchy-v1.css?v=4',
+  '/live-hierarchy-v1.css?v=5',
   '/final-polish-v1.css?v=2',
   '/simple-overhaul-v2.css?v=2',
   '/history-inline-v2.css?v=2',
@@ -49,7 +49,7 @@ const CORE=[
   '/round-sync.js?v=1',
   '/active-group-persistence.js?v=2',
   '/matchday-reference-live.js?v=8',
-  '/live-reference-table.js?v=2',
+  '/live-reference-table.js?v=3',
   '/final-polish-v1.js?v=2',
   '/history-inline-v2.js?v=2',
   '/manifest.webmanifest',

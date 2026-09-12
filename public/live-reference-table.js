@@ -4,7 +4,7 @@
 
   const state = {
     page: 'table', mounted: false, groupId: null, gameweekId: null,
-    fixtures: [], predictions: {}, members: [], leaderboard: {}, pickStatus: {},
+    fixtures: [], predictions: {}, groupPredictions: {}, members: [], leaderboard: {}, pickStatus: {},
     myId: null, round: null, loaded: false, loading: false, error: '',
     refreshTimer: 0, loadPromise: null
   };
@@ -97,18 +97,25 @@
         if (gameweekError) throw gameweekError;
         state.gameweekId = gameweekId;
 
-        const [membersResult, profilesResult, leaderboardResult, pickStatusResult, predictionsResult, football] = await Promise.all([
+        const football = await fixturesPromise;
+        state.fixtures = football.fixtures;
+        state.round = football.round || 'Matchday';
+        const revealedFixtureIds = state.fixtures
+          .filter(fixture => Date.now() >= new Date(fixture.kickoff).getTime())
+          .map(fixture => fixture.id)
+          .filter(Boolean);
+        const revealedPredictionsPromise = revealedFixtureIds.length
+          ? supabase.from('predictions').select('fixture_id,user_id,predicted_home,predicted_away').eq('group_id', state.groupId).in('fixture_id', revealedFixtureIds)
+          : Promise.resolve({ data: [], error: null });
+
+        const [membersResult, profilesResult, leaderboardResult, pickStatusResult, predictionsResult, revealedPredictionsResult] = await Promise.all([
           supabase.from('group_members').select('user_id').eq('group_id', state.groupId),
           supabase.from('profiles').select('id,display_name'),
           supabase.from('group_leaderboard').select('*').eq('group_id', state.groupId).eq('gameweek_id', state.gameweekId),
           supabase.rpc('group_pick_status', { p_group_id: state.groupId, p_gameweek_id: state.gameweekId }),
           supabase.from('predictions').select('*').eq('group_id', state.groupId).eq('user_id', state.myId),
-          fixturesPromise
+          revealedPredictionsPromise
         ]);
-        // Fixture visibility is independent of the leaderboard/profile queries.
-        // Keep the football feed usable even if a secondary Supabase read fails.
-        state.fixtures = football.fixtures;
-        state.round = football.round || 'Matchday';
         if (membersResult.error) throw membersResult.error;
         if (profilesResult.error) throw profilesResult.error;
         if (leaderboardResult.error) throw leaderboardResult.error;
@@ -122,6 +129,13 @@
         state.predictions = Object.fromEntries((predictionsResult.data || [])
           .filter(prediction => fixtureIds.has(String(prediction.fixture_id)))
           .map(prediction => [String(prediction.fixture_id), prediction]));
+        const revealed = revealedPredictionsResult.error ? [] : (revealedPredictionsResult.data || []);
+        state.groupPredictions = Object.groupBy
+          ? Object.groupBy(revealed, prediction => String(prediction.fixture_id))
+          : revealed.reduce((groups, prediction) => {
+              (groups[String(prediction.fixture_id)] ||= []).push(prediction);
+              return groups;
+            }, {});
         state.loaded = true;
       } catch (error) {
         state.error = error?.message || String(error);
@@ -185,7 +199,16 @@
   function fixtureHTML(fixture) {
     const started = fixture.status?.short !== 'NS';
     const score = started ? `${fixture.goals?.home ?? '–'}–${fixture.goals?.away ?? '–'}` : formatDayTime(fixture.kickoff).split(' ').pop();
-    return `<div class="kp-live-fxc" data-fixture="${esc(fixture.id)}"><div class="kp-live-fxc-crests"><img src="${esc(fixture.home?.logo || '')}" alt=""><img src="${esc(fixture.away?.logo || '')}" alt=""></div><div class="kp-live-fxc-abbr"><span>${esc(displayName(fixture.home?.name))}</span><span class="v">v</span><span>${esc(displayName(fixture.away?.name))}</span></div><div class="kp-live-fxc-time${fixtureIsLive(fixture) ? ' is-live' : ''}">${esc(score)}</div><div class="kp-live-fxc-lock">${esc(fixtureStatus(fixture))}</div></div>`;
+    return `<div class="kp-live-fxc" data-fixture="${esc(fixture.id)}"><div class="kp-live-fxc-crests"><img src="${esc(fixture.home?.logo || '')}" alt=""><img src="${esc(fixture.away?.logo || '')}" alt=""></div><div class="kp-live-fxc-abbr"><span>${esc(displayName(fixture.home?.name))}</span><span class="v">v</span><span>${esc(displayName(fixture.away?.name))}</span></div><div class="kp-live-fxc-time${fixtureIsLive(fixture) ? ' is-live' : ''}">${esc(score)}</div><div class="kp-live-fxc-lock">${esc(fixtureStatus(fixture))}</div>${groupPicksHTML(fixture)}</div>`;
+  }
+  function groupPicksHTML(fixture) {
+    if (Date.now() < new Date(fixture.kickoff).getTime()) return '';
+    const picks = state.groupPredictions[String(fixture.id)] || [];
+    const byUser = new Map(picks.map(pick => [pick.user_id, pick]));
+    return `<details class="kp-live-group-picks"${fixtureIsLive(fixture) ? ' open' : ''}><summary><span>Group picks</span><span>${picks.length}/${state.members.length} revealed</span></summary><div class="kp-live-group-picks-list">${state.members.map(member => {
+      const pick = byUser.get(member.user_id);
+      return `<div${member.user_id === state.myId ? ' class="is-me"' : ''}><span>${esc(member.display_name)}${member.user_id === state.myId ? ' · you' : ''}</span><strong>${pick ? `${pick.predicted_home}–${pick.predicted_away}` : 'No pick'}</strong></div>`;
+    }).join('')}</div></details>`;
   }
   function emptyHTML(title, detail) {
     return `<div class="kp-live-empty"><strong>${esc(title)}</strong><span>${esc(detail)}</span><button type="button" data-live-retry>Try again</button></div>`;
