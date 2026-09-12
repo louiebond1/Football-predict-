@@ -3,6 +3,13 @@
   const screen = document.querySelector('#screen');
   if (!screen) return;
 
+  /* The app shell already owns the iPhone safe-area inset. A second safe-area
+     padding on the sticky topbar was creating the large empty band seen above
+     the Group screen in standalone/PWA mode. */
+  const chromeFix = document.createElement('style');
+  chromeFix.textContent = '.topbar{padding-top:0!important}';
+  document.head.appendChild(chromeFix);
+
   const esc = (s='') => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const clean = (s='') => String(s).replace(/\s+/g,' ').trim();
   const svg = {
@@ -70,24 +77,21 @@
     if (panel && legacy) {
       const moved = panel.querySelector('[data-group-original-card="1"]');
       if (moved) {
+        moved.hidden = false;
+        moved.removeAttribute('hidden');
+        moved.style.removeProperty('display');
+        moved.style.removeProperty('visibility');
+        moved.style.removeProperty('opacity');
         moved.removeAttribute('data-group-original-card');
         legacy.appendChild(moved);
       }
       panel.remove();
     }
+    document.body.classList.remove('kp-group-panel-open');
     screen.querySelector('.group-reference-hub')?.classList.remove('group-reference-hub--compact');
     if (scrollHome) window.scrollTo({top:0,behavior:'smooth'});
   }
 
-  // Members/Rules/Settings each live in their own .kp3-view with a
-  // <h1> title in their .kp3-drill-header - matching by that view's own
-  // title (rather than hunting for a single .card by title text) picks up
-  // that view's ENTIRE content. Card-title matching used to grab only the
-  // Members-payments/This-week cards and, for Settings, actually matched
-  // the wrong card ("Pay the Treasurer", which also happens to contain
-  // "Treasurer") instead of the real Group Settings view - silently
-  // dropping the invite code, "Join another group" and the admin/leave
-  // controls that live alongside it in that view but outside any .card.
   function findTargetView(legacy,label){
     const match={members:/^members$/i,rules:/^rules$/i,settings:/^group settings$/i}[label];
     if(!match) return null;
@@ -97,6 +101,11 @@
     });
   }
 
+  function returnToHub(){
+    resetPanel(true);
+    document.dispatchEvent(new CustomEvent('kp:group-refresh'));
+  }
+
   function mountPanel(target,title,dark=false){
     const panel=document.createElement('section');
     panel.className='group-reference-panel'+(dark?' group-reference-panel--dark':'');
@@ -104,11 +113,23 @@
     panel.appendChild(target);
     screen.querySelector('.group-reference-hub')?.classList.add('group-reference-hub--compact');
     screen.appendChild(panel);
-    panel.querySelector('.group-reference-back')?.addEventListener('click',()=>{
-      resetPanel(true);
-      document.dispatchEvent(new CustomEvent('kp:group-refresh'));
+    document.body.classList.add('kp-group-panel-open');
+
+    panel.querySelector('.group-reference-back')?.addEventListener('click', returnToHub);
+
+    /* The legacy view has its own back arrow. Previously its old handler hid
+       the moved .kp3-view in-place, leaving our overlay mounted but empty.
+       Capture that button first and route BOTH arrows through the same panel
+       teardown so the Group hub always restores instead of blanking. */
+    target.querySelectorAll('.kp3-back, [data-kp-back], .kp-admin-back').forEach(backBtn => {
+      backBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        returnToHub();
+      }, true);
     });
-    requestAnimationFrame(()=>requestAnimationFrame(()=>panel.scrollIntoView({behavior:'smooth',block:'start'})));
+
+    requestAnimationFrame(()=>requestAnimationFrame(()=>panel.scrollTo({top:0,behavior:'auto'})));
   }
 
   function openAdmin(){
@@ -190,12 +211,6 @@
   document.addEventListener('kp:group-refresh', () => {
     if (!groupTabActive() || screen.querySelector('.group-reference-panel')) return;
     if (screen.dataset.groupReference === 'v4') {
-      // Hub is already up: only rebuild if the underlying data actually
-      // changed. Without this check, the normal 8-step data-load retry
-      // cascade in settings-v2.js (which mostly re-confirms the same
-      // state) would tear down and rebuild the whole hub up to 8 times
-      // in a few seconds - visible flicker, lost scroll position, and a
-      // tap on Admin landing on an element that gets replaced mid-click.
       const sig = currentSignature();
       if (!sig || sig === lastSignature) return;
     }
