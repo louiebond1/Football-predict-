@@ -1,0 +1,74 @@
+/* KickPot simple overhaul v2 — intentionally restrained. Loaded last. */
+:root{--kp-paper:#f7f4ec;--kp-ink:#151816;--kp-line:rgba(21,24,22,.09);--kp-gold:#a88945;--kp-green:#1d9560}
+body.kp-native-matchday,body.kp-native-live{background:#ede9e0!important}
+body.kp-native-matchday #app,body.kp-native-live #app{width:min(100vw,430px)!important;background:var(--kp-paper)!important;overflow-x:hidden!important}
+body.kp-native-matchday .topbar,body.kp-native-live .topbar{min-height:64px!important;padding:18px 24px 12px!important;background:var(--kp-paper)!important;position:relative!important;z-index:50!important}
+body.kp-native-matchday .topbar .brand,body.kp-native-live .topbar .brand{gap:9px!important}
+body.kp-native-matchday .topbar .brand>span,body.kp-native-live .topbar .brand>span{font:750 21px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.035em!important;text-transform:none!important}
+body.kp-native-matchday .topbar .brand-mark,body.kp-native-live .topbar .brand-mark{width:20px!important;height:18px!important}
+body.kp-native-matchday #userChip,body.kp-native-live #userChip{width:36px!important;height:36px!important;min-width:36px!important;border-color:rgba(21,24,22,.14)!important;font-size:12px!important}
+
+/* Stable, compact hero treatment shared by both first-level pages. */
+.kp-native-tabs{display:none!important}
+.kp-native-hero,.kp-live-hero{height:190px!important;margin:8px 18px 0!important;border-radius:18px!important;overflow:hidden!important;padding:22px!important}
+.kp-native-hero:before,.kp-live-hero:before{background:linear-gradient(90deg,rgba(3,6,8,.70),rgba(3,6,8,.12) 72%)!important}
+.kp-native-eyebrow,.kp-live-eyebrow{font:750 9px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:.15em!important;color:#ead28b!important}
+.kp-native-eyebrow:after,.kp-live-eyebrow:after{display:none!important}
+.kp-native-hero h1,.kp-live-hero h1{margin:12px 0 0!important;width:auto!important;font:700 34px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.045em!important;color:white!important}
+.kp-native-hero h1 br{display:none!important}
+.kp-native-count{left:22px!important;bottom:18px!important}
+.kp-native-count small{margin-bottom:4px!important;font-size:9px!important;letter-spacing:.08em!important;text-transform:none!important}
+.kp-native-count strong{font:700 17px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+.kp-live-stats{left:22px!important;bottom:18px!important;font-size:9px!important;letter-spacing:.04em!important;gap:6px!important;text-transform:none!important}
+
+/* Matchday: readable rows, less visual noise. */
+.kp-native-list{padding:18px 18px 24px!important}
+.kp-native-date{margin:0 0 8px!important;font-size:10px!important;letter-spacing:.08em!important;color:#817d73!important}
+.kp-native-match{grid-template-columns:minmax(0,1fr) 112px minmax(0,1fr)!important;min-height:82px!important;gap:6px!important;border-bottom:1px solid var(--kp-line)!important}
+.kp-native-side{grid-template-columns:30px minmax(0,1fr)!important;gap:7px!important}
+.kp-native-side.away{grid-template-columns:minmax(0,1fr) 30px!important}
+.kp-native-side img{width:29px!important;height:29px!important}
+.kp-native-team{font:650 12px/1.15 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;text-wrap:balance!important}
+.kp-native-mid{width:112px!important}
+.kp-native-time{font-size:10px!important;color:#777b77!important}
+.kp-native-lock{font-size:8px!important;color:#999b96!important}
+.kp-native-score{height:30px!important;border-radius:9px!important;background:rgba(255,255,255,.48)!important}
+.kp-native-score button,.kp-native-score b,.kp-native-score span{height:28px!important;line-height:28px!important}
+.kp-native-lock-button{height:46px!important;border-radius:12px!important;margin-top:16px!important}
+
+/* Live landing page — no extra decorative sections. */
+.kp-live-primary-actions{margin:12px 18px 0!important;border:1px solid var(--kp-line)!important;border-radius:14px!important;overflow:hidden!important;background:rgba(255,255,255,.36)!important}
+.kp-live-primary-actions button{min-height:52px!important;padding:0 16px!important;font:650 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+.kp-live-table-head{padding:28px 22px 9px!important;align-items:center!important}
+.kp-live-table-head h1{font:700 31px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.045em!important}
+.kp-live-locked{font-size:11px!important;color:var(--kp-green)!important}
+.kp-live-board{margin:0 18px!important;border-top:1px solid var(--kp-line)!important}
+.kp-live-trow{grid-template-columns:34px minmax(0,1fr) 34px 14px!important;min-height:68px!important;padding:9px 3px!important;gap:8px!important}
+.kp-live-tname{font-size:14px!important;font-weight:650!important}
+.kp-live-tstatus{font-size:10.5px!important}
+.kp-live-tpts{font:700 17px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+
+/* Drill-ins: a real route header and guaranteed escape path. */
+body[data-kp-live-page="fixtures"] .kp-live-body,body[data-kp-live-page="picks"] .kp-live-body{padding-top:0!important}
+.kp-live-drill-head{position:sticky!important;top:0!important;z-index:80!important;min-height:62px!important;padding:10px 18px!important;gap:10px!important;background:rgba(247,244,236,.98)!important;border-bottom:1px solid var(--kp-line)!important}
+.kp-live-drill-back{width:38px!important;height:38px!important;border:0!important;border-radius:10px!important;background:rgba(21,24,22,.06)!important;font:500 25px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+.kp-live-drill-head small{display:none!important}.kp-live-drill-head h1{font:700 22px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.03em!important}
+body[data-kp-live-page="fixtures"] .kp-live-fx-scroll{padding:0 18px 100px!important;background:var(--kp-paper)!important}
+body[data-kp-live-page="fixtures"] .kp-live-fxc{min-height:80px!important;grid-template-columns:31px minmax(0,1fr) 50px minmax(0,1fr) 31px!important;column-gap:7px!important;padding:13px 0!important}
+body[data-kp-live-page="fixtures"] .kp-live-fxc-abbr>span:not(.v){font:650 12px/1.15 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+body[data-kp-live-page="fixtures"] .kp-live-fxc-time{font:700 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+body[data-kp-live-page="fixtures"] .kp-live-fxc-lock{font-size:9px!important}
+body[data-kp-live-page="picks"] .kp-live-picks{padding:4px 18px 100px!important}
+.kp-live-pickrow{padding:14px 0!important}.kp-live-pick-team{font:650 12px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+
+/* Navigation never disappears or becomes untappable. */
+body.kp-native-matchday .bottom-nav,body.kp-native-live .bottom-nav{display:grid!important;visibility:visible!important;pointer-events:auto!important;z-index:1000!important;height:76px!important;background:rgba(247,244,236,.97)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}
+body.kp-native-matchday .bottom-nav .nav-item,body.kp-native-live .bottom-nav .nav-item{pointer-events:auto!important;min-width:0!important;color:#989b98!important}
+body.kp-native-matchday .bottom-nav .nav-item.active,body.kp-native-live .bottom-nav .nav-item.active{color:#16794d!important}
+body.kp-native-matchday #app,body.kp-native-live #app{padding-bottom:78px!important}
+
+/* Remove route-hold/skeleton artefacts if an older cached script briefly creates one. */
+#kp-route-hold,.kp-route-skeleton{display:none!important}
+.kp-native-loading{min-height:260px!important;padding:80px 24px!important;background:var(--kp-paper)!important}
+
+@media(max-width:395px){.kp-native-hero,.kp-live-hero{margin-left:14px!important;margin-right:14px!important}.kp-native-list{padding-left:14px!important;padding-right:14px!important}.kp-live-primary-actions{margin-left:14px!important;margin-right:14px!important}.kp-live-board{margin-left:14px!important;margin-right:14px!important}}
