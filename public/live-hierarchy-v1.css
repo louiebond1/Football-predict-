@@ -1,0 +1,43 @@
+/* Live hierarchy v1: table is the landing view; fixtures/picks are drill-ins. */
+body.kp-native-live .kp-live-subnav{display:none!important}
+
+body[data-kp-live-page="table"] .kp-live-fx-scroll,
+body[data-kp-live-page="table"] .kp-live-picks{display:none!important}
+
+.kp-live-primary-actions{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--kp-line);background:var(--kp-paper)}
+.kp-live-primary-actions button{min-height:48px;padding:0 28px;border:0;background:transparent;color:var(--kp-ink);display:flex;align-items:center;justify-content:space-between;font:600 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.kp-live-primary-actions button+button{border-left:1px solid var(--kp-line)}
+.kp-live-primary-actions button span:last-child{font:400 19px/1 Georgia,"Times New Roman",serif;color:#aaa8a4}
+.kp-live-primary-actions button:active{background:rgba(18,23,19,.035)}
+
+body[data-kp-live-page="fixtures"] .kp-live-hero,
+body[data-kp-live-page="fixtures"] .kp-live-primary-actions,
+body[data-kp-live-page="picks"] .kp-live-hero,
+body[data-kp-live-page="picks"] .kp-live-primary-actions{display:none!important}
+
+body[data-kp-live-page="fixtures"] .kp-live-table-head,
+body[data-kp-live-page="fixtures"] .kp-live-table-cols,
+body[data-kp-live-page="fixtures"] .kp-live-board,
+body[data-kp-live-page="fixtures"] .kp-live-tip,
+body[data-kp-live-page="fixtures"] .kp-live-need-title,
+body[data-kp-live-page="fixtures"] .kp-live-need{display:none!important}
+
+.kp-live-drill-head{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:11px;min-height:62px;padding:10px 22px;background:rgba(247,243,234,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--kp-line)}
+.kp-live-drill-back{width:35px;height:35px;display:grid;place-items:center;padding:0;border:1px solid rgba(18,23,19,.12);border-radius:50%;background:rgba(255,255,255,.2);color:var(--kp-ink);font:400 27px/1 Georgia,"Times New Roman",serif}
+.kp-live-drill-head small{display:block;margin-bottom:2px;font-size:8px;font-weight:800;letter-spacing:.18em;color:#8c8b85}
+.kp-live-drill-head h1{margin:0;font:500 25px/1 Georgia,"Times New Roman",serif;letter-spacing:-.02em;color:var(--kp-ink)}
+
+body[data-kp-live-page="fixtures"] .kp-live-fx-scroll{display:block!important;overflow:visible!important;padding:0 22px 96px!important;border-bottom:0!important}
+body[data-kp-live-page="fixtures"] .kp-live-fxc{width:100%!important;min-height:86px!important;display:grid!important;grid-template-columns:58px 1fr auto!important;grid-template-rows:auto auto!important;align-items:center!important;text-align:left!important;padding:14px 0!important;border-right:0!important;border-bottom:1px solid var(--kp-line)!important}
+body[data-kp-live-page="fixtures"] .kp-live-fxc-crests{grid-row:1/3;grid-column:1;justify-content:flex-start!important;gap:4px!important}
+body[data-kp-live-page="fixtures"] .kp-live-fxc-crests img{width:26px;height:26px}
+body[data-kp-live-page="fixtures"] .kp-live-fxc-abbr{grid-column:2;grid-row:1;justify-content:flex-start!important;margin:0!important;font-size:15px!important}
+body[data-kp-live-page="fixtures"] .kp-live-fxc-time{grid-column:3;grid-row:1;margin:0!important;font-size:12px!important;color:#6f706c!important}
+body[data-kp-live-page="fixtures"] .kp-live-fxc-lock{grid-column:2/4;grid-row:2;margin:4px 0 0!important;font-size:10px!important;color:#999791!important}
+
+body[data-kp-live-page="picks"] .kp-live-picks{display:block!important;padding-top:6px!important;padding-bottom:96px!important}
+
+@media(max-width:395px){
+  .kp-live-primary-actions button{padding-left:22px;padding-right:22px}
+  body[data-kp-live-page="fixtures"] .kp-live-fx-scroll{padding-left:18px!important;padding-right:18px!important}
+}
