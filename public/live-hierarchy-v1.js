@@ -6,6 +6,14 @@
   let applying = false;
 
   const isLive = () => document.querySelector('.bottom-nav .nav-item.active')?.dataset?.tab === 'live';
+  const teamNames = {
+    ARS:'Arsenal', AVL:'Aston Villa', BOU:'Bournemouth', BRE:'Brentford', BHA:'Brighton',
+    BUR:'Burnley', CHE:'Chelsea', CRY:'Crystal Palace', EVE:'Everton', FUL:'Fulham',
+    HUL:'Hull City', IPS:'Ipswich Town', LEI:'Leicester City', LIV:'Liverpool',
+    MCI:'Man City', MUN:'Man United', NEW:'Newcastle', NFO:'Nottingham Forest',
+    SOU:'Southampton', SUN:'Sunderland', TOT:'Tottenham', WHU:'West Ham', WOL:'Wolves',
+    LEE:'Leeds United', COV:'Coventry City'
+  };
 
   function clickNativeTab(id) {
     const btn = screen.querySelector(`[data-live-subtab="${id}"]`);
@@ -40,6 +48,22 @@
     head.querySelector('.kp-live-drill-back')?.addEventListener('click', closeDrill);
   }
 
+  function polishFixtureRows() {
+    if (mode !== 'fixtures') return;
+    screen.querySelectorAll('.kp-live-fxc').forEach(row => {
+      const nameSpans = [...row.querySelectorAll('.kp-live-fxc-abbr > span:not(.v)')];
+      nameSpans.forEach(span => {
+        const key = (span.textContent || '').trim().toUpperCase();
+        if (teamNames[key]) span.textContent = teamNames[key];
+      });
+      const lock = row.querySelector('.kp-live-fxc-lock');
+      if (lock && !lock.dataset.kpPolished) {
+        lock.dataset.kpPolished = '1';
+        lock.textContent = (lock.textContent || '').replace(/^🔒\s*/, '');
+      }
+    });
+  }
+
   function openDrill(kind) {
     mode = kind;
     document.body.dataset.kpLivePage = kind;
@@ -66,7 +90,6 @@
       root.dataset.hierarchy = 'v1';
       document.body.dataset.kpLivePage = mode;
 
-      // The old 3-tab strip is no longer the information architecture.
       const subnav = root.querySelector('.kp-live-subnav');
       if (subnav) subnav.setAttribute('aria-hidden', 'true');
 
@@ -85,6 +108,7 @@
           return;
         }
         buildDrillHeader(mode);
+        polishFixtureRows();
       }
     } finally {
       applying = false;
