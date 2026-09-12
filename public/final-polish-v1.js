@@ -84,3 +84,22 @@
 
   cacheCurrent();
 })();
+
+/* Load the Live information-architecture override last so the Live tab lands on
+   the table and treats Fixtures / My Picks as drill-in pages. */
+(() => {
+  if (!document.querySelector('link[data-kp-live-hierarchy]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/live-hierarchy-v1.css?v=1&studio=20260912-livehierarchy';
+    link.dataset.kpLiveHierarchy = '1';
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector('script[data-kp-live-hierarchy]')) {
+    const script = document.createElement('script');
+    script.src = '/live-hierarchy-v1.js?v=1&studio=20260912-livehierarchy';
+    script.defer = true;
+    script.dataset.kpLiveHierarchy = '1';
+    document.body.appendChild(script);
+  }
+})();
