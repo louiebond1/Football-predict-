@@ -65,8 +65,7 @@ const state = {
   tab: 'gw', supabase: null, session: null, config: null,
   groups: [], groupsStatus: 'idle', activeGroupId: null, gameweekId: null,
   fixtures: [], round: null, predictions: {}, members: [], profiles: {}, payments: {},
-  leaderboard: [], history: [],
-  prevRanks: {}, rankDelta: {}, lastGoal: null, prevGoals: {}, seasonBoard: []
+  leaderboard: [], history: [], seasonBoard: []
 };
 let sessionReadyRun = 0;
 
@@ -256,16 +255,7 @@ async function loadGroupData() {
 
 async function refreshLeaderboard() {
   const { data: lb } = await state.supabase.from('group_leaderboard').select('*').eq('group_id', state.activeGroupId).eq('gameweek_id', state.gameweekId).order('points', { ascending: false });
-  const rows = lb || [];
-  const prevOrder = state.prevRanks[state.activeGroupId] || {};
-  const delta = {};
-  rows.forEach((r, i) => {
-    const prevIdx = prevOrder[r.user_id];
-    delta[r.user_id] = prevIdx == null ? 0 : prevIdx - i;
-  });
-  state.rankDelta = delta;
-  state.prevRanks[state.activeGroupId] = Object.fromEntries(rows.map((r, i) => [r.user_id, i]));
-  state.leaderboard = rows;
+  state.leaderboard = lb || [];
 }
 
 async function loadGroupSeasonBoard() {
@@ -313,26 +303,6 @@ function computeAwards(rows, history) {
     mostExact: mostExact && mostExact[1] > 0 ? mostExact : null,
     spoon: spoon && spoon[1] > 0 ? spoon : null
   };
-}
-
-async function refreshLiveScores() {
-  const prevGoals = state.prevGoals || {};
-  const fxRes = await fetch('/api/football/fixtures').then(r => r.json()).catch(() => null);
-  if (fxRes) {
-    let latest = null;
-    (fxRes.fixtures || []).forEach(f => {
-      const prev = prevGoals[f.id];
-      if (!prev || f.goals?.home == null) return;
-      if (f.goals.home > prev.home) latest = { team: f.home?.name };
-      else if (f.goals.away > prev.away) latest = { team: f.away?.name };
-    });
-    if (latest) state.lastGoal = latest;
-    state.prevGoals = Object.fromEntries((fxRes.fixtures || []).filter(f => f.id).map(f => [f.id, { home: f.goals?.home, away: f.goals?.away }]));
-    state.fixtures = fxRes.fixtures || state.fixtures;
-    state.round = fxRes.round;
-  }
-  await refreshLeaderboard();
-  updateBell();
 }
 
 function potMeta() {
@@ -406,10 +376,8 @@ function startLockTicker() {
 function renderGW() {
   if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
   // A "for fun" group (payments_required === false) never needs a confirmed
-  // payment to unlock predictions - matches the same check in
-  // matchday-reference-live.js and gameweek-rollover.js, so this legacy
-  // renderer's brief first paint (before the reference skin takes over)
-  // doesn't show a contradictory locked state for for-fun groups.
+  // payment to unlock predictions. Keep the core Matchday behavior aligned
+  // with its reference renderer and rollover screen.
   const locked = activeGroup()?.payments_required !== false && !myPayment()?.confirmed_paid_at;
   screen.innerHTML = `<section class="hero"><h1>${esc(state.round || 'Gameweek')}</h1>${meta()}</section>
   ${groupSwitcher()}
@@ -481,71 +449,6 @@ async function submitPicks() {
   if (error) { statusEl.className = 'status error'; statusEl.textContent = error.message.includes('row-level security') ? 'Your payment needs Treasurer confirmation before predictions unlock.' : error.message; return; }
   statusEl.className = 'status success'; statusEl.textContent = '✓ Picks locked in and synced for the group.';
   await loadGroupData(); renderGW();
-}
-
-function rankMove(uid) {
-  const d = state.rankDelta[uid] || 0;
-  if (d > 0) return `<span class="rank-move up">${ic('arrowUp', 12)}${d}</span>`;
-  if (d < 0) return `<span class="rank-move down">${ic('arrowDown', 12)}${-d}</span>`;
-  return `<span class="rank-move same">${ic('dash', 12)}</span>`;
-}
-
-function goalSwingCard() {
-  const g = state.lastGoal;
-  const inPlay = state.fixtures.some(f => !['NS', 'FT', 'AET', 'PEN', 'PST', 'CANC'].includes(f.status?.short));
-  if (!g || !inPlay) return '';
-  const mover = state.leaderboard.find(m => (state.rankDelta[m.user_id] || 0) > 0);
-  const faller = state.leaderboard.find(m => (state.rankDelta[m.user_id] || 0) < 0);
-  const leader = state.leaderboard[0];
-  return `<section class="card swing"><div class="eyebrow">${ic('zap', 13)} Goal Swing</div><h2>GOAL — ${esc(g.team)}</h2>
-  <div>${mover ? `${esc(profileName(mover.user_id))} <span class="accent">${rankMove(mover.user_id)}</span>` : ''}${mover && faller ? ' · ' : ''}${faller ? `${esc(profileName(faller.user_id))} ${rankMove(faller.user_id)}` : ''}${!mover && !faller ? 'Standings unchanged so far.' : ''}</div>
-  ${leader ? `<p class="muted">${esc(profileName(leader.user_id))} is now leading the pot.</p>` : ''}</section>`;
-}
-
-function whatYouNeedCard() {
-  if (!state.leaderboard.length) return '';
-  const idx = state.leaderboard.findIndex(m => m.user_id === myId());
-  if (idx < 0) return '';
-  const stillPlaying = state.fixtures.filter(f => !['FT', 'AET', 'PEN', 'CANC'].includes(f.status?.short)).length;
-  let msg;
-  if (idx === 0) {
-    const gap = state.leaderboard[1] ? state.leaderboard[0].points - state.leaderboard[1].points : null;
-    msg = gap != null ? `You're leading by ${gap} pt${gap === 1 ? '' : 's'} over ${esc(profileName(state.leaderboard[1].user_id))}.` : "You're leading the pot.";
-  } else {
-    const gap = state.leaderboard[0].points - state.leaderboard[idx].points;
-    msg = `You're ${gap} pt${gap === 1 ? '' : 's'} behind ${esc(profileName(state.leaderboard[0].user_id))}.`;
-  }
-  if (stillPlaying) msg += ` ${stillPlaying} fixture${stillPlaying === 1 ? '' : 's'} still to finish.`;
-  return `<section class="card"><div class="card-title">${ic('target')} What You Need</div><p>${msg}</p></section>`;
-}
-
-function renderLive() {
-  if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
-  const inPlayCount = state.fixtures.filter(f => !['NS', 'FT', 'AET', 'PEN', 'PST', 'CANC'].includes(f.status?.short)).length;
-  screen.innerHTML = `<section class="hero"><h1>Live Matchday</h1><div class="hero-meta"><span class="pill">${ic('wallet', 14)} <strong>${potMeta().pot}</strong> Pot</span><span class="pill">${ic('radio', 14)} <strong>${inPlayCount}</strong> Live</span><span class="pill">${ic('clock', 14)} ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date())}</span></div></section>
-  ${groupSwitcher()}
-  <section class="card"><div class="card-head"><div class="card-title">${ic('trophy')} Live Table</div>${inPlayCount ? '<span class="badge">LIVE</span>' : ''}</div>
-  ${state.leaderboard.length ? `<table class="table"><thead><tr><th></th><th>#</th><th>Player</th><th class="pts">Pts</th></tr></thead><tbody>${state.leaderboard.map((m, i) => `<tr><td>${rankMove(m.user_id)}</td><td class="rank">${i + 1}</td><td><div class="row-left">${avatar(m.display_name || profileName(m.user_id), 'sm')}<strong>${esc(m.display_name || profileName(m.user_id))}</strong>${m.user_id === myId() ? ' <span class="muted">(you)</span>' : ''}</div></td><td class="pts">${m.points}</td></tr>`).join('')}</tbody></table>` : `<div class="empty">No predictions locked in yet.</div>`}
-  </section>
-  ${goalSwingCard()}
-  <section class="card"><div class="card-title">${ic('target')} This Gameweek's Fixtures</div>${state.fixtures.map(liveFixtureRow).join('') || '<div class="empty">No fixtures yet.</div>'}</section>
-  ${whatYouNeedCard()}`;
-  bindGroupSwitcher();
-}
-
-const STATUS_LABELS = { FT: 'Full-time', AET: 'After extra time', PEN: 'Penalties', HT: 'Half-time', PST: 'Postponed', CANC: 'Cancelled' };
-function statusLabel(f) {
-  if (f.status?.short === 'NS') return kickoffLabel(f.kickoff);
-  return STATUS_LABELS[f.status?.short] || esc(f.status?.short || '');
-}
-
-function liveFixtureRow(f) {
-  const live = !['NS', 'FT', 'AET', 'PEN', 'PST', 'CANC'].includes(f.status?.short);
-  const saved = state.predictions[f.id];
-  return `<div class="fixture"><div class="teams"><div class="team">${crest(f.home)}<span>${esc(f.home?.name)}</span></div>
-  <div class="scorepick"><span class="scorebox ${live ? 'accent' : ''}" style="display:grid;place-items:center">${f.goals?.home ?? '–'}</span><span class="dash">–</span><span class="scorebox ${live ? 'accent' : ''}" style="display:grid;place-items:center">${f.goals?.away ?? '–'}</span></div>
-  <div class="team away"><span>${esc(f.away?.name)}</span>${crest(f.away)}</div></div>
-  <div class="rules">${live ? `<span class="accent">${f.status?.elapsed ? f.status.elapsed + "'" : 'LIVE'}</span>` : statusLabel(f)} ${saved ? `· Your pick: ${saved.predicted_home}-${saved.predicted_away}` : ''} ${predictionBadge(saved, f)}</div></div>`;
 }
 
 function renderHistory() {
@@ -712,21 +615,25 @@ function renderConfigError() {
   screen.innerHTML = `<section class="card"><div class="card-title accent">Setup incomplete</div><p class="muted">Supabase isn't configured on the server yet. Add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in Railway.</p></section>`;
 }
 
-let liveInterval = null;
-function render() {
+function render({ resetLive = false } = {}) {
   nav.forEach(n => n.classList.toggle('active', n.dataset.tab === state.tab));
-  clearInterval(liveInterval); clearInterval(lockTickInterval);
+  clearInterval(lockTickInterval);
+  if (state.tab !== 'live') window.KickPotLive?.unmount();
   if (!state.session) return renderAuth();
   if (state.groupsStatus === 'loading' && !state.groups.length) return renderSessionLoading();
   if (state.groupsStatus === 'error' && !state.groups.length) return renderSessionLoading('Couldn’t load your pot');
-  ({ gw: renderGW, live: renderLive, history: renderHistory, group: renderGroup }[state.tab])();
-  updateBell();
-  if (state.tab === 'live' && state.groups.length) {
-    refreshLiveScores().then(() => { if (state.tab === 'live') renderLive() });
-    liveInterval = setInterval(() => { if (state.tab === 'live') refreshLiveScores().then(() => { if (state.tab === 'live') renderLive() }) }, 30000);
+  if (state.tab === 'live') {
+    if (!state.groups.length) return renderOnboarding();
+    window.KickPotLive?.mount({ reset: resetLive });
+  } else {
+    ({ gw: renderGW, history: renderHistory, group: renderGroup }[state.tab])();
   }
+  updateBell();
 }
-nav.forEach(btn => btn.addEventListener('click', () => { state.tab = btn.dataset.tab; render() }));
+nav.forEach(btn => btn.addEventListener('click', () => {
+  state.tab = btn.dataset.tab;
+  render({ resetLive: state.tab === 'live' });
+}));
 userChip?.addEventListener('click', async () => { if (confirm('Sign out of KickPot?')) { await state.supabase.auth.signOut(); state.session = null; resetSessionState(); render() } });
 document.querySelector('#bellBtn')?.addEventListener('click', () => {
   const p = myPayment();

@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const screen = document.querySelector('#screen');
-const subState = { live: 'matches', history: 'overview', group: 'overview' };
+const subState = { history: 'overview', group: 'overview' };
 let lastTab = null;
 let busy = false;
 let sb = null;
@@ -9,7 +9,6 @@ let dataCache = null;
 let dataCacheAt = 0;
 let winnerChecked = false;
 
-const LIVE_EXCLUDED = new Set(['NS', 'FT', 'AET', 'PEN', 'PST', 'CANC']);
 
 function hasText(el, text) {
   return (el?.textContent || '').toLowerCase().includes(text.toLowerCase());
@@ -194,102 +193,6 @@ async function loadContext(force = false) {
   dataCache = { client, session, group, gameweekId: gwId, fixtures, round: fx.round || '', members: membersRes.data || [], board: boardRes.data || [], history: historyRes.data || [], predictions, names };
   dataCacheAt = Date.now();
   return dataCache;
-}
-
-function pointsAt(pred, home, away) {
-  if (home == null || away == null) return 0;
-  if (Number(pred.predicted_home) === Number(home) && Number(pred.predicted_away) === Number(away)) return 3;
-  return Math.sign(Number(pred.predicted_home) - Number(pred.predicted_away)) === Math.sign(Number(home) - Number(away)) ? 1 : 0;
-}
-function liveTotals(ctx, override = null) {
-  const totals = new Map(ctx.members.map(m => [m.user_id, 0]));
-  const fixtures = new Map(ctx.fixtures.map(f => [Number(f.id), f]));
-  ctx.predictions.forEach(p => {
-    const f = fixtures.get(Number(p.fixture_id));
-    if (!f) return;
-    let h = f.goals?.home, a = f.goals?.away;
-    if (override && Number(override.fixtureId) === Number(f.id)) { h = override.home; a = override.away; }
-    totals.set(p.user_id, (totals.get(p.user_id) || 0) + pointsAt(p, h, a));
-  });
-  return totals;
-}
-function rankFor(totals, uid) {
-  const mine = totals.get(uid) || 0;
-  return 1 + [...totals.values()].filter(v => v > mine).length;
-}
-function ordinal(n) { return n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`; }
-
-async function addLiveExtras(matchesView) {
-  const ctx = await loadContext(true);
-  if (!ctx || !document.body.contains(matchesView)) return;
-  const live = ctx.fixtures.filter(f => !LIVE_EXCLUDED.has(f.status?.short) && f.goals?.home != null && f.goals?.away != null);
-  if (live.length && ctx.predictions.some(p => p.user_id === ctx.session.user.id)) {
-    const base = liveTotals(ctx);
-    const baseRank = rankFor(base, ctx.session.user.id);
-    let best = null;
-    live.forEach(f => {
-      [
-        { team: f.home?.name || 'Home', home: Number(f.goals.home) + 1, away: Number(f.goals.away) },
-        { team: f.away?.name || 'Away', home: Number(f.goals.home), away: Number(f.goals.away) + 1 }
-      ].forEach(opt => {
-        const rank = rankFor(liveTotals(ctx, { fixtureId: f.id, home: opt.home, away: opt.away }), ctx.session.user.id);
-        if (rank < baseRank && (!best || rank < best.rank)) best = { ...opt, rank };
-      });
-    });
-    const insight = document.createElement('section');
-    insight.className = 'kp3-live-impact';
-    insight.innerHTML = `<small>LIVE INSIGHT</small><strong>${best ? `If ${esc(best.team)} score next, you move to ${ordinal(best.rank)}.` : baseRank === 1 ? 'You’re leading the live projection.' : `You’re ${ordinal(baseRank)} right now.`}</strong><span>Calculated from revealed group picks.</span>`;
-    const hero = matchesView.querySelector('.kp3-page-hero');
-    hero?.after(insight);
-  }
-
-  const rows = [...matchesView.querySelectorAll('.kp3-live-fixture')];
-  rows.forEach((row, index) => {
-    const fixture = ctx.fixtures[index];
-    if (!fixture || Date.now() < new Date(fixture.kickoff).getTime()) return;
-    const picks = ctx.predictions.filter(p => Number(p.fixture_id) === Number(fixture.id));
-    if (!picks.length || row.querySelector('.kp3-reveal')) return;
-    const reveal = document.createElement('div');
-    reveal.className = 'kp3-reveal';
-    reveal.innerHTML = `<div><small>PICKS REVEALED</small><span>${picks.length}</span></div><div class="kp3-reveal-scroll">${picks.map(p => `<span class="kp3-pick-chip${p.user_id === ctx.session.user.id ? ' mine' : ''}"><b>${esc(ctx.names.get(p.user_id) || 'Player')}</b><em>${p.predicted_home}–${p.predicted_away}</em></span>`).join('')}</div>`;
-    row.append(reveal);
-  });
-}
-
-function enhanceLive() {
-  screen.className = 'screen kp3-screen kp3-live';
-  const hero = screen.querySelector(':scope > .hero');
-  const switcher = screen.querySelector(':scope > .select-wrap');
-  const table = directCard('Live Table');
-  const fixtures = directCard("This Gameweek's Fixtures");
-  const need = directCard('What You Need');
-  const swing = [...screen.querySelectorAll(':scope > .card')].find(c => c.classList.contains('swing'));
-  if (!hero || !table || !fixtures || screen.querySelector(':scope > .kp3-live-root')) return;
-
-  const root = document.createElement('div'); root.className = 'kp3-live-root';
-  const matches = document.createElement('section'); matches.className = 'kp3-view kp3-live-matches';
-  const tableView = document.createElement('section'); tableView.className = 'kp3-view';
-  screen.insertBefore(root, hero); root.append(matches, tableView);
-  hero.classList.add('kp3-page-hero');
-  matches.append(hero);
-  if (switcher) matches.append(switcher);
-  if (need) { need.classList.add('kp3-need'); matches.append(need); }
-
-  const tableLink = makeNavRow('Live table', 'See the group standings', 'trophy', () => {
-    subState.live = 'table'; showView({ matches, table: tableView }, 'table');
-  }, 'kp3-feature-row');
-  matches.append(tableLink, fixtures);
-  fixtures.classList.add('kp3-live-card');
-  fixtures.querySelectorAll('.fixture').forEach(f => {
-    f.classList.add('kp3-live-fixture');
-    f.querySelectorAll('.scorebox').forEach(s => s.classList.add('kp3-broadcast-score'));
-  });
-  if (swing) { swing.classList.add('kp3-swing'); fixtures.after(swing); }
-
-  table.classList.add('kp3-table-card');
-  tableView.append(makeBackHeader('Live table', 'Gameweek standings', () => { subState.live = 'matches'; showView({ matches, table: tableView }, 'matches'); }), table);
-  showView({ matches, table: tableView }, subState.live);
-  addLiveExtras(matches).catch(() => {});
 }
 
 function historyHasData(first) { return !hasText(first, 'No Gameweeks settled yet'); }
@@ -557,9 +460,9 @@ function enhance() {
   if (busy || !screen?.children.length) return;
   const tab = document.querySelector('.nav-item.active')?.dataset?.tab;
   if (!tab) return;
+  if (tab === 'live') return;
   if (tab !== lastTab) {
     lastTab = tab;
-    if (tab === 'live') subState.live = 'matches';
     if (tab === 'history') subState.history = 'overview';
     if (tab === 'group') subState.group = 'overview';
     dataCache = null; dataCacheAt = 0;
@@ -569,7 +472,6 @@ function enhance() {
   busy = true;
   try {
     if (tab === 'gw') enhanceGW();
-    if (tab === 'live') enhanceLive();
     if (tab === 'history') enhanceHistory();
     if (tab === 'group') enhanceGroup();
   } finally { busy = false; }

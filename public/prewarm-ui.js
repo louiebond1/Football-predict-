@@ -96,34 +96,6 @@ function computeAwards(rows, history) {
 function points(row) { return Number(row?.points || 0); }
 function exacts(row) { return Number(row?.exact_scores || 0); }
 function teamHits(row) { return Number(row?.team_score_hits || 0); }
-function sameRank(a, b) { return points(a) === points(b) && exacts(a) === exacts(b) && teamHits(a) === teamHits(b); }
-function ranksAbove(a, b) {
-  if (points(a) !== points(b)) return points(a) > points(b);
-  if (exacts(a) !== exacts(b)) return exacts(a) > exacts(b);
-  return teamHits(a) > teamHits(b);
-}
-function competitionRank(rows, index) {
-  const mine = rows[index];
-  return 1 + rows.filter(r => ranksAbove(r, mine)).length;
-}
-function isSharedRank(rows, index) {
-  const mine = rows[index];
-  return rows.filter(r => sameRank(r, mine)).length > 1;
-}
-
-function statusText(row) {
-  const submitted = Number(row?.picks_submitted || 0);
-  const total = Number(row?.fixtures_total || 0);
-  if (total === 0) return '<span class="kp-live-lock is-locked">✓ All available picks locked</span>';
-  if (row?.picks_locked) return `<span class="kp-live-lock is-locked">✓ ${submitted}/${total} picks locked</span>`;
-  if (submitted > 0) return `<span class="kp-live-lock is-partial">${submitted}/${total} picks saved</span>`;
-  return '<span class="kp-live-lock is-missing">Not submitted</span>';
-}
-
-function liveSignature(ctx) {
-  return `${ctx.gid}:${ctx.gameweekId}:` + ctx.liveRows.map(r => `${r.user_id}:${points(r)}:${exacts(r)}:${teamHits(r)}:${Number(r.picks_submitted || 0)}:${Number(r.fixtures_total || 0)}:${r.picks_locked ? 1 : 0}`).join('|');
-}
-
 function buildHistoryMarkup(ctx) {
   const mine = ctx.seasonRows.filter(r => r.user_id === ctx.session.user.id);
   const pointsTotal = mine.reduce((sum,r) => sum + Number(r.points || 0), 0);
@@ -161,8 +133,7 @@ async function prewarm(force = false) {
     }
 
     const { data:gameweekId } = await sb.rpc('ensure_current_gameweek', { p_group_id:gid });
-    const [liveRes, seasonRes, historyRes, memberRes] = await Promise.all([
-      gameweekId ? sb.rpc('group_live_status', { p_group_id:gid, p_gameweek_id:gameweekId }) : Promise.resolve({ data:[] }),
+    const [seasonRes, historyRes, memberRes] = await Promise.all([
       sb.from('group_leaderboard').select('*').eq('group_id', gid),
       sb.from('group_gameweeks').select('group_id,gameweek_id,winner_user_id,winner_user_ids,settlement_kind,settled_at,gameweeks(round_name)').eq('group_id', gid).not('settled_at','is',null).order('settled_at',{ascending:false}),
       sb.from('group_members').select('user_id').eq('group_id', gid)
@@ -177,7 +148,6 @@ async function prewarm(force = false) {
 
     const ctx = {
       at:Date.now(), gid, gameweekId, session,
-      liveRows:liveRes.data || [],
       seasonRows:seasonRes.data || [],
       history:historyRes.data || [],
       names
@@ -201,48 +171,9 @@ function applyHistory(ctx) {
   if (awards && isLoading(awards) && awards.innerHTML !== ctx.historyMarkup.awards) awards.innerHTML = ctx.historyMarkup.awards;
 }
 
-function applyLive(ctx) {
-  if (!screen?.classList.contains('kp3-live')) return;
-  const table = screen.querySelector('.kp3-table-card table, table.table');
-  const tbody = table?.querySelector('tbody');
-  if (!table || !tbody || !ctx.liveRows.length) return;
-
-  const signature = liveSignature(ctx);
-  if (table.dataset.kpGroupStatus === signature) return;
-
-  tbody.innerHTML = ctx.liveRows.map((row, index) => {
-    const name = row.display_name || ctx.names.get(row.user_id) || 'Player';
-    const mine = row.user_id === ctx.session.user.id;
-    const rank = competitionRank(ctx.liveRows, index);
-    const rankLabel = isSharedRank(ctx.liveRows, index) ? `=${rank}` : String(rank);
-    return `<tr data-kp-user="${esc(row.user_id)}">
-      <td><span class="rank-move same">–</span></td>
-      <td class="rank">${rankLabel}</td>
-      <td><div class="row-left kp-live-player">${avatar(name)}<span class="kp-live-player-copy"><strong>${esc(name)}</strong>${mine ? ' <span class="muted">(you)</span>' : ''}${statusText(row)}</span></div></td>
-      <td class="pts">${points(row)}</td>
-    </tr>`;
-  }).join('');
-  table.dataset.kpGroupStatus = signature;
-
-  const card = table.closest('.kp3-table-card,.card');
-  const head = card?.querySelector('.card-head');
-  if (head) {
-    let summary = head.querySelector('.kp-live-summary');
-    if (!summary) {
-      summary = document.createElement('span');
-      summary.className = 'kp-live-summary';
-      head.append(summary);
-    }
-    const locked = ctx.liveRows.filter(r => r.picks_locked).length;
-    const nextSummary = `${locked}/${ctx.liveRows.length} locked`;
-    if (summary.textContent !== nextSummary) summary.textContent = nextSummary;
-  }
-}
-
 function applyCached(ctx = caches.get(lastGroupId)) {
   if (!ctx || !screen) return;
   applyHistory(ctx);
-  applyLive(ctx);
 }
 
 const observer = new MutationObserver(() => {

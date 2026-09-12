@@ -29,12 +29,6 @@ body.kp-native-live .bottom-nav .nav-item:before{display:none!important}
 .kp-live-dot.on{background:#e0473f;box-shadow:0 0 0 3px rgba(224,71,63,.18)}
 .kp-live-tstatus .kp-live-dot.on{background:var(--kp-green);box-shadow:none}
 
-/* Same cream, gutters, type scale and gold underline as Matchday. */
-.kp-live-subnav{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:0 28px 0;background:var(--kp-paper);border-bottom:1px solid var(--kp-line)}
-.kp-live-subtabs{display:flex;gap:24px}
-.kp-live-subtab{background:none;border:0;padding:15px 0 13px;font:600 14px/1.05 Georgia,"Times New Roman",serif;color:#9c9b99;position:relative;white-space:nowrap}
-.kp-live-subtab.active{color:var(--kp-ink)}
-.kp-live-subtab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--kp-gold)}
 .kp-live-body{padding-bottom:8px}
 
 /* Fixture strip is editorial/flat rather than unrelated rounded cards. */
@@ -65,4 +59,4 @@ body.kp-native-live .bottom-nav .nav-item:before{display:none!important}
 
 .kp-live-picks{padding:14px 20px 4px}.kp-live-pickrow{padding:12px 0;border-bottom:1px solid var(--kp-line)}.kp-live-pickrow:last-child{border-bottom:0}.kp-live-pick-main{display:grid;grid-template-columns:26px minmax(0,1fr) auto minmax(0,1fr) 26px;align-items:center;gap:8px}.kp-live-pick-crest{width:26px;height:26px;object-fit:contain}.kp-live-pick-team{min-width:0;font:700 12.5px/1.2 Georgia,"Times New Roman",serif;color:var(--kp-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kp-live-pick-team.away{text-align:right}.kp-live-pick-score{padding:0 2px;font:700 15px/1 Georgia,"Times New Roman",serif;color:var(--kp-ink);white-space:nowrap}.kp-live-pick-time{margin-top:4px;font-size:10px;color:#9c9b99;padding-left:34px}
 html[data-kp-theme="dark"] body.kp-native-live .kp-live-fxc,html[data-kp-theme="dark"] body.kp-native-live .kp-live-board,html[data-kp-theme="dark"] body.kp-native-live .kp-live-trow{background:transparent!important}
-@media(max-width:395px){body.kp-native-live .topbar{padding-left:22px!important;padding-right:22px!important}.kp-live-hero{padding-left:22px;padding-right:22px}.kp-live-stats{left:22px}.kp-live-subnav{padding-left:22px;padding-right:22px}.kp-live-subtabs{gap:19px}.kp-live-fx-scroll{padding-left:16px}.kp-live-table-head{padding-left:22px;padding-right:22px}.kp-live-board{margin-left:16px;margin-right:16px}.kp-live-picks{padding-left:18px;padding-right:18px}}
+@media(max-width:395px){body.kp-native-live .topbar{padding-left:22px!important;padding-right:22px!important}.kp-live-hero{padding-left:22px;padding-right:22px}.kp-live-stats{left:22px}.kp-live-fx-scroll{padding-left:16px}.kp-live-table-head{padding-left:22px;padding-right:22px}.kp-live-board{margin-left:16px;margin-right:16px}.kp-live-picks{padding-left:18px;padding-right:18px}}

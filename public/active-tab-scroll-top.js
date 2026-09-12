@@ -38,6 +38,7 @@
   document.addEventListener('click', event => {
     const nav = event.target.closest?.('.bottom-nav .nav-item[data-tab]');
     if (!nav || !nav.classList.contains('active')) return;
+    if (nav.dataset.tab === 'live') return;
 
     const y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
     if (y < 24) return;

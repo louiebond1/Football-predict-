@@ -12,8 +12,7 @@
     const tab = activeTab();
     const drill = screen.querySelector('.group-reference-panel,.kp3-drill-header h1,.kp-admin-header h1')?.textContent?.trim() || '';
     const historyActive = [...screen.querySelectorAll('.kp3-history-tabs button')].find(b=>b.classList.contains('active'))?.textContent?.trim() || '';
-    const liveActive = [...screen.querySelectorAll('.live-reference-tabs button')].find(b=>b.classList.contains('active'))?.textContent?.trim() || '';
-    return `${tab}|${drill}|${historyActive}|${liveActive}|${screen.dataset.groupReference||''}`;
+    return `${tab}|${drill}|${historyActive}|${screen.dataset.groupReference||''}`;
   }
   function animateScreen(){
     const sig = routeSignature();

@@ -7,7 +7,7 @@
    variables here - rather than patching every individual consumer - fixes the
    background AND every text colour that depends on them in one place. Values
    match the dark --ref-bg/--ref-ink already used for these same screens in
-   reference-matchday-v1.css / reference-live-v1.css. */
+   reference-matchday-v1.css. */
 html[data-kp-theme="dark"] body.kp-native-matchday,
 html[data-kp-theme="dark"] body.kp-native-live{
   --kp-paper:#0d100f;

@@ -61,7 +61,6 @@ if (!VALID_TABS.has(desiredTab)) desiredTab = 'gw';
 let initialRestoreDone = false;
 let userRouteActionUntil = 0;
 let restoreTimer = 0;
-let liveSignature = '';
 let restoringGroup = false;
 let restoringRoute = false;
 let lastKnownScroll = window.scrollY;
@@ -98,9 +97,6 @@ function routeLabel(button) {
   return button?.querySelector('.kp3-nav-copy strong')?.textContent?.trim()
     || button?.querySelector('strong')?.textContent?.trim()
     || '';
-}
-function normaliseLiveMarkup(html) {
-  return String(html).replace(/\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s+\d{2}:\d{2}\b/g, 'LIVE_CLOCK');
 }
 function inviteCodeRow() {
   return [...document.querySelectorAll('.kp3-setting-row')].find(row => {
@@ -193,25 +189,14 @@ function prepareInviteRoute() {
   sessionStorage.setItem(`${ROUTE_PREFIX}group`, 'Group settings');
 }
 
-// app.js replaces #screen.innerHTML during renders. Intercept only this one
-// element so background refreshes retain scroll and identical Live polls do
-// not rebuild the DOM at all.
+// Preserve scroll when any main route rebuilds the shared screen.
 const innerHTMLDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
 if (screen && innerHTMLDescriptor?.get && innerHTMLDescriptor?.set) {
   Object.defineProperty(screen, 'innerHTML', {
     configurable: true,
     get() { return innerHTMLDescriptor.get.call(this); },
     set(value) {
-      const html = String(value);
-      const isLiveRender = html.includes('<h1>Live Matchday</h1>');
       const userNavigating = performance.now() < userRouteActionUntil;
-
-      if (isLiveRender) {
-        const signature = normaliseLiveMarkup(html);
-        if (liveSignature && signature === liveSignature && !userNavigating) return;
-        liveSignature = signature;
-      }
-
       const y = window.scrollY;
       innerHTMLDescriptor.set.call(this, value);
       if (initialRestoreDone && !userNavigating && y > 0) scheduleScrollRestore(y);

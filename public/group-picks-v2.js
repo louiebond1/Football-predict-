@@ -134,14 +134,14 @@ function renderReveal(row, ctx, fixture, picks) {
 
 async function enhanceGroupPicks() {
   const tab = activeTab();
-  if (busy || !screen || (tab !== 'gw' && tab !== 'live')) return;
+  if (busy || !screen || tab !== 'gw') return;
   const rows = [...screen.querySelectorAll('.fixture')].filter(row => row.querySelector('.teams'));
   if (!rows.length) return;
 
   busy = true;
   try {
     const [ctx, fixtures] = await Promise.all([loadContext(), loadFixtures()]);
-    if (!ctx || !fixtures.length || (activeTab() !== 'gw' && activeTab() !== 'live')) return;
+    if (!ctx || !fixtures.length || activeTab() !== 'gw') return;
 
     const now = Date.now();
     const visible = rows.map(row => ({ row, fixture: fixtureForRow(row, fixtures) }))
@@ -180,7 +180,7 @@ document.addEventListener('change', event => {
 }, true);
 
 document.addEventListener('click', event => {
-  if (event.target.closest('.nav-item[data-tab="gw"],.nav-item[data-tab="live"]')) {
+  if (event.target.closest('.nav-item[data-tab="gw"]')) {
     setTimeout(enhanceGroupPicks, 40);
     setTimeout(enhanceGroupPicks, 180);
   }

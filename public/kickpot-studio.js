@@ -71,36 +71,6 @@
     document.head.appendChild(script);
   }
 
-  if (!document.querySelector('link[data-kp-reference-live]')) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/reference-live-v1.css?v=1&studio=20260906w';
-    link.dataset.kpReferenceLive = '1';
-    document.head.appendChild(link);
-  }
-  if (!document.querySelector('script[data-kp-reference-live]')) {
-    const script = document.createElement('script');
-    script.src = '/reference-live-v1.js?v=1&studio=20260906w';
-    script.defer = true;
-    script.dataset.kpReferenceLive = '1';
-    document.head.appendChild(script);
-  }
-
-  if (!document.querySelector('link[data-kp-reference-live-fixtures]')) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/reference-live-fixtures-v2.css?v=1&studio=20260906x';
-    link.dataset.kpReferenceLiveFixtures = '1';
-    document.head.appendChild(link);
-  }
-  if (!document.querySelector('script[data-kp-reference-live-fixtures]')) {
-    const script = document.createElement('script');
-    script.src = '/reference-live-fixtures-v2.js?v=1&studio=20260906x';
-    script.defer = true;
-    script.dataset.kpReferenceLiveFixtures = '1';
-    document.head.appendChild(script);
-  }
-
   function preferredTheme() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'light' || saved === 'dark') return saved;

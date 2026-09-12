@@ -18,14 +18,8 @@ function activeGroupKey() {
     || 'default';
 }
 
-function normaliseScreenMarkup(html, tab) {
-  let value = String(html);
-  // The Live hero clock is display-only. A minute tick must never cause the
-  // entire Live DOM to be destroyed and rebuilt.
-  if (tab === 'live') {
-    value = value.replace(/\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s+\d{2}:\d{2}\b/g, 'LIVE_CLOCK');
-  }
-  return value;
+function normaliseScreenMarkup(html) {
+  return String(html);
 }
 
 function isUserRouteAction(target) {

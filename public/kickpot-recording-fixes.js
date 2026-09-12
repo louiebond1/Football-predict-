@@ -14,21 +14,11 @@
 
   function markFixtures() {
     const active = document.querySelector('.nav-item.active')?.dataset?.tab;
-    if (active !== 'gw' && active !== 'live') return;
+    if (active !== 'gw') return;
     screen.querySelectorAll('.fixture').forEach(row => {
       const editable = Boolean(row.querySelector('.kp3-score-stepper,[data-score]')) && row.dataset.locked !== '1';
       row.classList.toggle('kp-editable-fixture', editable);
       row.classList.toggle('kp-locked-fixture', !editable);
-    });
-  }
-
-  function markLeaderboard() {
-    if (document.querySelector('.nav-item.active')?.dataset?.tab !== 'live') return;
-    const rows = [...screen.querySelectorAll('.table tbody tr')];
-    rows.forEach((row, index) => {
-      row.classList.toggle('kp-is-leader', index === 0);
-      const text = (row.textContent || '').toLowerCase();
-      row.classList.toggle('kp-is-me', text.includes('(you)') || /\byou\b/.test(text));
     });
   }
 
@@ -61,7 +51,6 @@
 
   function polish() {
     markFixtures();
-    markLeaderboard();
     repairDrawPreview();
     fixDuplicateCounts();
   }

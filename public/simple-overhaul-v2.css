@@ -68,7 +68,6 @@ body.kp-native-matchday .bottom-nav .nav-item.active,body.kp-native-live .bottom
 body.kp-native-matchday #app,body.kp-native-live #app{padding-bottom:78px!important}
 
 /* Remove route-hold/skeleton artefacts if an older cached script briefly creates one. */
-#kp-route-hold,.kp-route-skeleton{display:none!important}
 .kp-native-loading{min-height:260px!important;padding:80px 24px!important;background:var(--kp-paper)!important}
 
 @media(max-width:395px){.kp-native-hero,.kp-live-hero{margin-left:14px!important;margin-right:14px!important}.kp-native-list{padding-left:14px!important;padding-right:14px!important}.kp-live-primary-actions{margin-left:14px!important;margin-right:14px!important}.kp-live-board{margin-left:14px!important;margin-right:14px!important}}

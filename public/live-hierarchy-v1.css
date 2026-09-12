@@ -1,26 +1,10 @@
-/* Live hierarchy v1: table is the landing view; fixtures/picks are drill-ins. */
-body.kp-native-live .kp-live-subnav{display:none!important}
-
-body[data-kp-live-page="table"] .kp-live-fx-scroll,
-body[data-kp-live-page="table"] .kp-live-picks{display:none!important}
+/* The Live owner renders the table as root and fixtures/picks as drill-ins. */
 
 .kp-live-primary-actions{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--kp-line);background:var(--kp-paper)}
 .kp-live-primary-actions button{min-height:48px;padding:0 28px;border:0;background:transparent;color:var(--kp-ink);display:flex;align-items:center;justify-content:space-between;font:600 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .kp-live-primary-actions button+button{border-left:1px solid var(--kp-line)}
 .kp-live-primary-actions button span:last-child{font:400 19px/1 Georgia,"Times New Roman",serif;color:#aaa8a4}
 .kp-live-primary-actions button:active{background:rgba(18,23,19,.035)}
-
-body[data-kp-live-page="fixtures"] .kp-live-hero,
-body[data-kp-live-page="fixtures"] .kp-live-primary-actions,
-body[data-kp-live-page="picks"] .kp-live-hero,
-body[data-kp-live-page="picks"] .kp-live-primary-actions{display:none!important}
-
-body[data-kp-live-page="fixtures"] .kp-live-table-head,
-body[data-kp-live-page="fixtures"] .kp-live-table-cols,
-body[data-kp-live-page="fixtures"] .kp-live-board,
-body[data-kp-live-page="fixtures"] .kp-live-tip,
-body[data-kp-live-page="fixtures"] .kp-live-need-title,
-body[data-kp-live-page="fixtures"] .kp-live-need{display:none!important}
 
 /* Drill-ins intentionally mirror My Picks: editorial header, cream paper, compact football rows. */
 .kp-live-drill-head{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;min-height:74px;padding:11px 20px 12px;background:rgba(247,243,234,.98);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--kp-line)}
@@ -46,6 +30,11 @@ body[data-kp-live-page="fixtures"] .kp-live-fxc-lock{grid-column:2/5!important;g
 body[data-kp-live-page="fixtures"] .kp-live-fxc-lock::first-letter{font-size:9px}
 
 body[data-kp-live-page="picks"] .kp-live-picks{display:block!important;padding-top:6px!important;padding-bottom:96px!important}
+.kp-live-empty{min-height:260px;padding:72px 28px 110px;display:flex;flex-direction:column;align-items:center;text-align:center;color:var(--kp-ink)}
+.kp-live-empty strong{font:600 24px/1.05 Georgia,"Times New Roman",serif}
+.kp-live-empty span{max-width:310px;margin-top:10px;color:#8e8f92;font-size:12px;line-height:1.5}
+.kp-live-empty button{margin-top:20px;padding:10px 18px;border:1px solid var(--kp-line);border-radius:22px;background:transparent;color:var(--kp-ink);font-weight:700}
+.kp-live-fxc-time.is-live{color:var(--kp-green)!important}
 
 @media(max-width:395px){
   .kp-live-primary-actions button{padding-left:22px;padding-right:22px}
