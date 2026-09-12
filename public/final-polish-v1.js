@@ -2,14 +2,20 @@
 (() => {
   const screen = document.querySelector('#screen');
   if (!screen) return;
-  const LIVE_KEY = 'kp-live-snapshot-v1';
-  const GROUP_KEY = 'kp-group-snapshot-v1';
   let hold = null;
   let holdTimer = null;
+  // In-memory only, deliberately not persisted (e.g. sessionStorage): a
+  // snapshot cached from an earlier page load can end up describing an
+  // older version of the screen's markup/styling than what a later deploy
+  // ships, and replaying it verbatim as the hold then looks like a broken,
+  // differently-styled screen briefly flashing over the real one - visible
+  // live as ghosted old-style nav text overlapping the current design
+  // during the Live tab transition. An in-memory cache can only ever hold
+  // something captured earlier in this exact page load, so it can never be
+  // older than the CSS/JS currently running.
+  const snapshots = { live:'', group:'' };
 
   const activeTab = () => document.querySelector('.bottom-nav .nav-item.active')?.dataset?.tab || '';
-  const safeGet = key => { try { return sessionStorage.getItem(key) || ''; } catch { return ''; } };
-  const safeSet = (key,val) => { try { if(val) sessionStorage.setItem(key,val); } catch {} };
 
   function removeHold(){
     clearTimeout(holdTimer);
@@ -24,7 +30,7 @@
 
   function showHold(tab){
     removeHold();
-    const cached = tab === 'live' ? safeGet(LIVE_KEY) : tab === 'group' ? safeGet(GROUP_KEY) : '';
+    const cached = tab === 'live' ? snapshots.live : tab === 'group' ? snapshots.group : '';
     hold = document.createElement('div');
     hold.id = 'kp-route-hold';
     if(tab === 'group') hold.classList.add('kp-route-hold-group');
@@ -35,9 +41,9 @@
 
   function cacheCurrent(){
     const live = screen.querySelector(':scope > .kp-live-screen') || screen.querySelector('.kp-live-screen');
-    if(live) safeSet(LIVE_KEY, live.outerHTML);
+    if(live) snapshots.live = live.outerHTML;
     const group = screen.querySelector(':scope > .group-reference-hub');
-    if(group && !group.classList.contains('group-reference-hub--compact')) safeSet(GROUP_KEY, group.outerHTML);
+    if(group && !group.classList.contains('group-reference-hub--compact')) snapshots.group = group.outerHTML;
   }
 
   function screenIsReadyFor(tab){
