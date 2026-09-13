@@ -89,11 +89,11 @@
     }
     document.body.classList.remove('kp-group-panel-open');
     screen.querySelector('.group-reference-hub')?.classList.remove('group-reference-hub--compact');
-    if (scrollHome) window.scrollTo({top:0,behavior:'smooth'});
+    if (scrollHome) window.scrollTo({top:0,behavior:'auto'});
   }
 
   function findTargetView(legacy,label){
-    const match={members:/^members$/i,rules:/^rules$/i,settings:/^group settings$/i}[label];
+    const match={members:/^members$/i,rules:/^rules$/i,payments:/^payments$/i,settings:/^group settings$/i}[label];
     if(!match) return null;
     return [...legacy.querySelectorAll('.kp3-view')].find(v=>{
       const h1=v.querySelector('.kp3-drill-header h1');
@@ -102,6 +102,7 @@
   }
 
   function returnToHub(){
+    history.replaceState({kpTab:'group'},'');
     resetPanel(true);
     document.dispatchEvent(new CustomEvent('kp:group-refresh'));
   }
@@ -116,18 +117,7 @@
     document.body.classList.add('kp-group-panel-open');
 
     panel.querySelector('.group-reference-back')?.addEventListener('click', returnToHub);
-
-    /* The legacy view has its own back arrow. Previously its old handler hid
-       the moved .kp3-view in-place, leaving our overlay mounted but empty.
-       Capture that button first and route BOTH arrows through the same panel
-       teardown so the Group hub always restores instead of blanking. */
-    target.querySelectorAll('.kp3-back, [data-kp-back], .kp-admin-back').forEach(backBtn => {
-      backBtn.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        returnToHub();
-      }, true);
-    });
+    panel.querySelector('.group-reference-back')?.focus({preventScroll:true});
 
     requestAnimationFrame(()=>requestAnimationFrame(()=>panel.scrollTo({top:0,behavior:'auto'})));
   }
@@ -141,28 +131,18 @@
       return;
     }
     entry.click();
-    const tryMount = (tries=0) => {
-      const view = legacy.querySelector('.kp-admin-view');
-      if (view && !view.hidden) {
-        view.dataset.groupOriginalCard='1';
-        view.style.removeProperty('display');
-        view.style.removeProperty('visibility');
-        view.style.removeProperty('opacity');
-        mountPanel(view,'Admin',true);
-        return;
-      }
-      if (tries < 25) setTimeout(()=>tryMount(tries+1), 60);
-    };
-    tryMount();
+    const view=legacy.querySelector('.kp-admin-view');
+    if(view){view.dataset.groupOriginalCard='1';mountPanel(view,'Admin',true);}
   }
 
-  function openLegacy(label){
+  function openLegacy(label,record=true){
+    if(record)history.pushState({kpTab:'group',kpGroupPage:label},'');
     if (label === 'admin') { openAdmin(); return; }
     resetPanel(false);
     const legacy = screen.querySelector('.group-reference-legacy');
     if (!legacy) return;
     const target=findTargetView(legacy,label);
-    const titles={members:'Members',rules:'Rules',settings:'Group settings'};
+    const titles={members:'Members',payments:'Payments',rules:'Rules',settings:'Group settings'};
     if (!target) {
       console.warn('[KickPot Group] panel target not found:', label);
       return;
@@ -195,28 +175,20 @@
       <section class="group-reference-hero"><div class="group-reference-hero-content"><div class="group-reference-private">${svg.lock}<span>Private group</span></div><h1>${esc(data.title)}</h1><p>${mode} · ${data.memberCount} member${data.memberCount===1?'':'s'}${data.treasurer?` · Treasurer: ${esc(data.treasurer)}`:''}</p><button type="button" data-open="members">View group ${svg.arrow}</button></div></section>
       <section class="group-reference-members-strip"><div class="group-reference-avatars">${avatarHtml}${extra?`<span class="group-reference-avatar group-reference-avatar-more">+${extra}</span>`:''}</div><button type="button" data-open="members"><span>${data.memberCount} member${data.memberCount===1?'':'s'}</span>${svg.chev}</button></section>
       <section class="group-reference-mode"><div><div class="group-reference-eyebrow">Play mode</div><h2>${esc(mode)}</h2><p>${esc(modeSub)}</p></div></section>
-      <section class="group-reference-menu">
+      <section class="group-reference-menu">${!isFun?'<button type="button" data-open="payments"><span class="group-reference-menu-icon">£</span><span class="group-reference-menu-copy"><b>Payments</b><small>Payment details & status</small></span><span class="group-reference-menu-tail">›</span></button>':''}
         <button type="button" data-open="members"><span class="group-reference-menu-icon">${svg.users}</span><span class="group-reference-menu-copy"><b>Members</b><small>Manage your group</small></span><span class="group-reference-menu-tail">${svg.chev}</span></button>
         <button type="button" data-open="rules"><span class="group-reference-menu-icon">${svg.rules}</span><span class="group-reference-menu-copy"><b>Rules</b><small>Scoring & lock times</small></span><span class="group-reference-menu-tail">${svg.chev}</span></button>
         <button type="button" data-open="settings"><span class="group-reference-menu-icon">${svg.link}</span><span class="group-reference-menu-copy"><b>Group settings</b><small>Invite code & group access</small></span><span class="group-reference-menu-tail">${svg.chev}</span></button>
         ${data.isTreasurer?`<button type="button" data-open="admin"><span class="group-reference-menu-icon">${svg.shield}</span><span class="group-reference-menu-copy"><b>Admin</b><small>Payments, members & scoring controls</small></span><span class="group-reference-menu-tail"><em>Treasurer</em>${svg.chev}</span></button>`:''}
       </section>`;
+    const switcher=legacy.querySelector('.select-wrap');if(switcher)hub.prepend(switcher);
     screen.append(hub,legacy);
     hub.querySelectorAll('[data-open]').forEach(btn=>btn.addEventListener('click',()=>openLegacy(btn.dataset.open)));
   }
 
-  let queued=false;
-  const schedule=()=>{ if(queued) return; queued=true; requestAnimationFrame(()=>{queued=false;render();}); };
-  new MutationObserver(()=>{ if(screen.dataset.groupReference!=='v4') schedule(); }).observe(screen,{childList:true,subtree:false});
-  document.addEventListener('kp:group-refresh', () => {
-    if (!groupTabActive() || screen.querySelector('.group-reference-panel')) return;
-    if (screen.dataset.groupReference === 'v4') {
-      const sig = currentSignature();
-      if (!sig || sig === lastSignature) return;
-    }
-    delete screen.dataset.groupReference;
-    schedule();
-  });
-  document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click',()=>setTimeout(schedule,0)));
-  setTimeout(schedule,0);
+  window.KickPotGroup={render,restore:label=>openLegacy(label,false),navigate:label=>{
+    if(!screen.querySelector('.group-reference-panel'))return false;
+    if(label==='overview')returnToHub();else openLegacy(label);
+    return true;
+  }};
 })();

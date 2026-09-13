@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './supabase-singleton.js';
 
 const screen = document.querySelector('#screen');
 let client = null;
@@ -33,14 +33,13 @@ async function loadAdminData() {
   if (!sb) return null;
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return null;
-  const { data: groups, error: groupsError } = await sb.from('groups').select('id,name,join_code,stake_pence,treasurer_id').order('created_at');
+  const { data: groups, error: groupsError } = await sb.from('groups').select('*').order('created_at');
   if (groupsError) throw groupsError;
-  const selected = document.querySelector('#groupSwitch')?.value;
+  const selected = window.KickPotApp?.context().activeGroupId;
   const group = (groups || []).find(g => g.id === selected) || (groups || [])[0];
   if (!group || group.treasurer_id !== session.user.id) return { sb, session, group, isAdmin: false };
 
-  const { data: gameweekId, error: gwError } = await sb.rpc('ensure_current_gameweek', { p_group_id: group.id });
-  if (gwError) throw gwError;
+  const gameweekId=window.KickPotApp.context().gameweekId;
   const { data: members, error: membersError } = await sb.from('group_members').select('user_id,role,joined_at').eq('group_id', group.id).order('joined_at');
   if (membersError) throw membersError;
   const ids = (members || []).map(m => m.user_id);
@@ -69,6 +68,7 @@ async function loadAdminData() {
 }
 
 function setGroupView(root, target) {
+  if(target.classList.contains('kp3-group-overview')&&window.KickPotGroup?.navigate('overview'))return;
   [...root.querySelectorAll(':scope > .kp3-view')].forEach(view => { view.hidden = view !== target; });
   window.scrollTo({ top: 0, behavior: 'auto' });
 }
@@ -77,12 +77,18 @@ function modal(title, message, confirmLabel = 'Confirm') {
   return new Promise(resolve => {
     const overlay = document.createElement('div');
     overlay.className = 'kp-admin-modal';
-    overlay.innerHTML = `<div class="kp-admin-modal-card"><strong>${esc(title)}</strong><p>${esc(message)}</p><div><button type="button" class="kp-admin-modal-cancel">Cancel</button><button type="button" class="kp-admin-modal-confirm">${esc(confirmLabel)}</button></div></div>`;
-    const finish = value => { overlay.remove(); resolve(value); };
+    overlay.innerHTML = `<div class="kp-admin-modal-card" role="dialog" aria-modal="true" aria-label="${esc(title)}"><strong>${esc(title)}</strong><p>${esc(message)}</p><div><button type="button" class="kp-admin-modal-cancel">Cancel</button><button type="button" class="kp-admin-modal-confirm">${esc(confirmLabel)}</button></div></div>`;
+    const previous=document.activeElement;
+    const finish = value => { overlay.remove(); previous?.focus(); resolve(value); };
     overlay.querySelector('.kp-admin-modal-cancel').addEventListener('click', () => finish(false));
     overlay.querySelector('.kp-admin-modal-confirm').addEventListener('click', () => finish(true));
     overlay.addEventListener('click', e => { if (e.target === overlay) finish(false); });
     document.body.append(overlay);
+    overlay.querySelector('button').focus();
+    overlay.addEventListener('keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();finish(false);}
+      if(event.key==='Tab'){event.preventDefault();const buttons=[...overlay.querySelectorAll('button')];buttons[(buttons.indexOf(document.activeElement)+1)%buttons.length].focus();}
+    });
   });
 }
 
@@ -202,6 +208,7 @@ async function renderAdmin(view, root, overview, startPage = 'menu') {
     const title = screen.querySelector('.kp3-group-head h1'); if (title) title.textContent = name;
     const opt = document.querySelector(`#groupSwitch option[value="${CSS.escape(group.id)}"]`); if (opt) opt.textContent = name;
     button.disabled = false;
+    Object.assign(window.KickPotApp.context().groups.find(g=>g.id===group.id),{name,stake_pence:stake});
   });
   groupPage.append(details);
 
@@ -274,6 +281,7 @@ async function renderAdmin(view, root, overview, startPage = 'menu') {
     bankWrap.append(bank); groupPage.append(bankWrap);
   }
 
+  await import('./settings-v2.js').then(m=>m.enhanceAdminPlayMode());
   goAdmin(startPage);
 }
 
@@ -292,7 +300,7 @@ async function enhanceAdmin() {
     // Re-check after the async gap: another overlapping call (triggered by
     // the same burst of DOM mutations this one was) may have already
     // appended the entry while this one was awaiting loadAdminData().
-    if (menu.querySelector('.kp-admin-entry')) return;
+    if (!menu.isConnected || menu.querySelector('.kp-admin-entry')) return;
 
     const settingsRow = [...menu.querySelectorAll('.kp3-nav-row')].find(r => /^Group settings/i.test(r.textContent.trim()));
     const settingsSmall = settingsRow?.querySelector('.kp3-nav-copy small'); if (settingsSmall && settingsSmall.textContent !== 'Invite code & group access') settingsSmall.textContent = 'Invite code & group access';
@@ -300,7 +308,7 @@ async function enhanceAdmin() {
     const view = document.createElement('section'); view.className = 'kp3-view kp-admin-view'; view.hidden = true; root.append(view);
     const entry = document.createElement('button'); entry.type = 'button'; entry.className = 'kp3-nav-row kp-admin-entry';
     entry.innerHTML = `<span class="kp3-nav-icon">${icons.admin}</span><span class="kp3-nav-copy"><strong>Admin</strong><small>Payments, members & scoring controls</small></span><span class="kp3-nav-meta">Treasurer</span><span class="kp3-nav-chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>`;
-    entry.addEventListener('click', async () => { setGroupView(root, view); await renderAdmin(view, root, overview); });
+    entry.addEventListener('click', async () => { setGroupView(root, view); try{await renderAdmin(view, root, overview);}catch(error){view.innerHTML='<div class="status error">'+esc(error.message)+'</div>';view.append(adminHeader(()=>setGroupView(root,overview)));} });
     menu.append(entry);
   } finally { injecting = false; }
 
@@ -308,30 +316,5 @@ async function enhanceAdmin() {
   if (bank) bank.hidden = true;
 }
 
-function scheduleEnhance() {
-  const token = ++attemptToken;
-  let tries = 0;
-  const run = () => {
-    if (token !== attemptToken) return;
-    enhanceAdmin().catch(() => {});
-    if (++tries < 16 && document.querySelector('.nav-item[data-tab="group"].active') && !screen?.querySelector('.kp-admin-entry')) setTimeout(run, 75);
-  };
-  setTimeout(run, 0);
-}
 
-document.querySelector('.nav-item[data-tab="group"]')?.addEventListener('click', scheduleEnhance);
-window.addEventListener('load', scheduleEnhance);
-window.addEventListener('pageshow', scheduleEnhance);
-if (document.querySelector('.nav-item[data-tab="group"].active')) scheduleEnhance();
-
-// The Group tab's DOM is fully rebuilt (screen.innerHTML replaced) by any
-// app.js re-render — a payment confirm, a bank-details save, switching
-// groups, etc. — which wipes the injected Admin entry. The named event
-// listeners above only cover navigating *to* the tab, not re-renders that
-// happen while already on it, so watch #screen directly and re-run
-// whenever the treasurer's Admin row isn't present.
-if (screen) {
-  new MutationObserver(() => {
-    if (document.querySelector('.nav-item[data-tab="group"].active') && !screen.querySelector('.kp-admin-entry')) scheduleEnhance();
-  }).observe(screen, { childList: true });
-}
+export {enhanceAdmin};

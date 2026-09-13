@@ -1,11 +1,11 @@
-import http from 'node:http';
+const supabaseOrigin=process.env.SUPABASE_URL?new URL(process.env.SUPABASE_URL).origin:'';
 
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://esm.sh",
+  "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https://crests.football-data.org https://images.unsplash.com",
-  "connect-src 'self' https://agxffllgcahbacvxhqua.supabase.co wss://agxffllgcahbacvxhqua.supabase.co https://esm.sh",
+  `connect-src 'self' ${supabaseOrigin} ${supabaseOrigin.replace(/^https:/,'wss:').replace(/^http:/,'ws:')}`,
   "font-src 'self' data:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -24,10 +24,8 @@ const SECURITY_HEADERS = {
   'Content-Security-Policy': CSP
 };
 
-const originalWriteHead = http.ServerResponse.prototype.writeHead;
-http.ServerResponse.prototype.writeHead = function patchedWriteHead(statusCode, statusMessage, headers) {
+export function applySecurityHeaders(res) {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
-    if (!this.hasHeader(name)) this.setHeader(name, value);
+    res.setHeader(name,value);
   }
-  return originalWriteHead.call(this, statusCode, statusMessage, headers);
-};
+}

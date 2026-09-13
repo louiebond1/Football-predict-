@@ -1,4 +1,13 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './supabase-singleton.js';
+import { enhanceGroup } from './ui-v3.js';
+import { enhanceAdmin } from './admin-v1.js';
+import { refreshGroupFeatures, openAccountSettings } from './settings-v2.js';
+import { ensurePasswordUI } from './password-auth.js';
+import './passkey-auth.js';
+import './account-password.js';
+import './auth-ux.js';
+import './pwa.js';
+import {readStandings} from './standings.js';
 
 const screen = document.querySelector('#screen');
 const nav = [...document.querySelectorAll('.nav-item')];
@@ -8,7 +17,7 @@ const bellDot = document.querySelector('#bellDot');
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; installBtn.hidden = false });
 installBtn.addEventListener('click', async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; installBtn.hidden = true });
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+
 
 /* ---------- icon set (Lucide-style inline SVG) ---------- */
 const ICONS = {
@@ -57,7 +66,7 @@ function avatar(name, size = '') {
 }
 function initials(name) {
   const words = (name || '?').trim().split(/\s+/).filter(Boolean);
-  const letters = words.length > 1 ? words[0][0] + words[words.length - 1][0] : words[0].slice(0, 2);
+  const letters = words.length > 1 ? words[0][0] + words[words.length - 1][0] : (words[0] || '?').slice(0, 2);
   return esc(letters.toUpperCase());
 }
 
@@ -65,9 +74,10 @@ const state = {
   tab: 'gw', supabase: null, session: null, config: null,
   groups: [], groupsStatus: 'idle', activeGroupId: null, gameweekId: null,
   fixtures: [], round: null, predictions: {}, members: [], profiles: {}, payments: {},
-  leaderboard: [], history: [], seasonBoard: []
+  leaderboard: [], history: [], readyWeeks: [], seasonBoard: [], recentFixtures: []
 };
 let sessionReadyRun = 0;
+let dataRun=0, renderRun=0;
 
 function esc(s = '') { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])) }
 function gbp(pence) { return `£${(pence / 100).toFixed(pence % 100 ? 2 : 0)}` }
@@ -104,6 +114,10 @@ function updateBell() {
 }
 
 function resetSessionState() {
+  ++sessionReadyRun;++dataRun;++renderRun;
+  window.KickPotLive?.unmount();window.KickPotMatchday?.unmount();
+  for(const key of Object.keys(draftPicks))delete draftPicks[key];
+  state.seasonBoard=[];state.readyWeeks=[];state.recentFixtures=[];
   state.groups = [];
   state.groupsStatus = 'idle';
   state.activeGroupId = null;
@@ -123,7 +137,8 @@ function renderSessionLoading(message = 'Loading your pot…') {
 }
 
 async function boot() {
-  state.config = await fetch('/api/config').then(r => r.json()).catch(() => null);
+  state.config = await fetch('/api/config',{signal:AbortSignal.timeout(15000)}).then(r => r.json()).catch(() => null);
+  if (!state.config) throw new Error(navigator.onLine===false?'You’re offline. Reconnect to load your group.':'KickPot could not connect. Try again.');
   if (!state.config?.supabaseConfigured) { renderConfigError(); return; }
   state.supabase = createClient(state.config.supabaseUrl, state.config.supabasePublishableKey);
   const { data: { session } } = await state.supabase.auth.getSession();
@@ -132,6 +147,7 @@ async function boot() {
   state.supabase.auth.onAuthStateChange((evt, sess) => {
     const previousUserId = state.session?.user?.id || null;
     const nextUserId = sess?.user?.id || null;
+    if(previousUserId&&previousUserId!==nextUserId)resetSessionState();
     state.session = sess;
     updateUserChip();
 
@@ -147,7 +163,7 @@ async function boot() {
     if (previousUserId === nextUserId && (evt === 'INITIAL_SESSION' || evt === 'TOKEN_REFRESHED' || evt === 'USER_UPDATED')) return;
     if (previousUserId === nextUserId && state.groupsStatus !== 'idle') return;
 
-    onSessionReady();
+    queueMicrotask(() => onSessionReady().catch(showError));
   });
 
   await onSessionReady();
@@ -166,11 +182,11 @@ async function onSessionReady() {
   if (run !== sessionReadyRun || !state.session) return;
   if (!loaded) {
     state.groupsStatus = 'error';
-    if (!state.groups.length) renderSessionLoading('Couldn’t load your pot');
+    showError(new Error('Couldn’t load your pot. Check your connection and try again.'));
     return;
   }
   state.groupsStatus = 'loaded';
-  render();
+  await render();
 }
 
 function updateUserChip() {
@@ -182,21 +198,25 @@ function updateUserChip() {
 
 async function ensureProfile() {
   const email = state.session.user.email || 'player';
-  await state.supabase.from('profiles').upsert(
+  const {error}=await state.supabase.from('profiles').upsert(
     { id: myId(), display_name: email.split('@')[0] },
     { onConflict: 'id', ignoreDuplicates: true }
   );
+  if(error)throw error;
 }
 
 async function loadGroups() {
+  const uid=myId();
   const { data, error } = await state.supabase.from('groups').select('*').order('created_at');
   if (error) { toast(error.message, 'error'); return false; }
+  if(uid!==myId())return false;
   const nextGroups = data || [];
   state.groups = nextGroups;
   if (!state.activeGroupId || !nextGroups.some(g => g.id === state.activeGroupId)) {
-    state.activeGroupId = nextGroups[0]?.id || null;
+    let stored='';try{stored=sessionStorage.getItem('kp-active-group-v1')||localStorage.getItem('kp-active-group-v1');}catch{}
+    state.activeGroupId = nextGroups.find(g=>g.id===stored)?.id||nextGroups[0]?.id||null;
   }
-  if (state.activeGroupId) await loadGroupData();
+  if (state.activeGroupId) return await loadGroupData();
   else {
     state.gameweekId = null;
     state.fixtures = [];
@@ -211,46 +231,37 @@ async function loadGroups() {
 }
 
 async function loadGroupData() {
-  const gid = state.activeGroupId;
-  const sb = state.supabase;
+  const run=++dataRun,gid=state.activeGroupId,uid=myId(),sb=state.supabase;
   try {
-    const { data: gwId, error: gwErr } = await sb.rpc('ensure_current_gameweek', { p_group_id: gid });
-    if (gwErr) throw gwErr;
-    state.gameweekId = gwId;
-
-    const [{ data: members }, { data: payments }] = await Promise.all([
-      sb.from('group_members').select('user_id, role').eq('group_id', gid),
-      sb.from('payments').select('*').eq('group_id', gid).eq('gameweek_id', gwId)
+    const response=await fetch('/api/football/fixtures',{cache:'no-store',signal:AbortSignal.timeout(15000)});
+    const fx=await response.json();
+    if(!response.ok||!Array.isArray(fx.fixtures))throw Error(fx.error||'Fixtures could not be loaded.');
+    let gwId=fx.gameweekId;
+    const ensured=gwId?await sb.rpc('ensure_group_gameweek',{gid,gwid:gwId}):await sb.rpc('ensure_current_gameweek',{p_group_id:gid});
+    if(ensured.error)throw ensured.error;gwId ||= ensured.data;
+    const ids=fx.fixtures.map(f=>f.id);
+    const results=await Promise.all([
+      sb.from('group_members').select('user_id,role').eq('group_id',gid),
+      sb.from('payments').select('*').eq('group_id',gid).eq('gameweek_id',gwId),
+      sb.from('profiles').select('id,display_name'),
+      ids.length?sb.from('predictions').select('*').eq('group_id',gid).eq('user_id',uid).in('fixture_id',ids):{data:[]},
+      sb.from('group_leaderboard').select('*').eq('group_id',gid).eq('gameweek_id',gwId),
+      sb.from('group_gameweeks').select('*,gameweeks(round_name,fixtures(status,home_goals,away_goals))').eq('group_id',gid).order('settled_at',{ascending:false})
     ]);
-    state.members = members || [];
-    state.payments = Object.fromEntries((payments || []).map(p => [p.user_id, p]));
-
-    const ids = state.members.map(m => m.user_id);
-    if (ids.length) {
-      const { data: profiles } = await sb.from('profiles').select('id,display_name').in('id', ids);
-      state.profiles = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+    if(run!==dataRun||gid!==state.activeGroupId||uid!==myId())return false;
+    const failed=results.find(r=>r.error);if(failed)throw failed.error;
+    const [members,payments,profiles,predictions,board,history]=results.map(r=>r.data||[]);
+    Object.assign(state,{gameweekId:gwId,fixtures:fx.fixtures,round:fx.round,members,
+      payments:Object.fromEntries(payments.map(p=>[p.user_id,p])),profiles:Object.fromEntries(profiles.map(p=>[p.id,p])),
+      predictions:Object.fromEntries(predictions.map(p=>[p.fixture_id,p])),leaderboard:board,history:history.filter(h=>h.settled_at),readyWeeks:history.filter(h=>!h.settled_at&&h.gameweeks?.fixtures?.length&&h.gameweeks.fixtures.every(f=>['FT','AET','PEN'].includes(f.status)&&f.home_goals!==null&&f.away_goals!==null)),groupsStatus:'loaded'});
+    try{sessionStorage.setItem('kp-active-group-v1',gid);localStorage.setItem('kp-active-group-v1',gid);}catch{}
+    if(!state.recentFixtures.length){
+      const recent=await sb.from('fixtures').select('kickoff,home_team_id,away_team_id,home_goals,away_goals,status').in('status',['FT','AET','PEN']).order('kickoff',{ascending:false}).limit(100);
+      if(run===dataRun&&!recent.error)state.recentFixtures=recent.data||[];
     }
-
-    const fxRes = await fetch('/api/football/fixtures').then(r => r.json()).catch(() => ({ fixtures: [], round: null }));
-    state.fixtures = fxRes.fixtures || [];
-    state.round = fxRes.round;
-
-    const fixtureIds = state.fixtures.map(f => f.id).filter(Boolean);
-    if (fixtureIds.length) {
-      const { data: preds } = await sb.from('predictions').select('*').eq('group_id', gid).eq('user_id', myId()).in('fixture_id', fixtureIds);
-      state.predictions = Object.fromEntries((preds || []).map(p => [p.fixture_id, p]));
-    } else {
-      state.predictions = {};
-    }
-
-    await refreshLeaderboard();
-
-    const { data: hist } = await sb.from('group_gameweeks').select('*, gameweeks(round_name)').eq('group_id', gid).not('settled_at', 'is', null).order('settled_at', { ascending: false });
-    state.history = hist || [];
-    updateBell();
-  } catch (err) {
-    toast(err.message || String(err), 'error');
-  }
+    if(run!==dataRun||gid!==state.activeGroupId||uid!==myId())return false;
+    updateBell();return true;
+  }catch(error){if(run===dataRun){state.groupsStatus='error';toast(error.message||'Could not refresh your group.','error');}return false;}
 }
 
 async function refreshLeaderboard() {
@@ -259,9 +270,10 @@ async function refreshLeaderboard() {
 }
 
 async function loadGroupSeasonBoard() {
-  const { data } = await state.supabase.from('group_leaderboard').select('*').eq('group_id', state.activeGroupId);
-  state.seasonBoard = data || [];
-  return state.seasonBoard;
+  const groupId=state.activeGroupId;
+  const data=await readStandings(state.supabase,groupId);
+  const settled=new Set(state.history.map(h=>String(h.gameweek_id)));
+  return (data||[]).filter(r=>settled.has(String(r.gameweek_id)));
 }
 
 function computeAwards(rows, history) {
@@ -325,7 +337,7 @@ function meta() {
 
 function groupSwitcher() {
   if (state.groups.length < 2) return '';
-  return `<div class="select-wrap" style="margin-bottom:12px"><select id="groupSwitch" class="scorer-select">${state.groups.map(g => `<option value="${g.id}" ${g.id === state.activeGroupId ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select>${ic('chevronRight', 16)}</div>`;
+  return `<div class="select-wrap" style="margin-bottom:12px"><select id="groupSwitch" aria-label="Active group" class="scorer-select">${state.groups.map(g => `<option value="${g.id}" ${g.id === state.activeGroupId ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select>${ic('chevronRight', 16)}</div>`;
 }
 function bindGroupSwitcher() {
   const el = document.querySelector('#groupSwitch');
@@ -333,6 +345,8 @@ function bindGroupSwitcher() {
   el.dataset.bound = '1';
   el.addEventListener('change', async e => {
     state.activeGroupId = e.target.value;
+    state.groupsStatus='loading';window.KickPotLive?.unmount();window.KickPotMatchday?.unmount();
+    renderSessionLoading();
     // Switching groups refetches that group's members/payments/predictions from
     // Supabase, which can take a second or more on a slow connection. Without
     // this, the previous group's fully-rendered screen just sits there
@@ -354,53 +368,17 @@ function bindGroupSwitcher() {
 }
 
 function paymentBanner() {
+  if(activeGroup()?.payments_required===false)return '';
   const p = myPayment();
   if (p?.confirmed_paid_at) return '';
   if (p?.claimed_paid_at) return `<div class="status warning">${ic('clock', 15)} Waiting for the Treasurer to confirm your payment. Predictions unlock once confirmed.</div>`;
   return `<div class="status error">${ic('lock', 15)} Pay the Treasurer for this Gameweek to unlock predictions. Go to the Group tab.</div>`;
 }
 
-let lockTickInterval = null;
-function startLockTicker() {
-  clearInterval(lockTickInterval);
-  lockTickInterval = setInterval(() => {
-    const pill = document.querySelector('#lockPill');
-    const timeEl = document.querySelector('#lockPillTime');
-    if (!pill || !timeEl) { clearInterval(lockTickInterval); return; }
-    const ms = new Date(pill.dataset.kickoff) - Date.now();
-    if (ms <= 0) { if (state.tab === 'gw') renderGW(); return; }
-    timeEl.textContent = countdown(ms);
-  }, 1000);
-}
-
 function renderGW() {
-  if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
-  // A "for fun" group (payments_required === false) never needs a confirmed
-  // payment to unlock predictions. Keep the core Matchday behavior aligned
-  // with its reference renderer and rollover screen.
-  const locked = activeGroup()?.payments_required !== false && !myPayment()?.confirmed_paid_at;
-  screen.innerHTML = `<section class="hero"><h1>${esc(state.round || 'Gameweek')}</h1>${meta()}</section>
-  ${groupSwitcher()}
-  ${paymentBanner()}
-  <section class="card"><div class="card-head"><div class="card-title">${ic('target')} Your Picks</div><span class="muted">${state.fixtures.length} fixtures</span></div>
-  ${state.fixtures.length ? state.fixtures.map(f => fixtureRow(f, locked)).join('') : `<div class="empty">Fixtures are syncing — check back shortly.</div>`}
-  <button class="primary" id="lockPicks" ${locked ? 'disabled' : ''}>${ic('lock', 17)} Lock In My Picks ${ic('chevronRight', 17)}</button><div id="gwStatus" class="rules">Your friends' picks stay hidden until kick-off.</div></section>`;
-
-  bindGroupSwitcher();
-  startLockTicker();
-
-  document.querySelectorAll('[data-fixture]').forEach(row => {
-    const id = Number(row.dataset.fixture);
-    const fLocked = locked || row.dataset.locked === '1';
-    if (fLocked) return;
-    const pred = pickFor(id);
-    row.querySelectorAll('[data-score]').forEach(inp => inp.addEventListener('input', () => { pred[inp.dataset.score] = Math.max(0, Math.min(20, Number(inp.value) || 0)); inp.value = pred[inp.dataset.score] }));
-    row.querySelectorAll('[data-step]').forEach(btn => btn.addEventListener('click', () => { const [side, delta] = btn.dataset.step.split(','); pred[side] = Math.max(0, Math.min(20, pred[side] + Number(delta))); renderGW() }));
-  });
-
-  document.querySelector('#lockPicks')?.addEventListener('click', submitPicks);
+  window.KickPotMatchday.mount({state,group:activeGroup(),pickFor,groupSwitcher,bindGroupSwitcher});
+  return;
 }
-
 const draftPicks = {};
 function pickFor(fixtureId) {
   const key = `${state.activeGroupId}:${fixtureId}`;
@@ -413,63 +391,29 @@ function pickFor(fixtureId) {
   return draftPicks[key];
 }
 
-function predictionBadge(saved, f) {
-  if (!saved || !['FT', 'AET', 'PEN'].includes(f.status?.short) || f.goals?.home == null) return '';
-  const exact = saved.predicted_home === f.goals.home && saved.predicted_away === f.goals.away;
-  const sign = n => (n > 0) - (n < 0);
-  const result = sign(saved.predicted_home - saved.predicted_away) === sign(f.goals.home - f.goals.away);
-  if (exact) return `<span class="badge exact">+3 EXACT</span>`;
-  if (result) return `<span class="badge result">+1 RESULT</span>`;
-  return `<span class="badge none">0 PTS</span>`;
-}
-
-function fixtureRow(f, groupLocked) {
-  const kickLocked = isLocked(f.kickoff);
-  const locked = groupLocked || kickLocked;
-  const pred = pickFor(f.id);
-  const saved = state.predictions[f.id];
-  return `<div class="fixture" data-fixture="${f.id}" data-locked="${locked ? '1' : '0'}">
-    <div class="teams"><div class="team">${crest(f.home)}<span>${esc(f.home?.name)}</span></div>
-    <div class="scorepick">${locked
-      ? `<span class="scorebox" style="display:grid;place-items:center">${saved ? saved.predicted_home : '–'}</span><span class="dash">–</span><span class="scorebox" style="display:grid;place-items:center">${saved ? saved.predicted_away : '–'}</span>`
-      : `<button class="step" data-step="home,-1">−</button><input class="scorebox" inputmode="numeric" value="${pred.home}" data-score="home"><span class="dash">–</span><input class="scorebox" inputmode="numeric" value="${pred.away}" data-score="away"><button class="step" data-step="away,1">＋</button>`}
-    </div><div class="team away"><span>${esc(f.away?.name)}</span>${crest(f.away)}</div></div>
-    <div class="rules">${kickoffLabel(f.kickoff)} ${locked ? `· ${ic('lock', 11)} locked` : '· locks at kick-off'} ${saved ? `· <strong class="accent">${saved.points} pts</strong>` : ''} ${predictionBadge(saved, f)}</div>
-  </div>`;
-}
-
-async function submitPicks() {
-  const rows = state.fixtures.filter(f => !isLocked(f.kickoff)).map(f => {
-    const p = pickFor(f.id);
-    return { group_id: state.activeGroupId, fixture_id: f.id, user_id: myId(), predicted_home: p.home, predicted_away: p.away };
-  });
-  const statusEl = document.querySelector('#gwStatus');
-  if (!rows.length) { statusEl.className = 'status warning'; statusEl.textContent = 'No open fixtures left to predict.'; return; }
-  const { error } = await state.supabase.from('predictions').upsert(rows, { onConflict: 'group_id,fixture_id,user_id' });
-  if (error) { statusEl.className = 'status error'; statusEl.textContent = error.message.includes('row-level security') ? 'Your payment needs Treasurer confirmation before predictions unlock.' : error.message; return; }
-  statusEl.className = 'status success'; statusEl.textContent = '✓ Picks locked in and synced for the group.';
-  await loadGroupData(); renderGW();
-}
-
 function renderHistory() {
   if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
   const allFinished = state.fixtures.length && state.fixtures.every(f => ['FT', 'AET', 'PEN'].includes(f.status?.short));
   const alreadySettled = state.history.some(h => h.gameweek_id === state.gameweekId);
   const latestWinner = state.history[0];
-  screen.innerHTML = `${latestWinner ? `<section class="card winner"><div class="trophy">${ic('crown', 22)}</div><div class="eyebrow">Gameweek Champion</div><h1>${esc((profileName(latestWinner.winner_user_id) || 'Player').toUpperCase())} WINS</h1><div class="muted">${esc(latestWinner.gameweeks?.round_name || '')}</div></section>` : `<section class="card"><div class="empty">No Gameweeks settled yet.</div></section>`}
+  const historyGroup=state.activeGroupId,historyUser=myId();
+  const winners=latestWinner?.winner_user_ids||[latestWinner?.winner_user_id].filter(Boolean);
+  const resultTitle=latestWinner?.settlement_kind==='draw'?'DRAW · '+winners.map(profileName).join(' & '):winners.length?profileName(winners[0])+' WINS':'NO WINNER';
+  screen.innerHTML = `${latestWinner ? `<section class="card winner"><div class="trophy">${ic('crown', 22)}</div><div class="eyebrow">Gameweek Champion</div><h1>${esc(resultTitle.toUpperCase())}</h1><div class="muted">${esc(latestWinner.gameweeks?.round_name || '')}</div></section>` : `<section class="card"><div class="empty">No Gameweeks settled yet.</div></section>`}
   ${groupSwitcher()}
-  ${isTreasurer() && allFinished && !alreadySettled ? `<section class="card"><div class="card-title">${ic('trophy')} Ready to Settle</div><p class="muted">All fixtures are final for this Gameweek.</p><button class="primary" id="settleBtn">Settle Gameweek & Crown Winner</button></section>` : ''}
+  ${isTreasurer()?state.readyWeeks.map(w=>`<section class="card"><div class="card-title">Ready to settle · ${esc(w.gameweeks.round_name)}</div><button class="primary" data-settle-week="${w.gameweek_id}">Settle Matchday & Crown Winner</button></section>`).join(''):''}
   <section class="card"><div class="card-title">${ic('clock')} Past Gameweeks</div>${state.history.length ? state.history.map(h => `<div class="payment-row"><span>${esc(h.gameweeks?.round_name || 'Gameweek')}</span><b>${esc(profileName(h.winner_user_id))}</b></div>`).join('') : '<div class="empty">Settle a Gameweek to see it here.</div>'}</section>
   <section class="card" id="seasonStatsCard"><div class="card-title">${ic('climb')} Your Season Stats</div><div class="empty">Loading…</div></section>
   <section class="card" id="awardsCard"><div class="card-title">${ic('award')} Awards</div><div class="empty">Loading…</div></section>`;
   bindGroupSwitcher();
-  document.querySelector('#settleBtn')?.addEventListener('click', async () => {
-    const { error } = await state.supabase.rpc('settle_gameweek', { p_group_id: state.activeGroupId, p_gameweek_id: state.gameweekId });
-    if (error) return toast(error.message, 'error');
-    toast('Gameweek settled.'); await loadGroupData(); render();
-  });
+  screen.querySelectorAll('[data-settle-week]').forEach(button=>button.addEventListener('click',async()=>{
+    button.disabled=true;
+    try{const {error}=await state.supabase.rpc('settle_gameweek',{p_group_id:historyGroup,p_gameweek_id:Number(button.dataset.settleWeek)});if(error)throw error;
+      toast('Matchday settled.');await loadGroupData();await render();
+    }catch(error){toast(error.message||'Could not settle. Try again.','error');button.disabled=false;}
+  }));
   loadGroupSeasonBoard().then(rows => {
-    if (state.tab !== 'history') return;
+    if (state.tab !== 'history'||state.activeGroupId!==historyGroup||myId()!==historyUser) return;
     const mine = rows.filter(r => r.user_id === myId());
     const s = {
       points: mine.reduce((a, r) => a + r.points, 0),
@@ -486,9 +430,16 @@ function renderHistory() {
     if (a?.mostExact) tiles.push({ icon: 'star', label: 'Sharpshooter', name: profileName(a.mostExact[0]) });
     const awardsCard = document.querySelector('#awardsCard');
     if (awardsCard) awardsCard.innerHTML = `<div class="card-title">${ic('award')} Awards</div>${tiles.length ? `<div class="award-grid">${tiles.map(t => `<div class="award-tile"><div class="award-icon">${ic(t.icon, 18)}</div><b>${esc(t.name)}</b><small>${esc(t.label)}</small></div>`).join('')}</div>` : '<div class="empty">Not enough settled Gameweeks yet.</div>'}`;
-  });
+  }).catch(()=>{for(const id of ['seasonStatsCard','awardsCard']){const el=document.getElementById(id);if(el)el.textContent='Stats unavailable. Reopen History to try again.';}});
 }
 
+function onAction(button,action){
+  button?.addEventListener('click',async event=>{
+    if(button.dataset.busy)return;button.dataset.busy='1';button.disabled=true;
+    try{await action(event);}catch(error){toast(error.message||'Could not complete the action. Please try again.','error');}
+    finally{delete button.dataset.busy;button.disabled=false;}
+  });
+}
 function renderGroup() {
   if (!state.groups.length) return state.groupsStatus === 'loaded' ? renderOnboarding() : renderSessionLoading();
   const g = activeGroup();
@@ -513,44 +464,45 @@ function renderGroup() {
   <div class="bankbox"><div class="bankline"><span>Account name</span><b>${esc(g.bank_account_name || 'Not set')}</b></div><div class="bankline"><span>Sort code</span><b>${esc(g.bank_sort_code || '••-••-••')}</b></div><div class="bankline"><span>Account no.</span><b>${esc(g.bank_account_number || '••••••••')}</b></div><div class="bankline"><span>Reference</span><b>${esc(state.round || 'GW')}-${esc((state.session.user.email || '').split('@')[0].toUpperCase())}</b></div></div>
   ${p?.claimed_paid_at ? `<div class="status warning" style="margin-top:12px">${ic('clock', 15)} Waiting on Treasurer confirmation.</div>` : `<button class="secondary" id="claimPaid" style="margin-top:12px">I've Paid</button>`}
   </section>
-  ${isTreasurer() ? `<section class="card"><div class="card-title">${ic('landmark')} Treasurer · Bank Details</div><div class="scorer-row"><input class="scorer-select" id="bankName" placeholder="Account name" value="${esc(g.bank_account_name || '')}"></div><div class="scorer-row"><input class="scorer-select" id="bankSort" placeholder="Sort code" value="${esc(g.bank_sort_code || '')}"></div><div class="scorer-row"><input class="scorer-select" id="bankAcc" placeholder="Account number" value="${esc(g.bank_account_number || '')}"></div><button class="secondary" id="saveBankBtn" style="margin-top:8px">Save Bank Details</button></section>` : ''}
+  ${isTreasurer() ? `<section class="card"><div class="card-title">${ic('landmark')} Treasurer · Bank Details</div><div class="scorer-row"><input class="scorer-select" id="bankName" aria-label="Bank account name" placeholder="Account name" value="${esc(g.bank_account_name || '')}"></div><div class="scorer-row"><input class="scorer-select" id="bankSort" aria-label="Sort code" placeholder="Sort code" value="${esc(g.bank_sort_code || '')}"></div><div class="scorer-row"><input class="scorer-select" id="bankAcc" aria-label="Bank account number" placeholder="Account number" value="${esc(g.bank_account_number || '')}"></div><button class="secondary" id="saveBankBtn" style="margin-top:8px">Save Bank Details</button></section>` : ''}
   <section class="card"><div class="card-title">Leave Group</div>${isTreasurer()
     ? `<p class="muted">You're the Treasurer — transfer control to another member (via Admin → Member administration) before you can leave.</p>`
     : `<p class="muted">You'll lose access to this group's predictions and history.</p><button class="secondary" id="leaveGroupBtn" style="margin-top:8px;border-color:#6f3535;color:#ff9d9d">Leave Group</button>`}
   </section>`;
 
+  const paymentWeek=state.gameweekId,paymentUser=myId();
   bindGroupSwitcher();
-  document.querySelector('#claimPaid')?.addEventListener('click', async () => {
-    const { error } = await state.supabase.from('payments').update({ claimed_paid_at: new Date().toISOString() }).eq('group_id', g.id).eq('gameweek_id', state.gameweekId).eq('user_id', myId());
+  onAction(document.querySelector('#claimPaid'), async () => {
+    const { error } = await state.supabase.from('payments').update({ claimed_paid_at: new Date().toISOString() }).eq('group_id', g.id).eq('gameweek_id', paymentWeek).eq('user_id', paymentUser);
     if (error) return toast(error.message, 'error');
-    toast('Marked as paid — waiting on Treasurer.'); await loadGroupData(); render();
+    toast('Marked as paid — waiting on Treasurer.'); await loadGroupData(); await render();
   });
-  document.querySelectorAll('.confirm-btn').forEach(btn => btn.addEventListener('click', async () => {
-    const { error } = await state.supabase.from('payments').update({ confirmed_paid_at: new Date().toISOString(), confirmed_by: myId() }).eq('group_id', g.id).eq('gameweek_id', state.gameweekId).eq('user_id', btn.dataset.user);
+  document.querySelectorAll('.confirm-btn').forEach(btn => onAction(btn, async () => {
+    const { error } = await state.supabase.from('payments').update({ confirmed_paid_at: new Date().toISOString(), confirmed_by: paymentUser }).eq('group_id', g.id).eq('gameweek_id', paymentWeek).eq('user_id', btn.dataset.user);
     if (error) return toast(error.message, 'error');
-    toast('Payment confirmed.'); await loadGroupData(); render();
+    toast('Payment confirmed.'); await loadGroupData(); await render();
   }));
-  document.querySelector('#confirmAllBtn')?.addEventListener('click', async () => {
+  onAction(document.querySelector('#confirmAllBtn'), async () => {
     const targets = Object.entries(state.payments).filter(([, x]) => !x.confirmed_paid_at).map(([uid]) => uid);
-    const { error } = await state.supabase.from('payments').update({ confirmed_paid_at: new Date().toISOString(), confirmed_by: myId() }).eq('group_id', g.id).eq('gameweek_id', state.gameweekId).in('user_id', targets);
+    const { error } = await state.supabase.from('payments').update({ confirmed_paid_at: new Date().toISOString(), confirmed_by: paymentUser }).eq('group_id', g.id).eq('gameweek_id', paymentWeek).in('user_id', targets);
     if (error) return toast(error.message, 'error');
-    toast('All payments confirmed.'); await loadGroupData(); render();
+    toast('All payments confirmed.'); await loadGroupData(); await render();
   });
-  document.querySelector('#saveBankBtn')?.addEventListener('click', async () => {
+  onAction(document.querySelector('#saveBankBtn'), async () => {
     const { error } = await state.supabase.from('groups').update({
       bank_account_name: document.querySelector('#bankName').value.trim() || null,
       bank_sort_code: document.querySelector('#bankSort').value.trim() || null,
       bank_account_number: document.querySelector('#bankAcc').value.trim() || null
     }).eq('id', g.id);
     if (error) return toast(error.message, 'error');
-    toast('Bank details saved.'); await loadGroups(); render();
+    toast('Bank details saved.'); await loadGroups(); await render();
   });
-  document.querySelector('#leaveGroupBtn')?.addEventListener('click', async () => {
+  onAction(document.querySelector('#leaveGroupBtn'), async () => {
     if (!confirm(`Leave ${g.name}? You'll lose access to its predictions and history.`)) return;
     const { error } = await state.supabase.rpc('leave_group', { p_group_id: g.id });
     if (error) return toast(error.message, 'error');
     state.activeGroupId = null;
-    toast('Left the group.'); await loadGroups(); state.groupsStatus = 'loaded'; render();
+    toast('Left the group.'); await loadGroups(); state.groupsStatus = 'loaded'; await render();
   });
 
   loadGroupSeasonBoard().then(rows => {
@@ -564,13 +516,13 @@ function renderGroup() {
     if (a.mostExact) rows2.push(['target', 'Most exact scores', `${profileName(a.mostExact[0])} (${a.mostExact[1]})`]);
     if (a.spoon) rows2.push(['dash', 'Wooden spoon', `${profileName(a.spoon[0])} (${a.spoon[1]})`]);
     card.innerHTML = `<div class="card-title">${ic('award')} Group Rivalry</div>${rows2.map(([icon, label, val]) => `<div class="rivalry-row"><span class="row-left">${ic(icon, 15)} ${label}</span><b class="accent">${esc(val)}</b></div>`).join('')}`;
-  });
+  }).catch(()=>{});
 }
 
 function renderOnboarding() {
   screen.innerHTML = `<section class="hero"><h1>Start a Pot</h1><div class="hero-sub">Create a private group or join one with a code.</div></section>
-  <section class="card"><div class="card-title">${ic('users')} Create a Group</div><div class="scorer-row"><input class="scorer-select" id="newGroupName" placeholder="Group name, e.g. VAR Is Corrupt"></div><div class="kp-mode-pick" role="group" aria-label="Play mode"><button type="button" class="kp-mode-pick-btn is-active" data-mode="pot">Play for a Pot</button><button type="button" class="kp-mode-pick-btn" data-mode="fun">Play for Fun</button></div><div class="scorer-row" id="newGroupStakeRow"><input class="scorer-select" id="newGroupStake" inputmode="numeric" placeholder="Stake per Gameweek (£)" value="5"></div><button class="primary" id="createGroupBtn">Create Group</button></section>
-  <section class="card"><div class="card-title">${ic('shield')} Join a Group</div><div class="scorer-row"><input class="scorer-select" id="joinCode" placeholder="6-character join code" style="text-transform:uppercase"></div><button class="secondary" id="joinGroupBtn">Join Group</button></section>
+  <section class="card"><div class="card-title">${ic('users')} Create a Group</div><div class="scorer-row"><input class="scorer-select" id="newGroupName" aria-label="Group name" placeholder="Group name, e.g. VAR Is Corrupt"></div><div class="kp-mode-pick" role="group" aria-label="Play mode"><button type="button" class="kp-mode-pick-btn is-active" data-mode="pot">Play for a Pot</button><button type="button" class="kp-mode-pick-btn" data-mode="fun">Play for Fun</button></div><div class="scorer-row" id="newGroupStakeRow"><input class="scorer-select" id="newGroupStake" aria-label="Weekly stake in pounds" inputmode="numeric" placeholder="Stake per Gameweek (£)" value="5"></div><button class="primary" id="createGroupBtn">Create Group</button></section>
+  <section class="card"><div class="card-title">${ic('shield')} Join a Group</div><div class="scorer-row"><input class="scorer-select" id="joinCode" aria-label="Group invite code" placeholder="6-character join code" style="text-transform:uppercase"></div><button class="secondary" id="joinGroupBtn">Join Group</button></section>
   <div id="onboardStatus"></div>`;
   const modeButtons = [...screen.querySelectorAll('.kp-mode-pick-btn')];
   const stakeRow = screen.querySelector('#newGroupStakeRow');
@@ -578,7 +530,7 @@ function renderOnboarding() {
     modeButtons.forEach(b => b.classList.toggle('is-active', b === btn));
     stakeRow.hidden = btn.dataset.mode === 'fun';
   }));
-  document.querySelector('#createGroupBtn').addEventListener('click', async () => {
+  onAction(document.querySelector('#createGroupBtn'), async () => {
     const name = document.querySelector('#newGroupName').value.trim();
     const isFun = screen.querySelector('.kp-mode-pick-btn[data-mode="fun"]')?.classList.contains('is-active');
     const stake = isFun ? 0 : Math.max(0, Number(document.querySelector('#newGroupStake').value) || 0) * 100;
@@ -586,55 +538,65 @@ function renderOnboarding() {
     if (!name) { statusEl.className = 'status error'; statusEl.textContent = 'Give your group a name.'; return; }
     const { data, error } = await state.supabase.rpc('create_group', { p_name: name, p_stake_pence: stake });
     if (error) { statusEl.className = 'status error'; statusEl.textContent = error.message; return; }
-    state.activeGroupId = data.id; state.groupsStatus = 'loading'; await loadGroups(); state.groupsStatus = 'loaded'; render();
+    state.activeGroupId = data.id; state.groupsStatus = 'loading'; await loadGroups(); state.groupsStatus = 'loaded'; await render();
   });
-  document.querySelector('#joinGroupBtn').addEventListener('click', async () => {
+  onAction(document.querySelector('#joinGroupBtn'), async () => {
     const code = document.querySelector('#joinCode').value.trim();
     const statusEl = document.querySelector('#onboardStatus');
     const { data, error } = await state.supabase.rpc('join_group', { p_join_code: code });
     if (error) { statusEl.className = 'status error'; statusEl.textContent = error.message; return; }
-    state.activeGroupId = data.id; state.groupsStatus = 'loading'; await loadGroups(); state.groupsStatus = 'loaded'; render();
+    state.activeGroupId = data.id; state.groupsStatus = 'loading'; await loadGroups(); state.groupsStatus = 'loaded'; await render();
   });
 }
 
 function renderAuth() {
   screen.innerHTML = `<section class="hero"><div class="eyebrow">KickPot</div><h1>Predict. Score. Win the pot.</h1><div class="hero-sub">Sign in with a magic link — no password needed.</div></section>
   <section class="card"><div class="scorer-row"><input class="scorer-select" id="authEmail" type="email" placeholder="you@email.com" autocomplete="email"></div><button class="primary" id="sendLinkBtn">Send Magic Link</button><div id="authStatus"></div></section>`;
-  document.querySelector('#sendLinkBtn').addEventListener('click', async () => {
-    const email = document.querySelector('#authEmail').value.trim();
-    const statusEl = document.querySelector('#authStatus');
-    if (!email) return;
-    statusEl.className = 'status'; statusEl.textContent = 'Sending…';
-    const { error } = await state.supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin } });
-    statusEl.className = error ? 'status error' : 'status success';
-    statusEl.textContent = error ? error.message : `✓ Check ${email} for your sign-in link.`;
-  });
+  ensurePasswordUI();
+  document.dispatchEvent(new Event('kp:auth-render'));
 }
 
 function renderConfigError() {
   screen.innerHTML = `<section class="card"><div class="card-title accent">Setup incomplete</div><p class="muted">Supabase isn't configured on the server yet. Add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in Railway.</p></section>`;
 }
 
-function render({ resetLive = false } = {}) {
+async function render({ resetLive = false } = {}) {
+  const run=++renderRun;
+  document.body.dataset.kpScreen=state.tab;
+  delete screen.dataset.groupReference;screen.className='screen';
+  document.body.classList.remove('kp-group-panel-open');
+  if(state.tab!=='gw')window.KickPotMatchday?.unmount();
   nav.forEach(n => n.classList.toggle('active', n.dataset.tab === state.tab));
-  clearInterval(lockTickInterval);
   if (state.tab !== 'live') window.KickPotLive?.unmount();
-  if (!state.session) return renderAuth();
-  if (state.groupsStatus === 'loading' && !state.groups.length) return renderSessionLoading();
-  if (state.groupsStatus === 'error' && !state.groups.length) return renderSessionLoading('Couldn’t load your pot');
+  if (!state.config?.supabaseConfigured) return renderConfigError();
+  if (!state.session) {window.KickPotLive?.unmount();return renderAuth();}
+  if (state.groupsStatus === 'loading') return renderSessionLoading();
+  if (state.groupsStatus === 'error') return showError(new Error('Couldn’t load your pot. Check your connection and try again.'));
   if (state.tab === 'live') {
     if (!state.groups.length) return renderOnboarding();
-    window.KickPotLive?.mount({ reset: resetLive });
+    window.KickPotLive?.mount({ reset: resetLive, context: {groupId:state.activeGroupId,userId:myId()} });
   } else {
     ({ gw: renderGW, history: renderHistory, group: renderGroup }[state.tab])();
+    if(state.tab==='group'&&state.groups.length){
+      enhanceGroup();
+      await enhanceAdmin();if(run!==renderRun)return;
+      await refreshGroupFeatures(true);if(run!==renderRun)return;
+      window.KickPotGroup?.render();
+      if(history.state?.kpGroupPage)window.KickPotGroup?.restore(history.state.kpGroupPage);
+    }
+    if(state.tab==='history')await window.KickPotHistory?.mount(state.activeGroupId);
   }
   updateBell();
 }
 nav.forEach(btn => btn.addEventListener('click', () => {
   state.tab = btn.dataset.tab;
-  render({ resetLive: state.tab === 'live' });
+  history.pushState({kpTab:state.tab},'');
+  render({ resetLive: state.tab === 'live' }).catch(showError);
+  window.scrollTo({top:0,behavior:'auto'});
 }));
-userChip?.addEventListener('click', async () => { if (confirm('Sign out of KickPot?')) { await state.supabase.auth.signOut(); state.session = null; resetSessionState(); render() } });
+history.replaceState({kpTab:state.tab},'');
+window.addEventListener('popstate',event=>{const tab=event.state?.kpTab||'gw';if(['gw','live','history','group'].includes(tab)){state.tab=tab;render().catch(showError);}});
+userChip?.addEventListener('click',()=>openAccountSettings().catch(showError));
 document.querySelector('#bellBtn')?.addEventListener('click', () => {
   const p = myPayment();
   if (p && !p.confirmed_paid_at) return toast(p.claimed_paid_at ? 'Waiting on Treasurer confirmation.' : 'You have an unpaid Gameweek stake.', 'warning');
@@ -643,4 +605,19 @@ document.querySelector('#bellBtn')?.addEventListener('click', () => {
   toast("You're all caught up.");
 });
 
-boot();
+function showError(error){
+  window.KickPotLive?.unmount();window.KickPotMatchday?.unmount();
+  screen.innerHTML='<section class="card" role="alert"><h1>Couldn’t load KickPot</h1><p>'+esc(error.message||'Check your connection and try again.')+'</p><button class="primary" id="retryApp">Try again</button></section>';
+  screen.querySelector('#retryApp').onclick=()=>{(state.supabase?onSessionReady():boot()).catch(showError);};
+}
+window.KickPotApp={refresh:async()=>{await loadGroups();await render();},selectGroup:async(id)=>{state.activeGroupId=id;await loadGroups();await render();},context:()=>state};
+let refreshing=false;
+async function resume(){
+  if(refreshing||document.hidden||!state.session||state.groupsStatus==='loading'||state.tab==='live'||document.querySelector('.group-reference-panel,.kp-account-overlay')||window.KickPotMatchday?.isSaving())return;
+  refreshing=true;try{if(await loadGroupData())await render();}finally{refreshing=false;}
+}
+window.addEventListener('pageshow',()=>resume().catch(showError));
+window.addEventListener('online',()=>resume().catch(showError));
+document.addEventListener('visibilitychange',()=>resume().catch(showError));
+setInterval(()=>{if(state.tab==='gw')resume().catch(showError);},30000);
+boot().catch(showError);

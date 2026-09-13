@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './supabase-singleton.js';
 
 const COOLDOWN_KEY = 'kp-auth-send-until-v2';
 const COOLDOWN_MS = 60_000;
@@ -81,8 +81,6 @@ document.addEventListener('click', async event => {
   const btn = event.target.closest('#sendLinkBtn');
   if (!btn) return;
   event.preventDefault();
-  event.stopPropagation();
-  event.stopImmediatePropagation();
 
   if (sending || cooldownUntil() > Date.now()) {
     updateButton();
@@ -97,13 +95,12 @@ document.addEventListener('click', async event => {
     return;
   }
 
-  const sb = await getClient();
-  if (!sb) return setStatus('error', 'KickPot sign-in is temporarily unavailable.');
-
   sending = true;
   updateButton();
   setStatus('', 'Sending one-time link…');
   try {
+    const sb = await getClient();
+    if (!sb) return setStatus('error', 'KickPot sign-in is temporarily unavailable.');
     const { error } = await sb.auth.signInWithOtp({
       email,
       options: { shouldCreateUser:false, emailRedirectTo:location.origin }
@@ -122,9 +119,9 @@ document.addEventListener('click', async event => {
     sending = false;
     updateButton();
   }
-}, true);
+});
 
 document.addEventListener('input', event => { if (event.target?.id === 'authEmail') updateButton(); });
 window.addEventListener('pageshow', updateButton);
 setInterval(updateButton, 1000);
-setTimeout(updateButton, 100);
+document.addEventListener('kp:auth-render', updateButton);

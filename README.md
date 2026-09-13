@@ -1,52 +1,61 @@
 # KickPot
 
-Installable iPhone-first Premier League prediction PWA.
+Installable, iPhone-first Premier League prediction PWA. The existing rules remain: exact score +3, correct result +1, fixture-by-fixture kickoff locks, treasurer-confirmed payments for money groups, and optional For Fun mode. Existing settlement eligibility and tie-breaks (points, exact scores, team score hits) are preserved. First-goalscorer scoring is inactive in the current product.
 
-## Rules
-- Exact score: +3
-- Correct result: +1
-- £5 per Gameweek
-- Winner takes the pot
-- Treasurer confirms payment
-- Database blocks unpaid users from submitting predictions
-- Predictions lock at each fixture kickoff
+## Local development and checks
 
-> First-goalscorer (+2) is not currently active. It requires per-match goal-events data,
-> which football-data.org's free tier doesn't provide. Re-enabling it needs a provider
-> with an events/lineups endpoint (e.g. API-Football's paid Pro tier).
+Use Node.js 22 or newer (validated with Node 24). Supply environment variables through your shell or hosting environment; the server does not implicitly load a .env file.
 
-## Live setup already completed
-- Supabase project: `KickPot`
-- Region: London (`eu-west-2`)
-- Database tables + RLS installed, including a payment-gated predictions policy
-- `create_group` / `join_group` RPCs (SECURITY DEFINER) generate join codes and seed the current Gameweek's payment rows
-- Payment claim (self) + Treasurer confirmation (RLS-scoped to `groups.treasurer_id`) installed
-- `score_fixture_predictions` trigger recomputes points whenever a fixture result is written
-- `settle_gameweek` RPC crowns the winner once every fixture in the round is `FINISHED`
-- football-data.org server proxy + caching implemented (server-side only — the token never reaches the browser)
-- Railway configuration included
-- PWA manifest, service worker and iPhone icons included
-- Client (`public/app.js`) is a real Supabase-backed app: magic-link auth, group create/join, live leaderboard, payment tracking and prediction submission all talk to Supabase directly under RLS
+```sh
+npm ci
+npm run build
+npm start
+npm run check
+npm test
+npx playwright install chromium webkit
+npm run test:browser
+npm audit
+```
 
-## Railway deployment
-Deploy this GitHub repository in Railway, then add these environment variables:
+`npm start` runs the asset build first. The build bundles the pinned Supabase SDK locally, follows JS and CSS dependencies, verifies every offline asset, and generates a content-derived service-worker version. Commit the generated `public/sw.js`; `public/vendor/` is generated during deployment. The source is static HTML/CSS/JS served by Node; there is no separate frontend development server.
 
-- `FOOTBALL_DATA_TOKEN` — your football-data.org API token (from https://www.football-data.org/client/register)
+Unit/integration tests include PostgreSQL migrations and RLS using PGlite, server HTTP behavior, scoring/settlement, authentication-edge mocks, and service-worker events. Browser tests use the real client SDK with mocked network data on desktop Chromium, iPhone-sized Chromium/WebKit, and 320px mobile. Chromium uses native offline emulation; Windows WebKit verifies cache installation and API-outage recovery; full offline navigation needs physical Safari acceptance because the Windows WebKit runner reports an internal navigation error. No test signs in to a real account or transfers money.
+
+## Railway configuration
+
+Railway runs `npm start` and checks `/api/health`. Set:
+
+- `NODE_ENV=production`
+- `PORT` supplied by Railway
 - `FOOTBALL_DATA_COMPETITION=PL`
-- `SUPABASE_URL` — already shown in `.env.example`
-- `SUPABASE_PUBLISHABLE_KEY` — already shown in `.env.example`
-- `SUPABASE_SECRET_KEY` — the project's **service_role / secret** key (Supabase Dashboard → Project Settings → API). Never use a personal access token (`sbp_...`) here — that's an account-level management credential, not a data-API key, and must never be embedded in an app.
+- `FOOTBALL_DATA_TOKEN`: football-data.org token, server only
+- `SUPABASE_URL`: HTTPS project URL
+- `SUPABASE_PUBLISHABLE_KEY`: publishable or legacy anon key, safe for the browser under RLS
+- `SUPABASE_SECRET_KEY`: service-role/secret data-API key, server only; never an account management token (`sbp_...`)
 
-Railway runs `npm start`. Generate a public domain in Railway Settings > Networking.
+Production startup rejects missing required configuration and secret keys in the public-key setting. `/api/config` exposes only the public configuration and capability flags. `/api/health` is a process health check, not proof that upstream services are healthy. Check `/api/football/fixtures` for upstream readiness; failures return 503 with a retryable message.
 
-## Database migration
-Run `supabase/schema.sql` in the Supabase SQL editor. It is idempotent (safe to re-run on an existing project) — it drops and recreates its own policies/functions/triggers rather than failing on "already exists".
+Fixture synchronization runs at startup and once per minute while the server is running; a request also synchronizes the requested round. Identical requests are coalesced, fixture/round responses are cached for 30 seconds, and season metadata for six hours. Upstream calls have deadlines. Database-derived active-round selection holds an unfinished round until all its fixtures are final, matching the existing production rule. A postponed/cancelled fixture therefore requires an upstream final result or an explicit operator decision; the app does not invent results or change settlement rules.
 
-On iPhone: open the Railway domain in Safari > Share > Add to Home Screen.
+## Database deployment
 
-## Football API usage
-The API token stays server-side. The current matchday is cached for 6 hours and fixtures for 5 minutes, to stay well within football-data.org's free-tier rate limit (10 requests/minute).
+**Do not rerun `supabase/schema.sql` on the live project.** It is a historical bootstrap, and can overwrite newer policies/functions. For a new empty test database, apply the bootstrap and repository migrations in filename order. Production has additional migration history; reconcile its migration ledger before using a bulk `supabase db push`.
 
-## Security
-Never commit `FOOTBALL_DATA_TOKEN` or `SUPABASE_SECRET_KEY`.
-The Supabase publishable key is intended for browser use and is protected by RLS.
+The September 2026 readiness release adds these migrations, in this order:
+
+1. `20260913010250_production_readiness.sql`: column privileges, prediction/payment identity guards, derived scoring, atomic login quota, and indexes.
+2. `20260913011936_production_schema_alignment.sql`: preserves production snapshot/settlement semantics, serializes settlement retries, validates final scores, and reconciles active-round selection.
+
+They contain no bulk user-data rewrite or deletion. Apply only these reviewed migrations to an existing installation, through Supabase migrations/SQL tooling. Do not replay historical migrations against production. Keep their privileges when rolling application code back. Run `npm test` before deployment and inspect Supabase security advisors afterward.
+
+Deploy `supabase/functions/invite-password-auth/index.ts` after the quota migration. Its JWT verification setting is **false**: this public login endpoint verifies the submitted credentials itself, consumes the database quota first, and uses service-role credentials only inside the edge runtime. Keep the allowed CORS origin synchronized with the production app domain. Required edge secrets are `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` (Supabase runtime-provided).
+
+## Ownership and operation
+
+`app.js` owns the session, group selection, data refresh, and bottom navigation. Matchday and Live each expose one mount/unmount controller. Group panels are composed explicitly after core data loads; there are no renderer observers or delayed repair loops. Auth refresh does not recreate the account session. Draft picks belong to one user/group, stay through refresh and failed saves, and clear on account changes.
+
+Other members' picks are queried/revealed only after valid kickoff timestamps; PostgreSQL RLS enforces privacy even against direct API calls. Prediction identity and computed points cannot be changed by clients. Server scoring clears derived points when an upstream final result is withdrawn. History reads frozen settlement snapshots in preference to mutable totals. Treasurers settle completed weeks from History, including weeks preceding the active round. Settlement is manual and does not initiate bank transfers. Audit corrections and payment operations remain subject to existing treasurer policies.
+
+The service worker caches only versioned application assets, never Supabase/auth/API responses. An installed shell can open offline and offer reconnection; saving requires connectivity. Updates wait for an explicit “Update available” action so a deployment cannot silently discard draft picks. On iPhone, use Safari → Share → Add to Home Screen. A physical Home Screen installation, biometric prompts, and email delivery still require device/account acceptance testing.
+
+Keep tokens and service-role keys out of source, browser code, screenshots and logs. The existing six-digit PIN/legacy-password product behavior is unchanged. Supabase's leaked-password setting must be managed in the Auth dashboard; review its compatibility with the established PIN flow before enabling it.

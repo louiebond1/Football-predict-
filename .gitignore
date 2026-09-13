@@ -2,3 +2,8 @@
 .env.*
 node_modules
 .DS_Store
+
+public/vendor/
+test-results/
+playwright-report/
+supabase/.temp/

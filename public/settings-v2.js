@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './supabase-singleton.js';
 
 const GROUP_KEY = 'kp-active-group-v1';
 const TAB_KEY = 'kp-active-tab-v1';
@@ -25,7 +25,7 @@ async function getClient() {
 }
 function invalidateContext() { ctxCache = null; ctxAt = 0; ctxKey = ''; }
 async function getContext(force = false) {
-  const selected = document.querySelector('#groupSwitch')?.value || sessionStorage.getItem(GROUP_KEY) || '';
+  const selected = window.KickPotApp?.context().activeGroupId || '';
   if (!force && ctxCache && ctxKey === selected && Date.now() - ctxAt < 12000) return ctxCache;
   const sb = await getClient();
   if (!sb) return null;
@@ -39,7 +39,7 @@ async function getContext(force = false) {
   return ctxCache;
 }
 
-function closeOverlay(node) { node?.remove(); }
+function closeOverlay(node) { node?.remove();document.querySelector('#userChip')?.focus(); }
 async function openAccountSettings() {
   if (document.querySelector('.kp-account-overlay')) return;
   const sb = await getClient();
@@ -56,7 +56,7 @@ async function openAccountSettings() {
     <div class="kp-account-avatar">${esc(name.slice(0,1).toUpperCase())}</div>
     <div class="kp-account-form">
       <label>Display name<input id="kpAccountName" maxlength="40" value="${esc(name)}"></label>
-      <label>Email<input value="${esc(session.user.email || '')}" readonly></label>
+      <label>Email<input value="${esc(session.user.user_metadata?.login_email || session.user.email || '')}" readonly></label>
       <button type="button" class="kp-account-primary" id="kpAccountSave">Save changes</button>
       <small class="kp-account-status" id="kpAccountStatus"></small>
     </div>
@@ -88,11 +88,21 @@ async function openAccountSettings() {
   });
   overlay.querySelector('#kpAccountSignOut').addEventListener('click', async () => {
     const button = overlay.querySelector('#kpAccountSignOut'); button.disabled = true; button.textContent = 'Signing out…';
-    await sb.auth.signOut();
-    sessionStorage.clear();
-    location.reload();
+    const {error}=await sb.auth.signOut();if(error){button.disabled=false;button.textContent='Try signing out again';return;}
+    closeOverlay(overlay);
   });
   document.body.append(overlay);
+  overlay.querySelector('input')?.focus();
+  overlay.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){event.preventDefault();closeOverlay(overlay);}
+    if(event.key==='Tab'){
+      const nodes=[...overlay.querySelectorAll('button,input,textarea,select,a[href]')].filter(n=>!n.disabled&&n.getClientRects().length);
+      const first=nodes[0],last=nodes.at(-1);
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    }
+  });
+  document.dispatchEvent(new Event('kp:account-render'));
 }
 
 function createGroupForm(list) {
@@ -126,7 +136,7 @@ function createGroupForm(list) {
     sessionStorage.setItem(GROUP_KEY, data.id);
     sessionStorage.setItem(TAB_KEY, 'group');
     sessionStorage.removeItem(`${ROUTE_PREFIX}group`);
-    setTimeout(() => location.reload(), 350);
+    await window.KickPotApp.selectGroup(data.id);
   });
   if (joinAnother) list.insertBefore(row, joinAnother); else list.append(row);
   row.after(form);
@@ -199,7 +209,7 @@ async function enhanceGroupSettings() {
   if (!list) return;
   createGroupForm(list);
   const ctx = await getContext();
-  if (ctx?.group) { applyFunPresentation(ctx.group); addStakesCard(ctx.group); maybeShowStakes(ctx.group); }
+  if (ctx?.group) { applyFunPresentation(ctx.group); addStakesCard(ctx.group);  }
 }
 
 function showAdminPage(adminView, target) {
@@ -259,10 +269,7 @@ async function enhanceAdminPlayMode() {
     document.querySelector('.kp-stakes-card')?.remove();
     sessionStorage.removeItem(`${ROUTE_PREFIX}group`);
 
-    setTimeout(() => {
-      document.querySelector('.nav-item[data-tab="group"]')?.click();
-      scheduleRefresh();
-    }, 260);
+    await window.KickPotApp.refresh();
   });
 
   applyFunPresentation(group);
@@ -273,44 +280,11 @@ async function refreshGroupFeatures(force = false) {
   if (ctx?.group) {
     applyFunPresentation(ctx.group);
     addStakesCard(ctx.group);
-    maybeShowStakes(ctx.group);
+
   }
   if (document.querySelector('.kp3-settings-list')) await enhanceGroupSettings();
   if (document.querySelector('.kp-admin-menu')) await enhanceAdminPlayMode();
 }
 
-function scheduleRefresh() {
-  // Slower connections can take well over half a second for the Group/Admin
-  // screens to finish their data-driven render (group switch, cold start).
-  // The old fixed delays here ([0,80,240,650]) could all fire before that DOM
-  // existed, silently skipping the mode-dependent enhancements (the Play mode
-  // row, hiding Payment control in a for-fun group, etc.) for the rest of
-  // that view's lifetime - the group/admin screen would then show stale or
-  // inconsistent wording depending on how slow that particular load was.
-  // Extend the tail so a slow render still gets enhanced once its target
-  // elements show up; every call here is already idempotent (each enhancer
-  // checks for its own "already applied" marker before touching the DOM), so
-  // the extra attempts are cheap no-ops once the earlier ones have caught up.
-  [0,80,240,650,1200,2000,3200,5000].forEach(ms => setTimeout(() => refreshGroupFeatures(ms === 650 || ms === 5000).catch(() => {}), ms));
-}
 
-document.addEventListener('click', event => {
-  const chip = event.target.closest('#userChip');
-  if (chip) {
-    event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation();
-    openAccountSettings().catch(() => {});
-    return;
-  }
-  const label = event.target.closest('.kp3-nav-row')?.querySelector('.kp3-nav-copy strong')?.textContent?.trim() || '';
-  if (/^Group settings$/i.test(label) || /^Members$/i.test(label) || event.target.closest('.kp-admin-entry')) scheduleRefresh();
-  if (event.target.closest('.nav-item[data-tab],.kp3-back')) scheduleRefresh();
-}, true);
-
-document.addEventListener('change', event => {
-  if (event.target?.id === 'groupSwitch') { invalidateContext(); scheduleRefresh(); }
-}, true);
-
-window.addEventListener('load', scheduleRefresh);
-window.addEventListener('pageshow', scheduleRefresh);
-window.addEventListener('focus', () => { invalidateContext(); scheduleRefresh(); });
-setTimeout(scheduleRefresh, 900);
+export {refreshGroupFeatures,openAccountSettings,enhanceAdminPlayMode};

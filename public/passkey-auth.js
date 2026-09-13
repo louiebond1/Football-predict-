@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './supabase-singleton.js';
 
 const READY_KEY = 'kp-passkey-ready-v1';
 let client = null;
@@ -126,11 +126,5 @@ async function injectLoginPasskey() {
   });
 }
 
-document.addEventListener('click', event => {
-  if (event.target.closest('#userChip')) [80,250,600,1100].forEach(ms => setTimeout(injectAccountPasskey, ms));
-});
-setInterval(() => {
-  if (document.querySelector('.kp-account-sheet')) injectAccountPasskey();
-  if (document.querySelector('.kp-auth-card')) injectLoginPasskey();
-}, 1200);
-setTimeout(injectLoginPasskey, 500);
+document.addEventListener('kp:account-render',()=>injectAccountPasskey().catch(()=>{}));
+document.addEventListener('kp:auth-render',()=>injectLoginPasskey().catch(()=>{}));

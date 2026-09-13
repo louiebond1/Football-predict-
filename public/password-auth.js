@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './supabase-singleton.js';
 
 const INVITE_KEY = 'kp-pending-invite-v1';
 let client = null;
@@ -136,7 +136,7 @@ async function edgeAuth(action, email, password, invite, displayName = '') {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
     body:JSON.stringify({ action, email, password, inviteCode:invite || '', displayName }),
-    cache:'no-store'
+    cache:'no-store',signal:AbortSignal.timeout(15000)
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -209,5 +209,4 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Enter' && document.querySelector('#authPassword') && ['authPassword','authEmail','authDisplayName'].includes(event.target?.id)) submitPassword();
 });
 
-setInterval(ensurePasswordUI, 350);
-setTimeout(ensurePasswordUI, 50);
+export {ensurePasswordUI};

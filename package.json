@@ -5,10 +5,23 @@
   "type": "module",
   "scripts": {
     "start": "node start.mjs",
-    "check": "node --check server.mjs && node --check start.mjs",
-    "test": "node --test test/live-controller.test.mjs"
+    "check": "node scripts/check.mjs && eslint .",
+    "test": "node --test test/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "test:browser": "playwright test",
+    "prestart": "npm run build"
   },
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.116.0",
+    "esbuild": "0.28.2"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@playwright/test": "1.63.0",
+    "eslint": "10.10.0",
+    "globals": "17.12.0"
   }
 }

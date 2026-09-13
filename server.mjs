@@ -2,7 +2,8 @@ import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomBytes } from 'node:crypto';
+import {applySecurityHeaders} from './security-headers.mjs';
+import { chooseRound, validateMatches } from './football.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, 'public');
@@ -12,13 +13,27 @@ const COMPETITION = process.env.FOOTBALL_DATA_COMPETITION || 'PL';
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || '';
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || '';
+if(!Number.isInteger(PORT)||PORT<0||PORT>65535)throw new Error('PORT must be a valid TCP port');
+if(COMPETITION!=='PL')throw new Error('KickPot requires FOOTBALL_DATA_COMPETITION=PL');
+if(SUPABASE_URL){
+  const url=new URL(SUPABASE_URL);
+  if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.search||url.hash)throw new Error('Invalid SUPABASE_URL');
+  if(process.env.NODE_ENV==='production'&&url.protocol!=='https:')throw new Error('Production SUPABASE_URL must use HTTPS');
+}
 
 const cache = new Map();
+const pending = new Map();
 function cached(key, ttlMs, fn) {
   const now = Date.now();
   const hit = cache.get(key);
   if (hit && hit.expires > now) return Promise.resolve(hit.value);
-  return fn().then(value => { cache.set(key, { value, expires: now + ttlMs }); return value; });
+  if (pending.has(key)) return pending.get(key);
+  const promise = Promise.resolve().then(fn).then(value => {
+    if (cache.size >= 100) cache.delete(cache.keys().next().value);
+    cache.set(key, { value, expires: Date.now() + ttlMs }); return value;
+  }).finally(() => pending.delete(key));
+  pending.set(key, promise);
+  return promise;
 }
 
 function send(res, status, body, type='application/json; charset=utf-8', extra={}) {
@@ -27,43 +42,12 @@ function send(res, status, body, type='application/json; charset=utf-8', extra={
   res.end(payload);
 }
 
-async function readJson(req, maxBytes = 16 * 1024) {
-  let raw = '';
-  for await (const chunk of req) {
-    raw += chunk;
-    if (Buffer.byteLength(raw) > maxBytes) throw new Error('Request too large');
-  }
-  if (!raw) return {};
-  try { return JSON.parse(raw); }
-  catch { throw new Error('Invalid JSON'); }
-}
-
-const AUTH_PAIR_TTL_MS = 10 * 60 * 1000;
-const authPairs = new Map();
-function pruneAuthPairs() {
-  const now = Date.now();
-  for (const [id, pair] of authPairs) if (pair.expiresAt <= now) authPairs.delete(id);
-  while (authPairs.size > 500) authPairs.delete(authPairs.keys().next().value);
-}
-function validPairId(value) { return typeof value === 'string' && /^[A-Za-z0-9_-]{24,80}$/.test(value); }
-async function supabaseUser(accessToken) {
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !accessToken) return null;
-  const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${accessToken}` } });
-  if (!r.ok) return null;
-  return r.json();
-}
-async function rotateSession(refreshToken) {
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !refreshToken) return null;
-  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, { method:'POST', headers:{apikey:SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'}, body:JSON.stringify({refresh_token:refreshToken}) });
-  if (!r.ok) return null;
-  return r.json();
-}
-
+function timedFetch(url, options = {}) { return fetch(url, { ...options, signal: AbortSignal.timeout(12000) }); }
 async function footballData(p, params={}) {
   if (!FOOTBALL_DATA_TOKEN) throw new Error('FOOTBALL_DATA_TOKEN is not configured');
   const url = new URL(`https://api.football-data.org/v4/${p}`);
   Object.entries(params).forEach(([k,v]) => v != null && url.searchParams.set(k, String(v)));
-  const r = await fetch(url, { headers: { 'X-Auth-Token': FOOTBALL_DATA_TOKEN } });
+  const r = await timedFetch(url, { headers: { 'X-Auth-Token': FOOTBALL_DATA_TOKEN } });
   const data = await r.json();
   if (!r.ok) throw new Error(`football-data.org error: ${r.status} ${JSON.stringify(data)}`);
   return data;
@@ -72,35 +56,58 @@ const STATUS_MAP={SCHEDULED:'NS',TIMED:'NS',IN_PLAY:'LIVE',PAUSED:'HT',FINISHED:
 function mapStatus(s){return STATUS_MAP[s]||s;}
 async function supabaseAdmin(restPath,{method='GET',body,prefer=''}={}){
   if(!SUPABASE_URL||!SUPABASE_SECRET_KEY)return null;
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/${restPath}`,{method,headers:{apikey:SUPABASE_SECRET_KEY,Authorization:`Bearer ${SUPABASE_SECRET_KEY}`,'Content-Type':'application/json',...(prefer?{Prefer:prefer}:{})},body:body==null?undefined:JSON.stringify(body)});
+  const r=await timedFetch(`${SUPABASE_URL}/rest/v1/${restPath}`,{method,headers:{apikey:SUPABASE_SECRET_KEY,Authorization:`Bearer ${SUPABASE_SECRET_KEY}`,'Content-Type':'application/json',...(prefer?{Prefer:prefer}:{})},body:body==null?undefined:JSON.stringify(body)});
   if(!r.ok)throw new Error(`Supabase admin error ${r.status}: ${await r.text()}`);
   const text=await r.text();return text?JSON.parse(text):null;
 }
-async function inspectSchema(){
-  if(!SUPABASE_URL||!SUPABASE_SECRET_KEY)return{error:'SUPABASE_SECRET_KEY not configured'};
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/`,{headers:{apikey:SUPABASE_SECRET_KEY,Authorization:`Bearer ${SUPABASE_SECRET_KEY}`,Accept:'application/openapi+json'}});
-  if(!r.ok)return{error:`openapi fetch failed: ${r.status} ${await r.text()}`};
-  const spec=await r.json();const expectedTables=['profiles','groups','group_members','gameweeks','fixtures','group_gameweeks','payments','predictions','point_adjustments','login_aliases','auth_login_limits'];const expectedRpcs=['create_group','join_group','leave_group','ensure_current_gameweek','settle_gameweek','calculate_prediction_points','admin_transfer_treasurer','admin_remove_member','admin_regenerate_join_code'];const tables={};for(const t of expectedTables){const def=spec.definitions?.[t];tables[t]=def?Object.keys(def.properties||{}):null;}const views={group_leaderboard:spec.definitions?.group_leaderboard?Object.keys(spec.definitions.group_leaderboard.properties||{}):null};const rpcs={};for(const fn of expectedRpcs)rpcs[fn]=Boolean(spec.paths?.[`/rpc/${fn}`]);return{tables,views,rpcs};
-}
-async function getDatabaseActiveMatchday(){
-  if(COMPETITION!=='PL'||!SUPABASE_SECRET_KEY)return null;try{const[gameweeks,fixtures]=await Promise.all([supabaseAdmin('gameweeks?league_id=eq.39&select=id,round_name,starts_at&order=starts_at.asc'),supabaseAdmin('fixtures?select=gameweek_id,status')]);if(!Array.isArray(gameweeks)||!Array.isArray(fixtures))return null;const unfinished=new Set(fixtures.filter(f=>!['FT','AET','PEN'].includes(String(f.status||'').toUpperCase())).map(f=>Number(f.gameweek_id)));const active=gameweeks.find(g=>unfinished.has(Number(g.id))&&/^Matchday\s+\d+$/i.test(String(g.round_name||'')));const match=String(active?.round_name||'').match(/Matchday\s+(\d+)/i);return match?Number(match[1]):null;}catch(err){console.error('active matchday lookup failed:',err.message);return null;}
-}
-async function getCurrentMatchday(){return cached(`matchday:${COMPETITION}`,30*1000,async()=>{const databaseMatchday=await getDatabaseActiveMatchday();if(databaseMatchday)return databaseMatchday;const d=await footballData(`competitions/${COMPETITION}`);return d.currentSeason?.currentMatchday||null;});}
+async function getCurrentMatchday(){return cached(`matchday:${COMPETITION}`,30*1000,async()=>{
+  const d=await cached(`season:${COMPETITION}`,6*60*60*1000,()=>footballData(`competitions/${COMPETITION}`));
+  const season=Number(d.currentSeason?.startDate?.slice(0,4));
+  if(!Number.isInteger(season))throw new Error('Invalid football season');
+  const weeks=await supabaseAdmin(`gameweeks?league_id=eq.39&season=eq.${season}&select=round_name,fixtures(status)&order=starts_at.asc`);
+  return chooseRound(d.currentSeason?.currentMatchday,weeks||[]);
+});}
 function normaliseFixture(m){return{id:m.id,kickoff:m.utcDate,status:{short:mapStatus(m.status),elapsed:null},venue:m.venue||null,league:{id:m.competition?.id,name:m.competition?.name},home:{id:m.homeTeam?.id,name:m.homeTeam?.shortName||m.homeTeam?.name,logo:m.homeTeam?.crest},away:{id:m.awayTeam?.id,name:m.awayTeam?.shortName||m.awayTeam?.name,logo:m.awayTeam?.crest},goals:{home:m.score?.fullTime?.home??null,away:m.score?.fullTime?.away??null},score:m.score};}
-async function syncFixtures(matchday,rawMatches){if(!SUPABASE_SECRET_KEY||!rawMatches.length)return;const dates=rawMatches.map(m=>new Date(m.utcDate).getTime()).filter(Number.isFinite);const season=Number(rawMatches[0]?.season?.startDate?.slice(0,4))||new Date().getFullYear();const gw=await supabaseAdmin('gameweeks?on_conflict=league_id,season,round_name',{method:'POST',body:[{league_id:39,season,round_name:`Matchday ${matchday}`,starts_at:new Date(Math.min(...dates)).toISOString(),ends_at:new Date(Math.max(...dates)).toISOString()}],prefer:'resolution=merge-duplicates,return=representation'});const gameweekId=gw?.[0]?.id;if(!gameweekId)return;const fixtures=rawMatches.map(m=>({id:m.id,gameweek_id:gameweekId,kickoff:m.utcDate,home_team_id:m.homeTeam.id,home_team_name:m.homeTeam.shortName||m.homeTeam.name,away_team_id:m.awayTeam.id,away_team_name:m.awayTeam.shortName||m.awayTeam.name,status:mapStatus(m.status),home_goals:m.score?.fullTime?.home??null,away_goals:m.score?.fullTime?.away??null,updated_at:new Date().toISOString()}));await supabaseAdmin('fixtures?on_conflict=id',{method:'POST',body:fixtures,prefer:'resolution=merge-duplicates'});}
-async function getFixtures(matchday){const md=matchday||await getCurrentMatchday();if(!md)return[];return cached(`fixtures:${COMPETITION}:${md}`,30*1000,async()=>{const d=await footballData(`competitions/${COMPETITION}/matches`,{matchday:md});const raw=d.matches||[];await syncFixtures(md,raw).catch(err=>console.error(err.message));return raw;});}
+async function syncFixtures(matchday,rawMatches){if(!SUPABASE_SECRET_KEY||!rawMatches.length)return;const dates=rawMatches.map(m=>new Date(m.utcDate).getTime()).filter(Number.isFinite);const season=Number(rawMatches[0]?.season?.startDate?.slice(0,4))||new Date().getFullYear();const gw=await supabaseAdmin('gameweeks?on_conflict=league_id,season,round_name',{method:'POST',body:[{league_id:39,season,round_name:`Matchday ${matchday}`,starts_at:new Date(Math.min(...dates)).toISOString(),ends_at:new Date(Math.max(...dates)).toISOString()}],prefer:'resolution=merge-duplicates,return=representation'});const gameweekId=gw?.[0]?.id;if(!gameweekId)return;const fixtures=rawMatches.map(m=>({id:m.id,gameweek_id:gameweekId,kickoff:m.utcDate,home_team_id:m.homeTeam.id,home_team_name:m.homeTeam.shortName||m.homeTeam.name,away_team_id:m.awayTeam.id,away_team_name:m.awayTeam.shortName||m.awayTeam.name,status:mapStatus(m.status),home_goals:m.score?.fullTime?.home??null,away_goals:m.score?.fullTime?.away??null,updated_at:new Date().toISOString()}));await supabaseAdmin('fixtures?on_conflict=id',{method:'POST',body:fixtures,prefer:'resolution=merge-duplicates'});return gameweekId;}
+async function getFixtures(matchday){const md=matchday||await getCurrentMatchday();if(!md)return {matches:[],gameweekId:null,matchday:null};return cached(`fixtures:${COMPETITION}:${md}`,30*1000,async()=>{const d=await footballData(`competitions/${COMPETITION}/matches`,{matchday:md});const raw=validateMatches(d.matches);const gameweekId=await syncFixtures(md,raw);return {matches:raw,gameweekId:gameweekId||null,matchday:md};});}
 async function handleApi(req,res,url){try{
+  if(!['GET','HEAD'].includes(req.method))return send(res,405,{error:'Method not allowed'},'application/json',{Allow:'GET, HEAD'});
   if(url.pathname==='/api/health')return send(res,200,{ok:true,app:'KickPot'});
-  if(url.pathname==='/api/auth/pair/start'&&req.method==='POST'){pruneAuthPairs();const pairId=randomBytes(24).toString('base64url');authPairs.set(pairId,{expiresAt:Date.now()+AUTH_PAIR_TTL_MS,session:null});return send(res,200,{pairId,expiresIn:Math.floor(AUTH_PAIR_TTL_MS/1000)});}
-  if(url.pathname==='/api/auth/pair/authorize'&&req.method==='POST'){pruneAuthPairs();const body=await readJson(req);const pairId=body.pairId;const pair=validPairId(pairId)?authPairs.get(pairId):null;if(!pair||pair.expiresAt<=Date.now())return send(res,404,{error:'Pairing expired'});const user=await supabaseUser(body.accessToken);if(!user?.id)return send(res,401,{error:'Invalid session'});const rotated=await rotateSession(body.refreshToken);if(!rotated?.access_token||!rotated?.refresh_token||rotated.user?.id!==user.id)return send(res,401,{error:'Could not transfer session'});pair.session={accessToken:rotated.access_token,refreshToken:rotated.refresh_token,userId:user.id};pair.expiresAt=Date.now()+2*60*1000;return send(res,200,{ok:true});}
-  if(url.pathname==='/api/auth/pair/status'&&req.method==='GET'){pruneAuthPairs();const pairId=url.searchParams.get('id')||'';const pair=validPairId(pairId)?authPairs.get(pairId):null;if(!pair)return send(res,404,{error:'Pairing expired'});if(!pair.session)return send(res,200,{ready:false});authPairs.delete(pairId);return send(res,200,{ready:true,accessToken:pair.session.accessToken,refreshToken:pair.session.refreshToken});}
-  if(url.pathname==='/api/debug/schema'&&process.env.DEBUG_ENDPOINTS==='1')return send(res,200,await inspectSchema());
+
   if(url.pathname==='/api/config')return send(res,200,{supabaseUrl:SUPABASE_URL,supabasePublishableKey:SUPABASE_PUBLISHABLE_KEY,footballConfigured:Boolean(FOOTBALL_DATA_TOKEN),supabaseConfigured:Boolean(SUPABASE_URL&&SUPABASE_PUBLISHABLE_KEY),databaseSyncConfigured:Boolean(SUPABASE_SECRET_KEY)});
   if(url.pathname==='/api/football/current-round')return send(res,200,{round:await getCurrentMatchday()});
-  if(url.pathname==='/api/football/fixtures'){const matchday=url.searchParams.get('round')||undefined;const raw=await getFixtures(matchday);const md=matchday||await getCurrentMatchday();return send(res,200,{round:md?`Matchday ${md}`:null,fixtures:raw.map(normaliseFixture)});}
+  if(url.pathname==='/api/football/fixtures'){const matchday=url.searchParams.get('round')||undefined;if(matchday&&!/^(?:[1-9]|[12][0-9]|3[0-8])$/.test(matchday))return send(res,400,{error:'Round must be between 1 and 38'});const raw=await getFixtures(matchday);const md=raw.matchday;return send(res,200,{round:md?`Matchday ${md}`:null,gameweekId:raw.gameweekId,fixtures:raw.matches.map(normaliseFixture)});}
   return send(res,404,{error:'Not found'});
-}catch(err){return send(res,500,{error:err.message});}}
+}catch(err){console.error('API request failed:', err.name);return send(res,503,{error:'Service temporarily unavailable. Please try again.'});}}
 
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.webmanifest':'application/manifest+json'};
-async function serveStatic(req,res,url){let reqPath=decodeURIComponent(url.pathname);if(reqPath==='/')reqPath='/index.html';let file=path.normalize(path.join(publicDir,reqPath));if(!file.startsWith(publicDir))return send(res,403,'Forbidden','text/plain');try{const s=await stat(file);if(s.isDirectory())file=path.join(file,'index.html');const data=await readFile(file);const ext=path.extname(file).toLowerCase();const longCache=['.png','.jpg','.jpeg','.webp','.ico'].includes(ext);res.writeHead(200,{'Content-Type':mime[ext]||'application/octet-stream','Cache-Control':longCache?'public, max-age=86400':'no-cache'});res.end(data);}catch{const html=await readFile(path.join(publicDir,'index.html'));res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-cache'});res.end(html);}}
-http.createServer(async(req,res)=>{const url=new URL(req.url,`http://${req.headers.host||'localhost'}`);if(url.pathname.startsWith('/api/'))return handleApi(req,res,url);return serveStatic(req,res,url);}).listen(PORT,'0.0.0.0',()=>console.log(`KickPot listening on ${PORT}`));
+async function serveStatic(req,res,url) {
+  if (!['GET','HEAD'].includes(req.method)) return send(res,405,'Method not allowed','text/plain', {Allow:'GET, HEAD'});
+  let pathname;
+  try { pathname=decodeURIComponent(url.pathname); } catch { return send(res,400,'Invalid path','text/plain'); }
+  if (pathname.includes('\\') || pathname.includes('\0')) return send(res,400,'Invalid path','text/plain');
+  const file=path.resolve(publicDir, '.'+(pathname==='/'?'/index.html':pathname));
+  const relative=path.relative(publicDir,file);
+  if(relative.startsWith('..')||path.isAbsolute(relative)) return send(res,403,'Forbidden','text/plain');
+  try {
+    if (!(await stat(file)).isFile()) return send(res,404,'Not found','text/plain');
+    const data=await readFile(file),ext=path.extname(file).toLowerCase();
+    res.writeHead(200,{'Content-Type':mime[ext]||'application/octet-stream','Cache-Control':'no-cache',...(pathname==='/sw.js'?{'Service-Worker-Allowed':'/'}:{})});
+    res.end(req.method==='HEAD'?undefined:data);
+  } catch { return send(res,404,'Not found','text/plain'); }
+}
+export const server = http.createServer(async(req,res)=>{
+  applySecurityHeaders(res);
+  try {
+    const url=new URL(req.url,'http://localhost');
+    if(url.pathname.startsWith('/api/')) return await handleApi(req,res,url);
+    return await serveStatic(req,res,url);
+  } catch { if (!res.headersSent) send(res,400,{error:'Invalid request'}); else res.end(); }
+});
+if (process.env.NODE_ENV === 'production') {
+  const missing = ['SUPABASE_URL','SUPABASE_PUBLISHABLE_KEY','SUPABASE_SECRET_KEY','FOOTBALL_DATA_TOKEN'].filter(k=>!process.env[k]);
+  if (missing.length) throw new Error('Missing required configuration: '+missing.join(', '));
+}
+if (SUPABASE_PUBLISHABLE_KEY.startsWith('sb_secret_') || SUPABASE_PUBLISHABLE_KEY.startsWith('sbp_')) throw new Error('Public key must be a publishable or anon key');
+try { if (JSON.parse(Buffer.from(SUPABASE_PUBLISHABLE_KEY.split('.')[1] || '', 'base64url').toString()).role === 'service_role') throw new Error('Service role key cannot be public'); } catch(e) { if(e.message==='Service role key cannot be public') throw e; }
+server.listen(PORT,'0.0.0.0',()=>console.log('KickPot listening on '+server.address().port));

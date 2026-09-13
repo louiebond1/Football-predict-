@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './supabase-singleton.js';
 
 const PROMPT_KEY = 'kp-pin-setup-prompt-v1';
 let client = null;
@@ -102,45 +102,4 @@ function injectPasswordControls() {
   return true;
 }
 
-async function maybeShowOneTimePrompt() {
-  if (promptBusy || localStorage.getItem(PROMPT_KEY) === 'done' || document.querySelector('.kp-password-prompt-overlay')) return;
-  const sb = await getClient();
-  if (!sb) return;
-  const { data:{ session } } = await sb.auth.getSession();
-  if (!session) return;
-  promptBusy = true;
-  addStyles();
-  const overlay = document.createElement('div');
-  overlay.className = 'kp-password-prompt-overlay';
-  overlay.innerHTML = `<section class="kp-password-prompt" role="dialog" aria-modal="true" aria-label="Choose your KickPot PIN">
-    <div class="kp-prompt-kicker">ONE-TIME SETUP</div>
-    <h2>Choose your 6-digit PIN</h2>
-    <p>Much easier than a password. KickPot stays signed in on this device, so you should only need the PIN occasionally.</p>
-    ${pinMarkup('kpPrompt')}
-    <button type="button" class="kp-prompt-save">Save PIN</button>
-    <button type="button" class="kp-prompt-later">Do this later</button>
-    <small class="kp-prompt-status"></small>
-  </section>`;
-  document.body.append(overlay);
-  bindPinInputs(overlay);
-  const status = overlay.querySelector('.kp-prompt-status');
-  const save = overlay.querySelector('.kp-prompt-save');
-  save.addEventListener('click', async () => {
-    const pin = overlay.querySelector('#kpPromptNewPassword').value;
-    const confirm = overlay.querySelector('#kpPromptConfirmPassword').value;
-    if (await savePin(pin, confirm, status, save)) setTimeout(() => overlay.remove(), 450);
-  });
-  overlay.querySelector('.kp-prompt-later').addEventListener('click', () => {
-    localStorage.setItem(PROMPT_KEY, 'done');
-    overlay.remove();
-  });
-  promptBusy = false;
-}
-
-document.addEventListener('click', event => {
-  if (!event.target.closest('#userChip')) return;
-  [60,180,400,800,1400].forEach(ms => setTimeout(injectPasswordControls, ms));
-});
-setInterval(() => { if (document.querySelector('.kp-account-sheet')) injectPasswordControls(); }, 750);
-window.addEventListener('pageshow', () => setTimeout(maybeShowOneTimePrompt, 900));
-setTimeout(maybeShowOneTimePrompt, 1200);
+document.addEventListener('kp:account-render',injectPasswordControls);

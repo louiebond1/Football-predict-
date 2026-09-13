@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './supabase-singleton.js';
 
 const screen = document.querySelector('#screen');
 const subState = { history: 'overview', group: 'overview' };
@@ -62,217 +62,12 @@ function showView(map, key) {
   requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
 }
 
-function buildScoreStepper(input, side, teamName) {
-  const wrap = document.createElement('div');
-  wrap.className = `kp3-score-stepper kp3-score-${side}`;
-  input.readOnly = true;
-  input.setAttribute('inputmode', 'none');
-  input.setAttribute('aria-label', `${teamName} predicted goals`);
-
-  const minus = document.createElement('button');
-  minus.type = 'button';
-  minus.className = 'kp3-step';
-  minus.textContent = '−';
-  minus.setAttribute('aria-label', `Decrease ${teamName} score`);
-  const plus = document.createElement('button');
-  plus.type = 'button';
-  plus.className = 'kp3-step';
-  plus.textContent = '+';
-  plus.setAttribute('aria-label', `Increase ${teamName} score`);
-
-  const change = delta => {
-    const next = clampScore(Number(input.value) + delta);
-    if (String(next) === String(input.value)) return;
-    input.value = String(next);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  };
-  minus.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); change(-1); });
-  plus.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); change(1); });
-  wrap.append(minus, input, plus);
-  return wrap;
-}
-
-function upgradeScoreControls(fixture) {
-  const scorepick = fixture.querySelector('.scorepick');
-  const homeInput = scorepick?.querySelector('[data-score="home"]');
-  const awayInput = scorepick?.querySelector('[data-score="away"]');
-  if (!scorepick || !homeInput || !awayInput || scorepick.dataset.kp3 === '1') return;
-  scorepick.dataset.kp3 = '1';
-  const teams = fixture.querySelectorAll('.team');
-  const homeName = teams[0]?.textContent?.trim() || 'Home team';
-  const awayName = teams[1]?.textContent?.trim() || 'Away team';
-  scorepick.querySelectorAll('.step,.dash').forEach(el => el.remove());
-  const divider = document.createElement('span');
-  divider.className = 'kp3-vs';
-  divider.textContent = 'vs';
-  scorepick.replaceChildren(buildScoreStepper(homeInput, 'home', homeName), divider, buildScoreStepper(awayInput, 'away', awayName));
-}
-
-function enhanceGW() {
-  screen.className = 'screen kp3-screen kp3-gw';
-  const hero = screen.querySelector(':scope > .hero');
-  const switcher = screen.querySelector(':scope > .select-wrap');
-  const banner = screen.querySelector(':scope > .status');
-  const picks = directCard('Your Picks');
-  if (!hero || !picks || screen.querySelector(':scope > .kp3-gw-root')) return;
-
-  const root = document.createElement('div');
-  root.className = 'kp3-gw-root';
-  screen.insertBefore(root, hero);
-  root.append(hero, ...(switcher ? [switcher] : []), ...(banner ? [banner] : []), picks);
-  hero.classList.add('kp3-page-hero');
-  picks.classList.add('kp3-fixtures-card');
-
-  const title = picks.querySelector('.card-title');
-  const count = picks.querySelectorAll(':scope > .fixture').length;
-  const head = picks.querySelector('.card-head');
-  if (head && !head.querySelector('.kp3-count')) {
-    const c = document.createElement('span');
-    c.className = 'kp3-count';
-    c.textContent = `${count} fixtures`;
-    head.append(c);
-  }
-
-  let lastDay = '';
-  [...picks.querySelectorAll(':scope > .fixture')].forEach(fixture => {
-    fixture.classList.add('kp3-pick-fixture');
-    upgradeScoreControls(fixture);
-    const rules = fixture.querySelector('.rules')?.textContent?.trim() || '';
-    const day = rules.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/)?.[1] || '';
-    if (day && day !== lastDay) {
-      const label = document.createElement('div');
-      label.className = 'kp3-day';
-      label.textContent = ({ Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday', Sun:'Sunday' })[day] || day;
-      picks.insertBefore(label, fixture);
-      lastDay = day;
-    }
-  });
-
-  const privacy = picks.querySelector('#gwStatus');
-  if (privacy) {
-    privacy.className = 'kp3-privacy';
-    privacy.textContent = 'Picks stay private until each fixture kicks off.';
-  }
-  if (title) title.textContent = 'Your Picks';
-}
-
 async function getSupabase() {
   if (sb) return sb;
   const cfg = await fetch('/api/config', { cache: 'no-store' }).then(r => r.json()).catch(() => null);
   if (!cfg?.supabaseConfigured) return null;
   sb = createClient(cfg.supabaseUrl, cfg.supabasePublishableKey);
   return sb;
-}
-
-async function loadContext(force = false) {
-  if (!force && dataCache && Date.now() - dataCacheAt < 15000) return dataCache;
-  const client = await getSupabase();
-  if (!client) return null;
-  const { data: { session } } = await client.auth.getSession();
-  if (!session) return null;
-  const { data: groups } = await client.from('groups').select('id,name,stake_pence,treasurer_id').order('created_at');
-  const selected = document.querySelector('#groupSwitch')?.value;
-  const group = (groups || []).find(g => g.id === selected) || (groups || [])[0];
-  if (!group) return null;
-  const { data: gwId } = await client.rpc('ensure_current_gameweek', { p_group_id: group.id });
-  const [fx, membersRes, boardRes, historyRes] = await Promise.all([
-    fetch('/api/football/fixtures', { cache: 'no-store' }).then(r => r.json()).catch(() => ({ fixtures: [], round: '' })),
-    client.from('group_members').select('user_id,role').eq('group_id', group.id),
-    client.from('group_leaderboard').select('*').eq('group_id', group.id).eq('gameweek_id', gwId),
-    client.from('group_gameweeks').select('*,gameweeks(round_name)').eq('group_id', group.id).not('settled_at', 'is', null).order('settled_at', { ascending: false }).limit(20)
-  ]);
-  const fixtures = fx.fixtures || [];
-  const started = fixtures.filter(f => Date.now() >= new Date(f.kickoff).getTime()).map(f => f.id).filter(Boolean);
-  let predictions = [];
-  if (started.length) {
-    const { data } = await client.from('predictions').select('fixture_id,user_id,predicted_home,predicted_away,points').eq('group_id', group.id).in('fixture_id', started);
-    predictions = data || [];
-  }
-  const names = new Map((boardRes.data || []).map(r => [r.user_id, r.display_name || 'Player']));
-  names.set(session.user.id, session.user.email?.split('@')[0] || 'You');
-  dataCache = { client, session, group, gameweekId: gwId, fixtures, round: fx.round || '', members: membersRes.data || [], board: boardRes.data || [], history: historyRes.data || [], predictions, names };
-  dataCacheAt = Date.now();
-  return dataCache;
-}
-
-function historyHasData(first) { return !hasText(first, 'No Gameweeks settled yet'); }
-
-function clonePreviewRows(past) {
-  const wrap = document.createElement('div');
-  wrap.className = 'kp3-history-preview';
-  const rows = [...past.querySelectorAll('.payment-row')].slice(0, 3);
-  if (!rows.length) {
-    wrap.innerHTML = '<div class="kp3-empty-small">Your settled Gameweeks will appear here.</div>';
-    return wrap;
-  }
-  rows.forEach(row => wrap.append(row.cloneNode(true)));
-  return wrap;
-}
-
-function enhanceHistory() {
-  screen.className = 'screen kp3-screen kp3-history';
-  if (screen.querySelector(':scope > .kp3-history-root')) return;
-  const first = screen.querySelector(':scope > .card');
-  const switcher = screen.querySelector(':scope > .select-wrap');
-  const settle = [...screen.querySelectorAll(':scope > .card')].find(c => hasText(c.querySelector('.card-title'), 'Ready to Settle'));
-  const past = directCard('Past Gameweeks');
-  const stats = directCard('Your Season Stats');
-  const awards = directCard('Awards');
-  if (!first || !past || !stats) return;
-
-  const hasData = historyHasData(first);
-  const root = document.createElement('div'); root.className = 'kp3-history-root';
-  const overview = document.createElement('section'); overview.className = 'kp3-view kp3-history-overview';
-  const gameweeks = document.createElement('section'); gameweeks.className = 'kp3-view';
-  const records = document.createElement('section'); records.className = 'kp3-view';
-  screen.insertBefore(root, first); root.append(overview, gameweeks, records);
-
-  const mast = document.createElement('section');
-  mast.className = 'kp3-history-mast';
-  mast.innerHTML = '<h1>History</h1><p>Your season, without the noise.</p>';
-  overview.append(mast);
-  if (switcher) overview.append(switcher);
-
-  if (!hasData) {
-    first.className = 'kp3-history-empty';
-    first.innerHTML = `<span>${icon('trophy')}</span><strong>Season ready to start</strong><p>Your first settled Gameweek will appear here.</p>`;
-    overview.append(first);
-  } else {
-    first.classList.add('kp3-latest-winner');
-    overview.append(first);
-  }
-
-  stats.classList.add('kp3-season-stats');
-  overview.append(stats);
-  if (settle) overview.append(settle);
-
-  const recent = document.createElement('section'); recent.className = 'kp3-recent';
-  recent.innerHTML = '<div class="kp3-section-head"><strong>Recent Gameweeks</strong></div>';
-  recent.append(clonePreviewRows(past));
-  overview.append(recent);
-
-  const menu = document.createElement('div'); menu.className = 'kp3-history-links';
-  if (hasData) {
-    menu.append(
-      makeNavRow('All Gameweeks', 'Results and weekly winners', 'trophy', () => { subState.history = 'gameweeks'; showView({ overview, gameweeks, records }, 'gameweeks'); }),
-      makeNavRow('Season records', 'Most wins, exact scores and more', 'target', () => { subState.history = 'records'; showView({ overview, gameweeks, records }, 'records'); })
-    );
-  } else {
-    const locked = makeNavRow('Season records', 'Available after your first settled Gameweek', 'target', () => {});
-    locked.disabled = true; locked.classList.add('kp3-disabled'); menu.append(locked);
-  }
-  overview.append(menu);
-
-  past.classList.add('kp3-gameweeks-list');
-  gameweeks.append(makeBackHeader('Gameweeks', 'Past winners', () => { subState.history = 'overview'; showView({ overview, gameweeks, records }, 'overview'); }), past);
-
-  records.append(makeBackHeader('Season records', 'Bragging rights', () => { subState.history = 'overview'; showView({ overview, gameweeks, records }, 'overview'); }));
-  if (awards) {
-    awards.classList.add('kp3-records-card');
-    const title = awards.querySelector('.card-title'); if (title) title.textContent = 'Records';
-    records.append(awards);
-  }
-  showView({ overview, gameweeks, records }, subState.history);
 }
 
 function memberStatus(source, memberRow) {
@@ -341,15 +136,16 @@ async function setupJoinAnother(container) {
     status.textContent = 'Joining…';
     try {
       const client = await getSupabase();
-      const { error } = await client.rpc('join_group', { p_join_code: code });
+      const { data, error } = await client.rpc('join_group', { p_join_code: code });
       if (error) throw error;
       status.textContent = 'Joined ✓';
-      setTimeout(() => location.reload(), 450);
+      await window.KickPotApp.selectGroup(data.id);
     } catch (err) { status.textContent = err.message || 'Could not join group.'; }
   });
 }
 
 function enhanceGroup() {
+  subState.group='overview';
   screen.className = 'screen kp3-screen kp3-group';
   if (screen.querySelector(':scope > .kp3-group-root')) return;
   const head = screen.querySelector(':scope > .group-head');
@@ -393,7 +189,7 @@ function enhanceGroup() {
 
   const nav = document.createElement('div'); nav.className = 'kp3-group-menu';
   const views = { overview, members, payments: paymentView, rules, settings };
-  const go = key => { subState.group = key; showView(views, key); };
+  const go = key => { if(window.KickPotGroup?.navigate(key))return;subState.group = key; showView(views, key); };
   const m = makeNavRow('Members', 'Manage your group', 'users', () => go('members'));
   m.querySelector('.kp3-nav-meta').textContent = `${memberCount} member${memberCount === 1 ? '' : 's'}`;
   const p = makeNavRow('Payments', 'Payment details & status', 'card', () => go('payments'));
@@ -437,49 +233,4 @@ function enhanceGroup() {
   showView(views, subState.group);
 }
 
-async function maybeWinnerMoment() {
-  if (winnerChecked) return;
-  winnerChecked = true;
-  try {
-    const ctx = await loadContext(false);
-    const latest = ctx?.history?.[0];
-    if (!ctx || !latest || latest.winner_user_id !== ctx.session.user.id) return;
-    const key = `kp3-win:${ctx.group.id}:${latest.gameweek_id}:${ctx.session.user.id}`;
-    if (localStorage.getItem(key)) return;
-    const pot = Number(ctx.group.stake_pence || 0) * Math.max(1, ctx.members.length) / 100;
-    const overlay = document.createElement('div'); overlay.className = 'kp3-winner';
-    overlay.innerHTML = `<button type="button" aria-label="Close">×</button><div class="kp3-winner-cup">${icon('trophy')}</div><small>YOU WON</small><h1>${esc(latest.gameweeks?.round_name || 'Gameweek')}</h1><strong>£${Number.isInteger(pot) ? pot.toFixed(0) : pot.toFixed(2)}</strong><p>Top of the pot.</p><button type="button" class="kp3-winner-action">See result</button>`;
-    const dismiss = go => { localStorage.setItem(key,'1'); overlay.remove(); if (go) document.querySelector('.nav-item[data-tab="history"]')?.click(); };
-    overlay.querySelector(':scope > button').addEventListener('click', () => dismiss(false));
-    overlay.querySelector('.kp3-winner-action').addEventListener('click', () => dismiss(true));
-    document.body.append(overlay);
-  } catch {}
-}
-
-function enhance() {
-  if (busy || !screen?.children.length) return;
-  const tab = document.querySelector('.nav-item.active')?.dataset?.tab;
-  if (!tab) return;
-  if (tab === 'live') return;
-  if (tab !== lastTab) {
-    lastTab = tab;
-    if (tab === 'history') subState.history = 'overview';
-    if (tab === 'group') subState.group = 'overview';
-    dataCache = null; dataCacheAt = 0;
-  }
-  const expected = `.kp3-${tab}-root`;
-  if (screen.querySelector(`:scope > ${expected}`)) return;
-  busy = true;
-  try {
-    if (tab === 'gw') enhanceGW();
-    if (tab === 'history') enhanceHistory();
-    if (tab === 'group') enhanceGroup();
-  } finally { busy = false; }
-  maybeWinnerMoment();
-}
-
-const observer = new MutationObserver(() => queueMicrotask(enhance));
-observer.observe(screen, { childList: true });
-window.addEventListener('load', enhance);
-window.addEventListener('focus', () => { dataCache = null; dataCacheAt = 0; maybeWinnerMoment(); });
-queueMicrotask(enhance);
+export {enhanceGroup};

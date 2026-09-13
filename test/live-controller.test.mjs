@@ -65,7 +65,7 @@ function createHarness({ fixtureFailure = false, leaderboardFailure = false } = 
         : queryResult([{ user_id: 'u1', points: 4 }, { user_id: 'u2', points: 2 }]);
       if (table === 'predictions') {
         predictionQueryCount += 1;
-        return predictionQueryCount % 2 === 1
+        return predictionQueryCount % 2 === 0
           ? queryResult([
               { fixture_id: 2, user_id: 'u1', predicted_home: 2, predicted_away: 1 },
               { fixture_id: 2, user_id: 'u2', predicted_home: 1, predicted_away: 1 }
@@ -101,7 +101,7 @@ function createHarness({ fixtureFailure = false, leaderboardFailure = false } = 
       : { ok: true, json: async () => football },
     setTimeout, clearTimeout,
     setInterval(callback, delay) { intervalCalls.push({ callback, delay }); return intervalCalls.length; },
-    clearInterval() {}, Date, Intl, Object, String, Number, Array, Set, Map, Promise
+    clearInterval() {}, Date, Intl, Object, String, Number, Array, Set, Map, Promise, AbortSignal
   };
   vm.runInNewContext(controllerSource, context, { filename: 'live-reference-table.js' });
 
@@ -148,12 +148,12 @@ test('Live mounts directly on the table and fixtures/picks are controller-owned 
   assert.match(harness.screen.innerHTML, /1–1/);
   assert.equal((harness.screen.innerHTML.match(/Group picks/g) || []).length, 1, 'future fixture picks stay hidden');
 
-  harness.fireScreen('pointerup', 'back');
+  harness.fireScreen('click', 'back');
   assert.match(harness.screen.innerHTML, /data-live-view="table"/);
   harness.fireScreen('click', 'page', 'picks');
   assert.match(harness.screen.innerHTML, /data-live-view="picks"/);
   assert.match(harness.screen.innerHTML, /2-0/);
-  harness.fireScreen('pointerup', 'back');
+  harness.fireScreen('click', 'back');
   assert.match(harness.screen.innerHTML, /data-live-view="table"/);
 });
 
@@ -224,9 +224,9 @@ test('leaving either drill-in clears Live state for every bottom-nav destination
 test('static ownership, navigation, and cache assertions', () => {
   assert.equal((controllerSource.match(/function render\s*\(/g) || []).length, 1);
   assert.doesNotMatch(appSource, /function renderLive|Live Matchday/);
-  assert.match(appSource, /KickPotLive\?\.mount\(\{ reset: resetLive \}\)/);
+  assert.match(appSource, /KickPotLive\?\.mount\(\{ reset: resetLive, context:/);
   assert.match(appSource, /state\.tab !== 'live'\) window\.KickPotLive\?\.unmount/);
   assert.doesNotMatch(indexSource, /(?:src|href)="\/(?:core-boot-guard|live-state-v1|live-status\.js|live-polish-v2|live-hierarchy-v1\.js|reference-live)/);
-  assert.match(serviceWorkerSource, /kickpot-v108-20260912-live-group-picks/);
+  assert.match(serviceWorkerSource, /kickpot-[a-f0-9]{16}/);
   assert.doesNotMatch(serviceWorkerSource, /['"]\/(?:core-boot-guard|live-state-v1|live-status\.js|live-polish-v2|reference-live)/);
 });

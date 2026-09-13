@@ -6,7 +6,7 @@
     page: 'table', mounted: false, groupId: null, gameweekId: null,
     fixtures: [], predictions: {}, groupPredictions: {}, members: [], leaderboard: {}, pickStatus: {},
     myId: null, round: null, loaded: false, loading: false, error: '',
-    refreshTimer: 0, loadPromise: null
+    refreshTimer: 0, loadPromise: null, generation: 0, context: null, picksError: false, openPicks: new Set()
   };
   const FINAL_CODES = new Set(['FT', 'AET', 'PEN', 'PST', 'CANC', 'ABD', 'AWD', 'WO']);
   const VALID_PAGES = new Set(['table', 'fixtures', 'picks']);
@@ -20,7 +20,7 @@
   function formatDayTime(iso) {
     return new Intl.DateTimeFormat('en-GB', {
       weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false
-    }).format(new Date(iso));
+    }).format(Number.isFinite(Date.parse(iso)) ? new Date(iso) : new Date(0));
   }
   function relativeKickoff(iso) {
     const milliseconds = new Date(iso) - Date.now();
@@ -49,116 +49,81 @@
     if (fixture?.status?.elapsed) return `${fixture.status.elapsed}'`;
     return fixtureIsLive(fixture) ? 'LIVE' : code;
   }
-  async function waitForClient(timeout = 15000) {
-    const started = Date.now();
-    while (Date.now() - started < timeout) {
-      if (client()) return client();
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    return null;
-  }
-  async function waitForSession(supabase, timeout = 15000) {
-    const started = Date.now();
-    while (Date.now() - started < timeout) {
-      const result = await supabase.auth.getSession().catch(() => null);
-      if (result?.data?.session) return result.data.session;
-      await new Promise(resolve => setTimeout(resolve, 150));
-    }
-    return null;
-  }
-
   async function load() {
     if (state.loadPromise) return state.loadPromise;
+    const generation = state.generation;
     state.loading = true;
-    state.error = '';
-    state.loadPromise = (async () => {
+    const promise = (async () => {
       try {
-        const fixturesPromise = fetch(`/api/football/fixtures?_=${Date.now()}`, { cache: 'no-store' })
-          .then(async response => {
-            const payload = await response.json();
-            if (!response.ok) throw new Error(payload?.error || 'Fixtures could not be loaded');
-            if (!Array.isArray(payload?.fixtures)) throw new Error('Fixtures response was invalid');
-            return payload;
-          });
-        const supabase = await waitForClient();
-        if (!supabase) throw new Error('KickPot client did not initialise');
-        const session = await waitForSession(supabase);
-        if (!session) throw new Error('KickPot session did not initialise');
-        state.myId = session.user.id;
-        const { data: groups, error: groupsError } = await supabase.from('groups').select('*').order('created_at');
-        if (groupsError) throw groupsError;
-        const storedGroup = (() => {
-          try { return sessionStorage.getItem('kp-active-group-v1') || localStorage.getItem('kp-active-group-v1') || ''; }
-          catch { return ''; }
-        })();
-        state.groupId = (groups || []).find(group => group.id === storedGroup)?.id || groups?.[0]?.id || null;
-        if (!state.groupId) throw new Error('No active group found');
-        const { data: gameweekId, error: gameweekError } = await supabase.rpc('ensure_current_gameweek', { p_group_id: state.groupId });
-        if (gameweekError) throw gameweekError;
-        state.gameweekId = gameweekId;
-
-        const football = await fixturesPromise;
-        state.fixtures = football.fixtures;
-        state.round = football.round || 'Matchday';
-        const revealedFixtureIds = state.fixtures
-          .filter(fixture => Date.now() >= new Date(fixture.kickoff).getTime())
-          .map(fixture => fixture.id)
-          .filter(Boolean);
-        const revealedPredictionsPromise = revealedFixtureIds.length
-          ? supabase.from('predictions').select('fixture_id,user_id,predicted_home,predicted_away').eq('group_id', state.groupId).in('fixture_id', revealedFixtureIds)
-          : Promise.resolve({ data: [], error: null });
-
-        const [membersResult, profilesResult, leaderboardResult, pickStatusResult, predictionsResult, revealedPredictionsResult] = await Promise.all([
-          supabase.from('group_members').select('user_id').eq('group_id', state.groupId),
+        const supabase = client();
+        if (!supabase) throw new Error('Please reload KickPot to reconnect.');
+        const {data:{session}} = await supabase.auth.getSession();
+        if (!session) throw new Error('Please sign in again.');
+        const context = state.context;
+        let groupId = context?.groupId;
+        if (!groupId) {
+          const {data:groups,error} = await supabase.from('groups').select('id').order('created_at');
+          if(error) throw error;
+          let stored='';try{stored=sessionStorage.getItem('kp-active-group-v1')||localStorage.getItem('kp-active-group-v1');}catch{}
+          groupId=groups?.find(g=>g.id===stored)?.id||groups?.[0]?.id;
+        }
+        if (!groupId) throw new Error('Join a group to see Live.');
+        const response=await fetch('/api/football/fixtures',{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        const football=await response.json();
+        if(!response.ok)throw new Error(football.error||'Fixtures could not be loaded');
+        if(!Array.isArray(football.fixtures))throw new Error('Fixtures response was invalid');
+        let gameweekId=football.gameweekId;
+        const ensured=gameweekId
+          ? await supabase.rpc('ensure_group_gameweek',{gid:groupId,gwid:gameweekId})
+          : await supabase.rpc('ensure_current_gameweek',{p_group_id:groupId});
+        if(ensured.error)throw ensured.error;
+        gameweekId ||= ensured.data;
+        if(generation!==state.generation)return;
+        // Publish the fixture feed independently of optional standings/picks reads.
+        state.fixtures=football.fixtures;state.round=football.round||'Matchday';state.loaded=true;
+        state.groupId=groupId;state.gameweekId=gameweekId;state.myId=session.user.id;
+        const ids=football.fixtures.map(f=>f.id);
+        const revealedIds=football.fixtures.filter(f=>Number.isFinite(Date.parse(f.kickoff))&&Date.now()>=Date.parse(f.kickoff)).map(f=>f.id);
+        const results=await Promise.all([
+          supabase.from('group_members').select('user_id').eq('group_id',groupId),
           supabase.from('profiles').select('id,display_name'),
-          supabase.from('group_leaderboard').select('*').eq('group_id', state.groupId).eq('gameweek_id', state.gameweekId),
-          supabase.rpc('group_pick_status', { p_group_id: state.groupId, p_gameweek_id: state.gameweekId }),
-          supabase.from('predictions').select('*').eq('group_id', state.groupId).eq('user_id', state.myId),
-          revealedPredictionsPromise
+          supabase.from('group_leaderboard').select('*').eq('group_id',groupId).eq('gameweek_id',gameweekId),
+          supabase.rpc('group_pick_status',{p_group_id:groupId,p_gameweek_id:gameweekId}),
+          ids.length?supabase.from('predictions').select('fixture_id,predicted_home,predicted_away').eq('group_id',groupId).eq('user_id',session.user.id).in('fixture_id',ids):{data:[]},
+          revealedIds.length?supabase.from('predictions').select('fixture_id,user_id,predicted_home,predicted_away').eq('group_id',groupId).in('fixture_id',revealedIds):{data:[]}
         ]);
-        if (membersResult.error) throw membersResult.error;
-        if (profilesResult.error) throw profilesResult.error;
-        if (leaderboardResult.error) throw leaderboardResult.error;
-        if (predictionsResult.error) throw predictionsResult.error;
-
-        const names = new Map((profilesResult.data || []).map(profile => [profile.id, profile.display_name]));
-        state.members = (membersResult.data || []).map(member => ({ user_id: member.user_id, display_name: names.get(member.user_id) || 'Player' }));
-        state.leaderboard = Object.fromEntries((leaderboardResult.data || []).map(row => [row.user_id, row.points]));
-        state.pickStatus = pickStatusResult.error ? {} : Object.fromEntries((pickStatusResult.data || []).map(row => [row.user_id, Number(row.submitted_count) || 0]));
-        const fixtureIds = new Set(state.fixtures.map(fixture => String(fixture.id)));
-        state.predictions = Object.fromEntries((predictionsResult.data || [])
-          .filter(prediction => fixtureIds.has(String(prediction.fixture_id)))
-          .map(prediction => [String(prediction.fixture_id), prediction]));
-        const revealed = revealedPredictionsResult.error ? [] : (revealedPredictionsResult.data || []);
-        state.groupPredictions = Object.groupBy
-          ? Object.groupBy(revealed, prediction => String(prediction.fixture_id))
-          : revealed.reduce((groups, prediction) => {
-              (groups[String(prediction.fixture_id)] ||= []).push(prediction);
-              return groups;
-            }, {});
-        state.loaded = true;
-      } catch (error) {
-        state.error = error?.message || String(error);
-        if (state.fixtures.length) state.loaded = true;
-        console.error('KickPot Live load', error);
+        if(generation!==state.generation)return;
+        const [members,profiles,board,status,mine,revealed]=results;
+        const names=new Map((profiles.data||[]).map(p=>[p.id,p.display_name]));
+        state.members=(members.data||[]).map(m=>({...m,display_name:names.get(m.user_id)||'Player'}));
+        state.leaderboard=Object.fromEntries((board.data||[]).map(r=>[r.user_id,r]));
+        state.pickStatus=Object.fromEntries((status.data||[]).map(r=>[r.user_id,Number(r.submitted_count)||0]));
+        state.predictions=Object.fromEntries((mine.data||[]).map(p=>[String(p.fixture_id),p]));
+        state.picksError=!!(revealed.error||members.error||profiles.error);
+        const allowed=new Set(revealedIds.map(String));
+        state.groupPredictions=(revealed.error?[]:revealed.data||[]).filter(p=>allowed.has(String(p.fixture_id))).reduce((all,p)=>{(all[String(p.fixture_id)]||=[]).push(p);return all;},{});
+        state.error=results.some(r=>r.error)?'Some Live data could not be refreshed. Try again.':'';
+      } catch(error) {
+        if(generation===state.generation){state.error=error?.message||'Live could not be refreshed.';state.picksError=true;}
       } finally {
-        state.loading = false;
-        state.loadPromise = null;
+        if(generation===state.generation){state.loading=false;state.loadPromise=null;}
       }
     })();
-    return state.loadPromise;
+    state.loadPromise=promise;return promise;
   }
 
   function rankedRoster() {
     const total = state.fixtures.length;
     const roster = state.members.map(member => ({ ...member,
-      points: state.leaderboard[member.user_id] || 0,
+      points: Number(state.leaderboard[member.user_id]?.points) || 0,
+      exact: Number(state.leaderboard[member.user_id]?.exact_scores) || 0,
+      hits: Number(state.leaderboard[member.user_id]?.team_score_hits) || 0,
       submitted: state.pickStatus[member.user_id] || 0,
       total, isMe: member.user_id === state.myId
-    })).sort((a, b) => b.points - a.points || a.display_name.localeCompare(b.display_name));
+    })).sort((a, b) => b.points - a.points || b.exact - a.exact || b.hits - a.hits || a.display_name.localeCompare(b.display_name));
     let rank = 0;
     roster.forEach((member, index) => {
-      if (!index || member.points !== roster[index - 1].points) rank = index + 1;
+      if (!index || ['points','exact','hits'].some(k=>member[k]!==roster[index-1][k])) rank = index + 1;
       member.rank = rank;
     });
     return roster;
@@ -174,7 +139,7 @@
       <div class="kp-live-tpos">${member.rank}</div>
       <div class="kp-live-tplayer"><div class="kp-live-tname">${esc(member.display_name)}${member.isMe ? ' <span class="kp-live-you">(you)</span>' : ''}</div>
       <div class="kp-live-tstatus"><span class="kp-live-dot${status.locked ? ' on' : ''}"></span>${esc(status.text)}</div></div>
-      <div class="kp-live-tpts">${member.points}</div><div class="kp-live-tchevron">›</div>
+      <div class="kp-live-tpts">${member.points}</div>
     </div>`;
   }
   function heroHTML(roster) {
@@ -202,10 +167,11 @@
     return `<div class="kp-live-fxc" data-fixture="${esc(fixture.id)}"><div class="kp-live-fxc-crests"><img src="${esc(fixture.home?.logo || '')}" alt=""><img src="${esc(fixture.away?.logo || '')}" alt=""></div><div class="kp-live-fxc-abbr"><span>${esc(displayName(fixture.home?.name))}</span><span class="v">v</span><span>${esc(displayName(fixture.away?.name))}</span></div><div class="kp-live-fxc-time${fixtureIsLive(fixture) ? ' is-live' : ''}">${esc(score)}</div><div class="kp-live-fxc-lock">${esc(fixtureStatus(fixture))}</div>${groupPicksHTML(fixture)}</div>`;
   }
   function groupPicksHTML(fixture) {
-    if (Date.now() < new Date(fixture.kickoff).getTime()) return '';
+    if (!Number.isFinite(Date.parse(fixture.kickoff)) || Date.now() < Date.parse(fixture.kickoff)) return '';
+    if(state.picksError)return '<div class="kp-live-empty">Group picks unavailable. <button type="button" data-live-retry>Try again</button></div>';
     const picks = state.groupPredictions[String(fixture.id)] || [];
     const byUser = new Map(picks.map(pick => [pick.user_id, pick]));
-    return `<details class="kp-live-group-picks"${fixtureIsLive(fixture) ? ' open' : ''}><summary><span>Group picks</span><span>${picks.length}/${state.members.length} revealed</span></summary><div class="kp-live-group-picks-list">${state.members.map(member => {
+    return `<details class="kp-live-group-picks" data-picks-id="${esc(fixture.id)}"${state.openPicks.has(String(fixture.id)) ? ' open' : ''}><summary><span>Group picks</span><span>${picks.length}/${state.members.length} revealed</span></summary><div class="kp-live-group-picks-list">${state.members.map(member => {
       const pick = byUser.get(member.user_id);
       return `<div${member.user_id === state.myId ? ' class="is-me"' : ''}><span>${esc(member.display_name)}${member.user_id === state.myId ? ' · you' : ''}</span><strong>${pick ? `${pick.predicted_home}–${pick.predicted_away}` : 'No pick'}</strong></div>`;
     }).join('')}</div></details>`;
@@ -243,7 +209,8 @@
     const content = state.page === 'table'
       ? `${heroHTML(roster)}${actionsHTML()}<div class="kp-live-body">${tableHTML(roster)}</div>`
       : `<div class="kp-live-body">${drillHeaderHTML(state.page === 'fixtures' ? 'Live fixtures' : 'My picks')}${state.page === 'fixtures' ? fixturesHTML() : picksHTML()}</div>`;
-    screen.innerHTML = `<div class="kp-live-screen" data-live-view="${state.page}">${content}</div>`;
+    const markup = `<div class="kp-live-screen" data-live-view="${state.page}">${state.error ? '<div class="status warning" role="status">'+esc(state.error)+' <button type="button" data-live-retry>Try again</button></div>':''}${content}</div>`;
+    if(screen.innerHTML!==markup)screen.innerHTML=markup;
   }
   function updateHistory(page, mode) {
     if (!mode) return;
@@ -264,12 +231,18 @@
   function startRefresh() {
     clearInterval(state.refreshTimer);
     state.refreshTimer = setInterval(() => {
-      if (state.mounted && isLiveRoute()) refresh();
+      if (state.mounted && isLiveRoute() && document.visibilityState!=='hidden') refresh();
     }, 30000);
   }
-  function mount({ reset = false } = {}) {
+  function mount({ reset = false, context = null } = {}) {
+    if(!state.mounted || (context && (context.groupId!==state.context?.groupId || context.userId!==state.context?.userId))) {
+      state.generation++;state.loadPromise=null;state.loaded=false;state.fixtures=[];
+      state.members=[];state.predictions={};state.groupPredictions={};state.error='';state.openPicks.clear();
+    }
+    state.context=context;
     state.mounted = true;
     if (reset) state.page = 'table';
+    else if(VALID_PAGES.has(history.state?.kpLivePage))state.page=history.state.kpLivePage;
     updateHistory(state.page, 'replace');
     render();
     startRefresh();
@@ -277,19 +250,17 @@
   }
   function unmount() {
     state.mounted = false;
+    state.generation++; state.loadPromise=null; state.loaded=false; state.fixtures=[];state.members=[];state.predictions={};state.groupPredictions={};
     clearInterval(state.refreshTimer);
     state.refreshTimer = 0;
     document.body.classList.remove('kp-native-live');
     delete document.body.dataset.kpLivePage;
   }
 
-  let pointerBackAt = 0;
-  screen.addEventListener('pointerup', event => {
-    if (!event.target.closest('[data-live-back]') || !state.mounted) return;
-    pointerBackAt = Date.now();
-    event.preventDefault();
-    setPage('table', { historyMode: 'replace' });
-  });
+  screen.addEventListener('toggle',event=>{
+    const id=event.target.dataset?.picksId;if(!id)return;
+    if(event.target.open)state.openPicks.add(id);else state.openPicks.delete(id);
+  },true);
   screen.addEventListener('click', event => {
     if (!state.mounted) return;
     const pageButton = event.target.closest('[data-live-page]');
@@ -300,7 +271,7 @@
     }
     if (event.target.closest('[data-live-back]')) {
       event.preventDefault();
-      if (Date.now() - pointerBackAt >= 500) setPage('table', { historyMode: 'replace' });
+      setPage('table', { historyMode: 'replace' });
       return;
     }
     if (event.target.closest('[data-live-retry]')) {
