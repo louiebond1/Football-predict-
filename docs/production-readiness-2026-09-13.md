@@ -22,7 +22,7 @@ Scope: repository-wide application/server review, deployed Supabase schema/funct
 ## Verification
 
 - `npm ci`, build, syntax/lint, tests, `npm start` and dependency audit succeeded. Start-command health endpoint returned 200.
-- 34 unit/integration tests passed: real embedded PostgreSQL schema/migrations, privacy, forged points, payment authorization, fixture identity, scoring, settlement, quota, mocked edge auth, HTTP behavior and service-worker caching.
+- 35 unit/integration tests passed: real embedded PostgreSQL schema/migrations, privacy, forged points, payment authorization, fixture identity, scoring, settlement, quota, mocked edge auth, HTTP behavior and service-worker caching.
 - 52 distinct browser test/project combinations passed across desktop Chromium, iPhone-sized Chromium/WebKit and 320px mobile. The full 44-case run passed; the added History/sign-out cases plus affected Group flows passed in a 12-case targeted run.
 - Browser coverage includes save/edit, group isolation, kickoff, Live fixtures/reveal, 30-second refresh, back, unpaid restrictions, save failures, Group panels, payment claim and admin confirmation/cancellation, account, auth tabs, sign-out, History empty/pending/settled/player states, theme and overflow.
 - Desktop/mobile screenshots were inspected and used to correct score, hero and payment-row layout defects. Build validated 53 offline assets, including transitive CSS/JS dependencies.
@@ -39,3 +39,6 @@ Chromium verified native offline reopening. Windows WebKit's native offline navi
 Supabase advisors retain intentional warnings for guarded authenticated SECURITY DEFINER RPCs and deny-by-default private auth tables. Leaked-password protection remains disabled as an existing Auth setting; review compatibility with the established PIN flow before enabling it. [Supabase guidance](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection). No payment, eligibility or PIN rule changed.
 
 Both required database migrations and the edge function are deployed. Railway must build the pushed branch with the documented configuration; verify its worker hash and fixture endpoint after deployment. Health alone does not prove provider availability. Historical migration ledgers differ: do not replay the bootstrap or old migrations on production.
+
+Railway deployment verification also found a stale start-command override. It was corrected to npm start with a health check, and a tested compatibility launcher preserves older deployment commands. The production health and worker endpoints return 200, the public fixture endpoint returns 10 Matchday 4 fixtures, and the deployed app.js matches the Git blob. Public desktop Chromium and mobile WebKit login screens loaded without page errors. No migration or deployment action remains required for this release.
+

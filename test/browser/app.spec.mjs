@@ -135,9 +135,11 @@ test('payment claim stays scoped to the displayed week and admin confirmation is
  await page.locator('[data-tab=group]').click();await page.locator('.group-reference-menu [data-open=payments]').click();
  await page.locator('#claimPaid').click();await expect.poll(()=>h.mutations.filter(m=>m.table==='payments').length).toBe(1);
  const payment=h.mutations.find(m=>m.table==='payments');expect(payment.query.group_id).toBe('eq.'+gid);expect(payment.query.gameweek_id).toBe('eq.4');expect(payment.query.user_id).toBe('eq.'+uid);
- await expect(page.locator('.group-reference-hub')).toBeVisible();
- // Refresh preserves this panel's history state; return through its own back action.
- if(await page.locator('.group-reference-back').count())await page.locator('.group-reference-back').click();
+ // The old claim button stays disabled until the awaited refresh completes.
+ // Wait for the replacement panel, rather than inspecting the covered old hub.
+ await expect(page.locator('.group-reference-panel #claimPaid')).toBeEnabled();
+ await page.locator('.group-reference-back').click();
+ await expect(page.locator('.group-reference-panel')).toHaveCount(0);
  await page.locator('[data-open=admin]').click();await page.getByRole('button',{name:/Payment control/}).click();
  await page.locator('.kp-admin-member-action').filter({hasText:'Alex'}).click();
  await expect(page.getByRole('dialog',{name:'Mark as paid?'})).toBeVisible();await page.getByRole('button',{name:'Cancel',exact:true}).click();
