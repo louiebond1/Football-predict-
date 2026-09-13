@@ -33,6 +33,8 @@ Railway runs `npm start` and checks `/api/health`. Set:
 - `SUPABASE_PUBLISHABLE_KEY`: publishable or legacy anon key, safe for the browser under RLS
 - `SUPABASE_SECRET_KEY`: service-role/secret data-API key, server only; never an account management token (`sbp_...`)
 
+Ensure the Railway service override also uses `npm start` and `/api/health`; service settings can override repository defaults. A previously configured `node proxy-server.mjs` command caused a failed deployment during this audit. That filename is retained as a compatibility launcher which builds assets and imports the same canonical server; it no longer implements a separate proxy. Railway redeployment of an existing deployment can reuse its old start command, so deploy a fresh commit after changing overrides.
+
 Production startup rejects missing required configuration and secret keys in the public-key setting. `/api/config` exposes only the public configuration and capability flags. `/api/health` is a process health check, not proof that upstream services are healthy. Check `/api/football/fixtures` for upstream readiness; failures return 503 with a retryable message.
 
 Fixture synchronization runs at startup and once per minute while the server is running; a request also synchronizes the requested round. Identical requests are coalesced, fixture/round responses are cached for 30 seconds, and season metadata for six hours. Upstream calls have deadlines. Database-derived active-round selection holds an unfinished round until all its fixtures are final, matching the existing production rule. A postponed/cancelled fixture therefore requires an upstream final result or an explicit operator decision; the app does not invent results or change settlement rules.
