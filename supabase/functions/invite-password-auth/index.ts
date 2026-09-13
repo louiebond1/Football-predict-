@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient } from 'npm:@supabase/supabase-js@2.116.0'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || ''
@@ -40,13 +40,30 @@ async function sha256(value: string) {
   return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-Deno.serve(async (req: Request) => {
+async function handle(req: Request) {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' })
   if (!SUPABASE_URL || !ANON_KEY || !SERVICE_KEY) return json(503, { error: 'Authentication service is not configured.' })
 
   let body: Record<string, unknown>
-  try { body = await req.json() } catch { return json(400, { error: 'Invalid request.' }) }
+  try {
+    const reader = req.body?.getReader()
+    const chunks: Uint8Array[] = []
+    let size = 0
+    if (!reader) return json(400, { error: 'Invalid request.' })
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      size += value.length
+      if (size > 8192) { await reader.cancel(); return json(413, { error: 'Request too large.' }) }
+      chunks.push(value)
+    }
+    const bytes = new Uint8Array(size)
+    let offset = 0
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length }
+    body = JSON.parse(new TextDecoder().decode(bytes))
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return json(400, { error: 'Invalid request.' })
+  } catch { return json(400, { error: 'Invalid request.' }) }
 
   const action = String(body.action || '')
   const email = cleanEmail(body.email)
@@ -63,28 +80,6 @@ Deno.serve(async (req: Request) => {
   const authClient = createClient(SUPABASE_URL, ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
 
   const identifierHash = await sha256(email)
-  async function checkRateLimit() {
-    const { data } = await admin.from('auth_login_limits').select('*').eq('identifier_hash', identifierHash).maybeSingle()
-    if (!data) return { blocked: false }
-    const now = Date.now()
-    const blockedUntil = data.blocked_until ? new Date(data.blocked_until).getTime() : 0
-    if (blockedUntil > now) return { blocked: true, retrySeconds: Math.max(1, Math.ceil((blockedUntil - now) / 1000)) }
-    const windowStart = new Date(data.window_started_at).getTime()
-    if (!Number.isFinite(windowStart) || now - windowStart > 15 * 60 * 1000) {
-      await admin.from('auth_login_limits').upsert({ identifier_hash: identifierHash, attempts: 0, window_started_at: new Date().toISOString(), blocked_until: null, updated_at: new Date().toISOString() })
-    }
-    return { blocked: false }
-  }
-  async function recordFailure() {
-    const { data } = await admin.from('auth_login_limits').select('*').eq('identifier_hash', identifierHash).maybeSingle()
-    const now = Date.now()
-    const windowStart = data?.window_started_at ? new Date(data.window_started_at).getTime() : 0
-    const withinWindow = Number.isFinite(windowStart) && now - windowStart <= 15 * 60 * 1000
-    const attempts = withinWindow ? Number(data?.attempts || 0) + 1 : 1
-    const blockedUntil = attempts >= 5 ? new Date(now + 15 * 60 * 1000).toISOString() : null
-    await admin.from('auth_login_limits').upsert({ identifier_hash: identifierHash, attempts, window_started_at: withinWindow ? data.window_started_at : new Date(now).toISOString(), blocked_until: blockedUntil, updated_at: new Date(now).toISOString() })
-    return { attempts, blockedUntil }
-  }
   async function clearFailures() {
     await admin.from('auth_login_limits').delete().eq('identifier_hash', identifierHash)
   }
@@ -95,7 +90,8 @@ Deno.serve(async (req: Request) => {
     return data || null
   }
   async function aliasFor(loginEmail: string) {
-    const { data } = await admin.from('login_aliases').select('user_id,auth_email').eq('login_email', loginEmail).maybeSingle()
+    const { data, error } = await admin.from('login_aliases').select('user_id,auth_email').ilike('login_email', loginEmail.replace(/[\\%_]/g, char => '\\' + char)).maybeSingle()
+    if(error)throw error
     return data || null
   }
   async function joinWithSession(accessToken: string, code: string) {
@@ -111,26 +107,25 @@ Deno.serve(async (req: Request) => {
     return { ok: true, group: data || group }
   }
   async function realEmailAccountExists(loginEmail: string) {
-    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-    if (error) return false
-    return (data.users || []).some(user => String(user.email || '').toLowerCase() === loginEmail)
+    for(let page=1;;page++){
+      const {data,error}=await admin.auth.admin.listUsers({page,perPage:1000})
+      if(error)throw error
+      if(data.users.some(user=>String(user.email||'').toLowerCase()===loginEmail))return true
+      if(data.users.length<1000)return false
+    }
   }
 
+  if (!['login','register'].includes(action)) return json(400,{error:'Unknown authentication action.'})
+  const {data:allowed,error:limitError}=await admin.rpc('consume_login_attempt',{p_identifier_hash:identifierHash})
+  if(limitError)return json(503,{error:'Sign-in is temporarily unavailable. Please try again.'})
+  if(!allowed)return json(429,{error:'Too many attempts. Please wait 15 minutes.',code:'pin_locked'})
   if (action === 'login') {
-    const limit = await checkRateLimit()
-    if (limit.blocked) return json(429, { error: `Too many incorrect attempts. Try again in about ${Math.ceil(Number(limit.retrySeconds || 60) / 60)} minute(s).`, code: 'pin_locked' })
 
     const alias = await aliasFor(email)
     const authEmail = alias?.auth_email || email
     const { data, error } = await authClient.auth.signInWithPassword({ email: authEmail, password: String(password) })
     if (error || !data.session) {
-      const failure = await recordFailure()
-      if (failure.blockedUntil) return json(429, { error: 'Too many incorrect attempts. PIN login is locked for 15 minutes.', code: 'pin_locked' })
-      const existing = !alias && await realEmailAccountExists(email)
-      return json(401, {
-        error: existing ? 'This account does not have a PIN yet. If you are signed in on another device, open Account and choose one there.' : safeMessage(error),
-        code: existing ? 'pin_not_set' : 'invalid_login',
-      })
+      return json(401,{error:'Email or PIN is incorrect.',code:'invalid_login'})
     }
     await clearFailures()
     const joined = inviteCode ? await joinWithSession(data.session.access_token, inviteCode) : { ok: true, group: null }
@@ -170,4 +165,5 @@ Deno.serve(async (req: Request) => {
   }
 
   return json(400, { error: 'Unknown authentication action.' })
-})
+}
+Deno.serve(async(req:Request)=>{try{return await handle(req)}catch{return json(503,{error:'Authentication is temporarily unavailable. Please try again.'})}})
