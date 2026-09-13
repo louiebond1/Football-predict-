@@ -579,10 +579,44 @@ async function render({ resetLive = false } = {}) {
     ({ gw: renderGW, history: renderHistory, group: renderGroup }[state.tab])();
     if(state.tab==='group'&&state.groups.length){
       enhanceGroup();
-      await enhanceAdmin();if(run!==renderRun)return;
-      await refreshGroupFeatures(true);if(run!==renderRun)return;
-      window.KickPotGroup?.render();
-      if(history.state?.kpGroupPage)window.KickPotGroup?.restore(history.state.kpGroupPage);
+      // renderGroup()+enhanceGroup() above paint the older kp3-group-overview
+      // card list (pot hero, flat Members/Payments/Rules rows) straight into
+      // #screen, but window.KickPotGroup.render() - the actual, current Group
+      // design - can't run yet: it reads treasurer/fun-mode/member data off
+      // that same DOM, and enhanceAdmin()/refreshGroupFeatures() below still
+      // need their own Supabase round-trips (frequently 1s+) to finish
+      // filling it in first. Without covering this gap, that older screen
+      // sits fully visible - Admin row popping in partway through - for that
+      // whole stretch before hard-cutting to the real design once render()
+      // finally runs: precisely the "renders once, then turns into a
+      // different screen a second later" bug, just moved one layer down.
+      // Hiding #screen's children behind a plain loading state for exactly
+      // this gap (removed the moment render() is called, whatever happens
+      // next) means the user only ever sees the loading state then the one
+      // real screen - never the intermediate design.
+      screen.classList.add('kp-group-loading');
+      if(!screen.querySelector(':scope>.kp-group-loading-cover')){
+        const cover=document.createElement('div');
+        cover.className='kp-group-loading-cover';
+        cover.innerHTML='<div class="eyebrow">KICKPOT</div><h1>Loading your group…</h1><p>Getting your group ready.</p>';
+        screen.append(cover);
+      }
+      // Guarded by run===renderRun in the finally below, not unconditionally:
+      // showError() (see this function's caller) replaces #screen's content
+      // on a thrown error but never resets its className, so an unconditional
+      // removal here would be fine for THIS render - but if a later render()
+      // has already started (run!==renderRun) and re-added this same class
+      // for its own loading gap, removing it here would reveal that newer
+      // call's still-incomplete DOM early. Only the render that is still
+      // current gets to clear its own loading state.
+      try{
+        await enhanceAdmin();if(run!==renderRun)return;
+        await refreshGroupFeatures(true);if(run!==renderRun)return;
+        window.KickPotGroup?.render();
+        if(history.state?.kpGroupPage)window.KickPotGroup?.restore(history.state.kpGroupPage);
+      } finally {
+        if(run===renderRun)screen.classList.remove('kp-group-loading');
+      }
     }
     if(state.tab==='history')await window.KickPotHistory?.mount(state.activeGroupId);
   }

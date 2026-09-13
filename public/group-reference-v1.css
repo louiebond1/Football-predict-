@@ -58,3 +58,13 @@ body:has(.nav-item[data-tab="group"].active) .bottom-nav .nav-item{pointer-event
 body:has(.nav-item[data-tab="group"].active) .bottom-nav .nav-item.active{color:var(--kp-green)!important}
 
 @media(max-width:390px){#screen.group-reference-screen{padding-left:14px!important;padding-right:14px!important}.group-reference-hero{height:204px!important}.group-reference-hero-content{padding:19px!important}.group-reference-hero h1{font-size:32px!important}.group-reference-avatar{width:39px!important;height:39px!important;min-width:39px!important}.group-reference-menu>button{min-height:69px!important}}
+
+/* Covers the older kp3-group-overview paint (pot hero + flat menu rows) while
+   the real Group design's data (treasurer/fun-mode/members) is still being
+   fetched, so that screen is never actually visible to the user - see the
+   comment in app.js's render() where this class is toggled. */
+#screen.kp-group-loading>*:not(.kp-group-loading-cover){display:none!important}
+.kp-group-loading-cover{padding:70px 26px;text-align:center}
+.kp-group-loading-cover .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--kp-muted)}
+.kp-group-loading-cover h1{margin:10px 0 6px;font:700 22px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;letter-spacing:-.02em;color:var(--kp-ink)}
+.kp-group-loading-cover p{margin:0;font-size:13px;color:var(--kp-muted)}
