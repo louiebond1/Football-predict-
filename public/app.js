@@ -403,8 +403,8 @@ function renderHistory() {
   ${groupSwitcher()}
   ${isTreasurer()?state.readyWeeks.map(w=>`<section class="card"><div class="card-title">Ready to settle · ${esc(w.gameweeks.round_name)}</div><button class="primary" data-settle-week="${w.gameweek_id}">Settle Matchday & Crown Winner</button></section>`).join(''):''}
   <section class="card"><div class="card-title">${ic('clock')} Past Gameweeks</div>${state.history.length ? state.history.map(h => `<div class="payment-row"><span>${esc(h.gameweeks?.round_name || 'Gameweek')}</span><b>${esc(profileName(h.winner_user_id))}</b></div>`).join('') : '<div class="empty">Settle a Gameweek to see it here.</div>'}</section>
-  <section class="card" id="seasonStatsCard"><div class="card-title">${ic('climb')} Your Season Stats</div><div class="empty">Loading…</div></section>
-  <section class="card" id="awardsCard"><div class="card-title">${ic('award')} Awards</div><div class="empty">Loading…</div></section>`;
+  <section class="card" id="seasonStatsCard"><div class="card-title">${ic('climb')} Your Season Stats</div><div class="empty kp-skel-rows">Loading…</div></section>
+  <section class="card" id="awardsCard"><div class="card-title">${ic('award')} Awards</div><div class="empty kp-skel-rows">Loading…</div></section>`;
   bindGroupSwitcher();
   screen.querySelectorAll('[data-settle-week]').forEach(button=>button.addEventListener('click',async()=>{
     button.disabled=true;
@@ -459,7 +459,7 @@ function renderGroup() {
     return `<div class="payment-row"><div class="row-left">${avatar(profileName(m.user_id), 'sm')}<strong>${esc(profileName(m.user_id))}${m.user_id === myId() ? ' (you)' : ''}</strong></div><span><span class="${cls}">${pay?.confirmed_paid_at ? ic('check', 15) : ''} ${status}</span>${canConfirm ? `<button class="secondary confirm-btn chip-btn" data-user="${m.user_id}">Confirm</button>` : ''}</span></div>`;
   }).join('')}</section>
   <section class="card"><div class="card-title">${ic('clock')} This Week</div><div class="rivalry-row"><span class="row-left">${ic('trophy', 15)} Winner takes all</span></div><div class="rivalry-row"><span class="row-left">${ic('lock', 15)} Predictions lock per fixture kickoff</span></div><div class="rivalry-row"><span class="row-left">${ic('target', 15)} Exact score +3 · Correct result +1</span></div></section>
-  <section class="card" id="rivalryCard"><div class="card-title">${ic('award')} Group Rivalry</div><div class="empty">Loading…</div></section>
+  <section class="card" id="rivalryCard"><div class="card-title">${ic('award')} Group Rivalry</div><div class="empty kp-skel-rows">Loading…</div></section>
   <section class="card"><div class="card-title">${ic('landmark')} Pay the Treasurer</div><p class="muted">Money is sent separately. KickPot only records whether the Treasurer has confirmed payment.</p>
   <div class="bankbox"><div class="bankline"><span>Account name</span><b>${esc(g.bank_account_name || 'Not set')}</b></div><div class="bankline"><span>Sort code</span><b>${esc(g.bank_sort_code || '••-••-••')}</b></div><div class="bankline"><span>Account no.</span><b>${esc(g.bank_account_number || '••••••••')}</b></div><div class="bankline"><span>Reference</span><b>${esc(state.round || 'GW')}-${esc((state.session.user.email || '').split('@')[0].toUpperCase())}</b></div></div>
   ${p?.claimed_paid_at ? `<div class="status warning" style="margin-top:12px">${ic('clock', 15)} Waiting on Treasurer confirmation.</div>` : `<button class="secondary" id="claimPaid" style="margin-top:12px">I've Paid</button>`}

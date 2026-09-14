@@ -62,20 +62,65 @@ body{background:#ede9e0!important}
 #app>.topbar #kpThemeToggle{border:0!important;font-size:17px!important}
 html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"] #app>.topbar #userChip{color:#f4f1ea!important}
 
-/* One loading moment. Each tab had its own: Matchday/Live a small centred
-   line, Group a three-line eyebrow/heading/subtext block, History a 12px
-   inline string plus two "Loading…" holes inside already-drawn cards - so
-   moving between tabs during a load looked like moving between apps. Same
-   type, colour and rhythm everywhere now; Group's markup was reduced to a
-   single line in app.js to match. */
-.kp-native-loading,.kp-group-loading-cover,.kp-hi-loading,
+/* Loading states are skeletons of the screen that is coming, not a line of
+   text in an empty page.
+
+   A previous pass in this session unified these as a single 13px centred
+   line. On a phone that renders as one nearly-invisible grey string near the
+   top of a ~700px empty cream area, held for 0.6-0.7s on Live and Group -
+   it reads as a broken screen, not a loading one, and it was worse than what
+   it replaced. Blocking out the hero and rows instead means the shape on
+   screen matches the shape that arrives, so content swaps in place rather
+   than materialising out of nothing.
+
+   The message text stays in the DOM for screen readers; it is only hidden
+   visually. The shared pulse is disabled by the prefers-reduced-motion rule
+   further up this file. */
+.kp-native-loading,.kp-group-loading-cover,.kp-hi-loading{
+  position:relative!important;background:transparent!important;
+  color:transparent!important;font-size:0!important;line-height:0!important;
+  animation:kp-skel 1.5s ease-in-out infinite!important;
+}
+.kp-native-loading,.kp-group-loading-cover{display:flex!important;flex-direction:column!important;padding:6px 0 10px!important;min-height:calc(100dvh - 150px)!important}
+.kp-native-loading::before,.kp-group-loading-cover::before{
+  content:''!important;display:block!important;flex:0 0 auto!important;height:196px!important;
+  border-radius:18px!important;background:rgba(21,24,22,.06)!important;
+}
+.kp-native-loading::after,.kp-group-loading-cover::after{
+  content:''!important;display:block!important;margin-top:20px!important;
+  flex:1 1 auto!important;min-height:180px!important;
+  background:repeating-linear-gradient(to bottom,rgba(21,24,22,.06) 0 44px,transparent 44px 74px)!important;
+}
+/* History's list sits inside an existing card, so rows only - no hero. */
+.kp-hi-loading{padding:4px 0 0!important;min-height:232px!important}
+.kp-hi-loading::after{
+  content:''!important;display:block!important;height:228px!important;
+  background:repeating-linear-gradient(to bottom,rgba(21,24,22,.06) 0 40px,transparent 40px 64px)!important;
+}
+@keyframes kp-skel{0%,100%{opacity:1}50%{opacity:.55}}
+
+/* Season Stats / Awards / Rivalry render a placeholder while their query
+   resolves. Only the placeholder carries kp-skel-rows (set in app.js), so the
+   same .empty class still renders real copy - "Not enough settled Gameweeks
+   yet." - as readable text rather than being blanked into a skeleton. */
+.kp-skel-rows{
+  padding:4px 0 2px!important;min-height:96px!important;
+  color:transparent!important;font-size:0!important;line-height:0!important;
+  background:repeating-linear-gradient(to bottom,rgba(21,24,22,.06) 0 30px,transparent 30px 48px)!important;
+  animation:kp-skel 1.5s ease-in-out infinite!important;
+}
 #seasonStatsCard .empty,#awardsCard .empty,#rivalryCard .empty{
-  padding:72px 24px!important;text-align:center!important;
+  padding:28px 12px!important;text-align:center!important;
   font:600 13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
   color:#8a877f!important;background:transparent!important;
 }
-.kp-native-loading,.kp-group-loading-cover{min-height:240px!important}
-#seasonStatsCard .empty,#awardsCard .empty,#rivalryCard .empty{padding:28px 12px!important}
+/* The gradient is repeated here on purpose: the `background:transparent` in
+   the rule above is an ID-specificity shorthand, so it resets background-image
+   to none and a plain .kp-skel-rows gradient never lands inside these cards. */
+#seasonStatsCard .empty.kp-skel-rows,#awardsCard .empty.kp-skel-rows,#rivalryCard .empty.kp-skel-rows{
+  padding:4px 0 2px!important;color:transparent!important;font-size:0!important;line-height:0!important;
+  background:repeating-linear-gradient(to bottom,rgba(21,24,22,.06) 0 30px,transparent 30px 48px)!important;
+}
 
 /* Group switcher (Matchday/History, when you're in more than one group). It
    was rendering as a bare bold label with a stray arrow glyph floating at the
