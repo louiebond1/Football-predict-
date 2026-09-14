@@ -598,7 +598,7 @@ async function render({ resetLive = false } = {}) {
       if(!screen.querySelector(':scope>.kp-group-loading-cover')){
         const cover=document.createElement('div');
         cover.className='kp-group-loading-cover';
-        cover.innerHTML='<div class="eyebrow">KICKPOT</div><h1>Loading your group…</h1><p>Getting your group ready.</p>';
+        cover.textContent='Loading your group…';
         screen.append(cover);
       }
       // Guarded by run===renderRun in the finally below, not unconditionally:

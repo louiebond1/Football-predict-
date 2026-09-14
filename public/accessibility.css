@@ -51,6 +51,21 @@ body{background:#ede9e0!important}
 #app>.topbar #kpThemeToggle{border:0!important;font-size:17px!important}
 html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"] #app>.topbar #userChip{color:#f4f1ea!important}
 
+/* One loading moment. Each tab had its own: Matchday/Live a small centred
+   line, Group a three-line eyebrow/heading/subtext block, History a 12px
+   inline string plus two "Loading…" holes inside already-drawn cards - so
+   moving between tabs during a load looked like moving between apps. Same
+   type, colour and rhythm everywhere now; Group's markup was reduced to a
+   single line in app.js to match. */
+.kp-native-loading,.kp-group-loading-cover,.kp-hi-loading,
+#seasonStatsCard .empty,#awardsCard .empty,#rivalryCard .empty{
+  padding:72px 24px!important;text-align:center!important;
+  font:600 13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  color:#8a877f!important;background:transparent!important;
+}
+.kp-native-loading,.kp-group-loading-cover{min-height:240px!important}
+#seasonStatsCard .empty,#awardsCard .empty,#rivalryCard .empty{padding:28px 12px!important}
+
 /* Give every score step its own touch target, without squeezing team names. */
 body.kp-native-matchday .kp-native-match{grid-template-columns:1fr 1fr!important;gap:8px!important;padding:14px 0!important}
 body.kp-native-matchday .kp-native-side{grid-column:1;grid-row:1}

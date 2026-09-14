@@ -69,7 +69,6 @@ body:has(.nav-item[data-tab="group"].active) .bottom-nav .nav-item.active{color:
    fetched, so that screen is never actually visible to the user - see the
    comment in app.js's render() where this class is toggled. */
 #screen.kp-group-loading>*:not(.kp-group-loading-cover){display:none!important}
-.kp-group-loading-cover{padding:70px 26px;text-align:center}
-.kp-group-loading-cover .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--kp-muted)}
-.kp-group-loading-cover h1{margin:10px 0 6px;font:700 22px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;letter-spacing:-.02em;color:var(--kp-ink)}
-.kp-group-loading-cover p{margin:0;font-size:13px;color:var(--kp-muted)}
+/* Typography now comes from the shared loading rule in accessibility.css so
+   every tab's loading moment looks the same; this element only needs to exist
+   for the kp-group-loading hide rule above. */
