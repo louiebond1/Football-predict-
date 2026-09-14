@@ -10,7 +10,7 @@ body:has(.nav-item[data-tab="group"].active) .topbar .brand-mark{display:grid!im
 body:has(.nav-item[data-tab="group"].active) .topbar .brand>span{font:750 21px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.035em!important;text-transform:none!important}
 body:has(.nav-item[data-tab="group"].active) #userChip{width:36px!important;height:36px!important;min-width:36px!important;border-color:rgba(21,24,22,.14)!important;font-size:12px!important}
 
-#screen.group-reference-screen{padding:8px 18px 104px!important;background:var(--kp-paper)!important;color:var(--kp-ink)!important;overflow-x:hidden!important}
+#screen.group-reference-screen{background:var(--kp-paper)!important;color:var(--kp-ink)!important;overflow-x:hidden!important}
 .group-reference-hub{display:block!important;width:100%!important;max-width:none!important;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif!important}
 /* Never show the legacy group selector as a second title row. */
 .group-reference-hub>.select-wrap{display:none!important}
@@ -62,7 +62,7 @@ body:has(.nav-item[data-tab="group"].active) .bottom-nav{display:grid!important;
 body:has(.nav-item[data-tab="group"].active) .bottom-nav .nav-item{pointer-events:auto!important;min-width:0!important;color:#989b98!important}
 body:has(.nav-item[data-tab="group"].active) .bottom-nav .nav-item.active{color:var(--kp-green)!important}
 
-@media(max-width:390px){#screen.group-reference-screen{padding-left:14px!important;padding-right:14px!important}.group-reference-hero{height:204px!important}.group-reference-hero-content{padding:19px!important}.group-reference-hero h1{font-size:32px!important}.group-reference-avatar{width:39px!important;height:39px!important;min-width:39px!important}.group-reference-menu>button{min-height:69px!important}}
+@media(max-width:390px){.group-reference-hero{height:204px!important}.group-reference-hero-content{padding:19px!important}.group-reference-hero h1{font-size:32px!important}.group-reference-avatar{width:39px!important;height:39px!important;min-width:39px!important}.group-reference-menu>button{min-height:69px!important}}
 
 /* Covers the older kp3-group-overview paint (pot hero + flat menu rows) while
    the real Group design's data (treasurer/fun-mode/members) is still being

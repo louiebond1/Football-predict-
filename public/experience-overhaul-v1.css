@@ -4,7 +4,7 @@
   --kp-surface:#fbf8f0;--kp-surface-2:#eee8db;--kp-green:#123b2a;--kp-gold:#aa8739;
   --kp-r1:10px;--kp-r2:16px;--kp-r3:22px;--kp-shadow:0 14px 40px rgba(27,31,25,.08);
   --kp-ease:cubic-bezier(.22,.72,.18,1);--kp-fast:180ms;--kp-med:300ms;
-  --kp-page:680px;--kp-gutter:14px;
+  --kp-page:680px;
 }
 html{background:var(--kp-bg);scroll-behavior:auto}
 body{background:var(--kp-bg);color:var(--kp-ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}

@@ -41,8 +41,7 @@ body:has(#screen.group-reference-screen) .bottom-nav .nav-item.active{color:#267
 .kp-live-fxc-time{font-size:10.5px!important}
 .kp-live-fxc-lock{font-size:9px!important;color:#989995!important}
 
-/* Group: a little more air before the fixed nav. */
-#screen.group-reference-screen{padding-bottom:148px!important}
+/* Nav clearance is one value in accessibility.css ("ONE GRID"). */
 .group-reference-menu{margin-bottom:34px!important}
 .group-reference-menu-copy small,
 .group-reference-mode p{letter-spacing:0!important}

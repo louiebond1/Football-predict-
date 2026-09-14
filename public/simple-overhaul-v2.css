@@ -65,7 +65,6 @@ body[data-kp-live-page="picks"] .kp-live-picks{padding:4px 18px 100px!important}
 body.kp-native-matchday .bottom-nav,body.kp-native-live .bottom-nav{display:grid!important;visibility:visible!important;pointer-events:auto!important;z-index:1000!important;height:76px!important;background:rgba(247,244,236,.97)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}
 body.kp-native-matchday .bottom-nav .nav-item,body.kp-native-live .bottom-nav .nav-item{pointer-events:auto!important;min-width:0!important;color:#989b98!important}
 body.kp-native-matchday .bottom-nav .nav-item.active,body.kp-native-live .bottom-nav .nav-item.active{color:#16794d!important}
-body.kp-native-matchday #app,body.kp-native-live #app{padding-bottom:78px!important}
 
 /* Remove route-hold/skeleton artefacts if an older cached script briefly creates one. */
 .kp-native-loading{min-height:260px!important;padding:80px 24px!important;background:var(--kp-paper)!important}

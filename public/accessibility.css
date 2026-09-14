@@ -62,7 +62,53 @@ input,select,textarea{font-size:16px;max-width:100%}
       header into place afterwards.
 
    Nothing here is screen-scoped. There is no tab-specific header any more. */
-:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px)}
+:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px}
+
+/* ---------------------------------------------------------------------------
+   ONE GRID.
+
+   Measured with each tab's real markup under the real cascade. Content's left
+   edge was #app.app-shell's padding plus whatever margin the block carried:
+
+                  #app pad   block margin   content edge
+     Matchday         0           18             18
+     Live            18           18             36
+     History         18            0             18
+     Group           18           14             32
+     header           -            -             24   (set in ONE HEADER)
+
+   Four values on four tabs, with the header on a fifth. Because the two terms
+   differ per tab, no single #app padding can square them - Live and Group have
+   to be met halfway whatever it is set to.
+
+   So #app stops being a gutter at all: it is now a full-bleed canvas, and the
+   gutter belongs to the blocks, named once here. 18px because it is where
+   Matchday and History content already sits, it is .app-shell's own historical
+   value, and it moves the fewest pixels - Live and Group come in to meet it
+   rather than three tabs moving out to 24. */
+#app,body.kp-studio #app{padding-left:0!important;padding-right:0!important}
+#screen>.card{margin-left:var(--kp-gutter)!important;margin-right:var(--kp-gutter)!important}
+/* Matchday's own blocks already used 18; named now so they track the variable. */
+.kp-native-hero{margin-left:var(--kp-gutter)!important;margin-right:var(--kp-gutter)!important}
+.kp-native-list{padding-left:var(--kp-gutter)!important;padding-right:var(--kp-gutter)!important}
+/* Live's blocks carried 14/16/18/20px across four stylesheets and two
+   breakpoints - the widest spread in the app. One value, every width. */
+.kp-live-hero,.kp-live-board,.kp-live-tip{margin-left:var(--kp-gutter)!important;margin-right:var(--kp-gutter)!important}
+.kp-live-fx-scroll{padding-left:var(--kp-gutter)!important;padding-right:var(--kp-gutter)!important}
+/* Content starts at the same distance below the header on every tab. It was
+   68/68/90/76px from the top - the header's bottom edge on two tabs, 22px
+   below it on one and 8px on another. */
+#screen{padding-top:8px!important;padding-bottom:calc(var(--kp-nav-h) + 20px + env(safe-area-inset-bottom))!important}
+/* One place reserves room for the fixed nav. It was #screen's padding plus
+   #app's, and those totalled 86/86/90/230px - Group scrolled to 154px of
+   dead space under its last row, the other three to none to speak of. */
+#app{padding-bottom:0!important}
+/* Inside the blocks, two leftovers: hero copy sat 22px in from the photo edge
+   on Matchday/Live but 18px on Group, and Group's mode/avatars rows carried a
+   stray 2px that put their text 20px from the screen edge under a 18px block.
+   One inner inset, the same value as the outer one. */
+.kp-native-hero,.kp-live-hero,.group-reference-hero-content{padding-left:var(--kp-gutter)!important;padding-right:var(--kp-gutter)!important}
+.group-reference-members-strip,.group-reference-mode{padding-left:0!important;padding-right:0!important}
 #app>.topbar{
   position:relative!important;
   /* Span the shell's border box, whatever horizontal padding #app carries.
@@ -72,7 +118,7 @@ input,select,textarea{font-size:16px;max-width:100%}
   width:min(100vw,430px)!important;
   margin-left:calc((100% - min(100vw,430px)) / 2)!important;margin-right:0!important;
   height:var(--kp-topbar-h)!important;min-height:var(--kp-topbar-h)!important;
-  padding:0 24px!important;
+  padding:0 var(--kp-gutter)!important;
   display:flex!important;align-items:center!important;justify-content:space-between!important;
   background:#f7f4ec!important;border:0!important;box-shadow:none!important;
 }
@@ -126,7 +172,7 @@ body{background:#ede9e0!important}
    Safari trigger for the bar detaching and painting at a stale offset during
    momentum scrolling - it floats up into the middle of the content and snaps
    back when the scroll settles. Opaque background, no blur layer, no artifact. */
-#app .bottom-nav{position:fixed!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:0!important;width:min(100vw,430px)!important;height:76px!important;padding:0 0 max(9px,env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(4,1fr)!important;background:#f7f4ec!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;border-top:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;box-shadow:none!important;z-index:100!important}
+#app .bottom-nav{position:fixed!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:0!important;width:min(100vw,430px)!important;height:var(--kp-nav-h)!important;padding:0 0 max(9px,env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(4,1fr)!important;background:#f7f4ec!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;border-top:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;box-shadow:none!important;z-index:100!important}
 /* Topbar controls: the toggle glyph was rgb(216,213,226) on cream - about
    1.3:1 contrast, effectively invisible on every tab - and History dropped
    the account chip entirely while styling it white-on-cream. */
@@ -213,10 +259,10 @@ html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"
    than to #app's padding - which put it hard against the screen edge on
    Matchday (0px) and at 18px on History, under a header at 24px on both.
    Same border-box escape as the header above, then the same 24px. */
-#screen .select-wrap{position:relative!important;box-sizing:border-box!important;width:min(100vw,430px)!important;margin:0 0 4px calc((100% - min(100vw,430px)) / 2)!important;padding:0 24px!important;border:0!important;border-bottom:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+#screen .select-wrap{position:relative!important;box-sizing:border-box!important;width:min(100vw,430px)!important;margin:0 0 4px calc((100% - min(100vw,430px)) / 2)!important;padding:0 var(--kp-gutter)!important;border:0!important;border-bottom:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 #screen .select-wrap select{width:100%!important;min-height:52px!important;padding:0 28px 0 0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#151816!important;font:700 15px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.01em!important;appearance:none!important;-webkit-appearance:none!important;box-shadow:none!important}
 #screen .select-wrap>svg{display:none!important}
-#screen .select-wrap::after{content:''!important;position:absolute!important;right:24px!important;top:50%!important;width:8px!important;height:8px!important;margin-top:-7px!important;border-right:2px solid #9a9c97!important;border-bottom:2px solid #9a9c97!important;transform:rotate(45deg)!important;pointer-events:none!important}
+#screen .select-wrap::after{content:''!important;position:absolute!important;right:var(--kp-gutter)!important;top:50%!important;width:8px!important;height:8px!important;margin-top:-7px!important;border-right:2px solid #9a9c97!important;border-bottom:2px solid #9a9c97!important;transform:rotate(45deg)!important;pointer-events:none!important}
 
 /* History's winner headline was the one place in the app using a condensed
    display face ("Avenir Next Condensed" via --kp-font-display) at 40px/950
