@@ -1,10 +1,8 @@
 /* iPhone production hotfix — 2026-09-05 */
 body.kp-studio .app-shell{
-  padding-top:calc(env(safe-area-inset-top, 0px) + 12px)!important;
-}
-body.kp-studio .topbar{
-  min-height:58px!important;
-  height:58px!important;
+  /* Same value, now named once in accessibility.css, because the fixed Admin
+     panel has to start exactly where the header ends and was drifting. */
+  padding-top:var(--kp-shell-top)!important;
 }
 
 /* Never reserve a giant empty photo area. The JS only enables the photo after it has loaded. */

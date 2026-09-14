@@ -1,60 +1,9 @@
 /* Final UI audit fixes — 10 Sep 2026 */
 
-/* One header rhythm across Matchday, Live and Group. */
-body.kp-native-matchday .topbar,
-body.kp-native-live .topbar,
-body:has(#screen.group-reference-screen) .topbar{
-  position:relative!important;inset:auto!important;height:auto!important;
-  /* 24px matches the shared shell in accessibility.css; this used to be 28px
-     here, which shifted the Group header 4px inward against every other tab. */
-  padding:44px 24px 13px!important;background:var(--kp-paper,#f7f3ea)!important;
-  border:0!important;box-shadow:none!important;display:flex!important;
-  align-items:center!important;justify-content:space-between!important;
-}
-/* The 44px above is a fixed guess at clearing the status bar. iOS reports a
-   taller safe-area-inset-top while screen recording is active (to make room
-   for the recording indicator pill), and this fixed value doesn't grow with
-   it - so the KickPot wordmark and account chip end up rendered partly
-   behind the indicator during a recording, even though the same layout is
-   fine otherwise. #app > .topbar (an ID selector) outranks every other
-   topbar rule regardless of which body/screen class is or isn't present, so
-   this floor always applies: never less than 44px, but grows to clear a
-   taller real safe area whenever the OS reports one. */
-#app > .topbar{ padding-top:max(44px, calc(env(safe-area-inset-top, 0px) + 12px))!important; }
-body.kp-native-matchday .topbar .brand,
-body.kp-native-live .topbar .brand,
-body[data-kp-screen="history"] .topbar .brand,
-body:has(#screen.group-reference-screen) .topbar .brand{display:flex!important;align-items:center!important;gap:9px!important;color:#171717!important}
-/* Wordmark/crest: one definition shared by all four tabs, not four. This
-   exact block used to exist only for Group, with values (16px, uppercase,
-   0.31em letter-spacing) that didn't match what Matchday/Live actually use
-   (simple-overhaul-v2.css: 21px/750-weight/-0.035em/normal-case) - so Group
-   alone rendered as widely-tracked "K I C K P O T" while Matchday/Live read
-   as a normal tight "KICKPOT". History had no equivalent rule at all and
-   fell back to inheriting its wordmark's size/weight from the unrelated
-   .brand div-level rule in experience-overhaul-v1.css, rendering small and
-   condensed. Same for the crest: Group had its own display:grid override,
-   Matchday/Live/History had none, leaving them dependent on whatever else
-   happened to re-enable it over experience-overhaul-v1.css's unconditional
-   .brand-mark{display:none}. All four now share the exact same values. */
-body.kp-native-matchday .topbar .brand-mark,
-body.kp-native-live .topbar .brand-mark,
-body[data-kp-screen="history"] .topbar .brand-mark,
-body:has(#screen.group-reference-screen) .topbar .brand-mark{display:grid!important;place-items:center!important;width:20px!important;height:18px!important;color:#a58a48!important;background:none!important;border:0!important}
-body.kp-native-matchday .topbar .brand-mark svg,
-body.kp-native-live .topbar .brand-mark svg,
-body[data-kp-screen="history"] .topbar .brand-mark svg,
-body:has(#screen.group-reference-screen) .topbar .brand-mark svg{width:20px!important;height:18px!important}
-body.kp-native-matchday .topbar .brand>span,
-body.kp-native-live .topbar .brand>span,
-body[data-kp-screen="history"] .topbar .brand>span,
-body:has(#screen.group-reference-screen) .topbar .brand>span{font:750 21px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.035em!important;text-transform:uppercase!important}
-body:has(#screen.group-reference-screen) #installBtn,
-body:has(#screen.group-reference-screen) #bellBtn{display:none!important}
-/* 36px + the shared border/ink match the shell in accessibility.css; these
-   were 38px and #171717 here, making the account chip visibly jump size and
-   shade when moving between Group and every other tab. */
-body:has(#screen.group-reference-screen) #userChip{display:grid!important;place-items:center!important;width:36px!important;height:36px!important;min-width:36px!important;padding:0!important;border:1px solid rgba(21,24,22,.14)!important;border-radius:50%!important;background:transparent!important;color:#151816!important;font-size:13px!important;font-weight:700!important;box-shadow:none!important}
+/* Header layout, the wordmark/crest and the account chip all used to be
+   declared here, once per screen, with History missing from most of the lists.
+   That is what produced five different headers. They now live in one
+   unconditional block in accessibility.css - see "ONE HEADER" there. */
 
 /* Stronger but still quiet bottom navigation. */
 body.kp-native-matchday .bottom-nav .nav-item,

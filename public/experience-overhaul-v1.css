@@ -15,7 +15,7 @@ button{-webkit-tap-highlight-color:transparent}
 /* App chrome */
 .topbar{height:56px!important;min-height:56px!important;padding:env(safe-area-inset-top) 16px 0!important;background:rgba(244,239,228,.94)!important;backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);border-bottom:1px solid rgba(18,23,19,.08)!important;position:sticky!important;top:0;z-index:80}
 .brand{gap:7px!important;font-size:12px!important;font-weight:800!important;letter-spacing:-.02em;text-transform:none!important}
-.brand-mark{display:none!important}
+
 .topbar-actions{gap:6px!important}
 .icon-btn,.user-chip{width:34px!important;height:34px!important;border-radius:50%!important;border:1px solid rgba(18,23,19,.10)!important;background:rgba(255,255,255,.20)!important;transition:transform var(--kp-fast) var(--kp-ease),background var(--kp-fast) ease!important}
 .icon-btn:active,.user-chip:active{transform:scale(.94);background:rgba(18,23,19,.06)!important}

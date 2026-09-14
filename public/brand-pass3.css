@@ -7,7 +7,7 @@ body.kp-studio .brand{
   gap:0!important;
   min-width:0;
 }
-body.kp-studio .brand-mark{display:none!important}
+
 body.kp-studio .brand>span,
 body.kp-studio .brand .kp-wordmark{
   display:inline-flex!important;

@@ -12,9 +12,83 @@ input,select,textarea{font-size:16px;max-width:100%}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(max-width:360px){.kp-native-side{gap:4px}.kp-native-side img{width:24px;height:24px}.kp-native-team{font-size:12px}.kp-native-mid{min-width:110px}}
 
-/* Keep fixed panels below a single, deterministic safe-area header. */
-#app>.topbar{height:56px!important;min-height:56px!important;padding-top:0!important}
-.group-reference-panel{inset:calc(56px + env(safe-area-inset-top)) 0 0!important;z-index:90!important}
+/* ---------------------------------------------------------------------------
+   ONE HEADER.
+
+   Measured frame by frame off a device recording (768 frames, 1290x2796),
+   then reproduced exactly in a browser. Before this block:
+
+                   brand X   brand Y   header h   crest   controls
+     Matchday        24px      23.5       56px    gold    toggle + chip
+     Live            42px      23.5       56px    gold    toggle + chip
+     History         42px      29         56px    gold    toggle + EMPTY BELL + chip
+                                          + hairline under it
+     Group           42px      67.5      101px    gold    toggle + chip
+     any transition  42px      31.5       56px    BLUE    toggle + EMPTY BELL + chip
+
+   Four causes, all of them structural rather than cosmetic:
+
+   1. X (24 vs 42). The header's inset is #app.app-shell's padding plus the
+      topbar's own. Eight stylesheets give .app-shell a horizontal padding
+      (13/14/16/18/20px); Matchday alone zeroes it. An earlier pass in this
+      session standardised #screen's padding and left #app's alone - the wrong
+      element, which is why the header stayed split. The topbar now spans the
+      shell's border box via the margin below, so #app's padding cannot move
+      it, whatever that padding happens to be at any width.
+
+   2. Y and height (Group +44px, 101px tall). final-polish-v1.css scoped its
+      header rule to three screens, and its Group arm was written as
+      `body:has(#screen.group-reference-screen) .topbar`. :has() takes the
+      specificity of its most specific argument, so that selector carries an
+      ID and outranked the shared `#app > .topbar` rule - Group alone got
+      `padding:44px 24px 13px` on top of a 56px header.
+
+   3. History (+5.5px, a hairline, and a third button). History was in that
+      file's `.brand` list but not its `.topbar` list, so it alone kept
+      kickpot-studio.css's topbar - border-bottom included - and it is the one
+      tab nothing hides #bellBtn on. #bellBtn has a click handler but no icon
+      in the markup, so it rendered as a 40px blank gap between the toggle and
+      the chip. Hidden here on every tab, consistently; it needs an icon
+      before it can be shown anywhere.
+
+   4. The blue crest. The gold crest was declared only under those same four
+      screen-scoped selectors, so on any transition where none of them matched
+      yet - most visibly every entry into Group, whose selector needs an async
+      render to finish before #screen gets .group-reference-screen - the
+      winner was product-v3.css's `.brand-mark{38px, blue gradient}`. That is
+      the "old header" that flashes mid-transition. The competing rules are
+      deleted rather than out-specified, and index.html now ships the crown
+      and "KICKPOT" as its default markup, so no renderer has to patch the
+      header into place afterwards.
+
+   Nothing here is screen-scoped. There is no tab-specific header any more. */
+:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px)}
+#app>.topbar{
+  position:relative!important;
+  /* Span the shell's border box, whatever horizontal padding #app carries.
+     100% resolves against #app's content width, so this is exactly minus that
+     padding, and collapses to 0 on the tab that has none. */
+  box-sizing:border-box!important;
+  width:min(100vw,430px)!important;
+  margin-left:calc((100% - min(100vw,430px)) / 2)!important;margin-right:0!important;
+  height:var(--kp-topbar-h)!important;min-height:var(--kp-topbar-h)!important;
+  padding:0 24px!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  background:#f7f4ec!important;border:0!important;box-shadow:none!important;
+}
+#app>.topbar .brand{display:flex!important;align-items:center!important;gap:9px!important;color:#151816!important}
+#app .topbar .brand-mark{display:grid!important;place-items:center!important;width:20px!important;height:18px!important;padding:0!important;color:#a58a48!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+#app .topbar .brand-mark svg{width:20px!important;height:18px!important}
+#app>.topbar .brand>span{font:750 21px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.035em!important;text-transform:uppercase!important}
+#app>.topbar .topbar-actions{display:flex!important;align-items:center!important;gap:8px!important}
+#app>.topbar #installBtn,#app>.topbar #bellBtn{display:none!important}
+
+/* Fixed panels hang off the header, so they read its height rather than
+   repeating it. The Admin/Members/Rules panel was pinned at a hard-coded 56px
+   while Group's header actually ended at 113px, so on the one tab it opens on
+   it started 45px underneath the header - the Admin screen looking uneven,
+   with the header overlapping its top. */
+.group-reference-panel{inset:calc(var(--kp-shell-top) + var(--kp-topbar-h)) 0 0!important;z-index:90!important}
 .group-reference-panel-head{scroll-margin-top:0}
 .group-reference-panel .kp3-drill-header,.group-reference-panel .kp-admin-header{position:relative!important}
 .kp-live-drill-back,.group-reference-back{min-width:44px;min-height:44px}
@@ -41,7 +115,6 @@ input,select,textarea{font-size:16px;max-width:100%}
 #screen,#screen.group-reference-screen{padding-left:0!important;padding-right:0!important}
 #app{background:#f7f4ec!important}
 body{background:#ede9e0!important}
-#app>.topbar{padding-left:24px!important;padding-right:24px!important;background:#f7f4ec!important}
 /* #app-level specificity: seven rules across six stylesheets target
    .bottom-nav with six different heights (62/72/76/83/calc(68+safe-area)),
    and body.kp-native-* ones outranked a plain .bottom-nav selector - which
@@ -57,7 +130,13 @@ body{background:#ede9e0!important}
 /* Topbar controls: the toggle glyph was rgb(216,213,226) on cream - about
    1.3:1 contrast, effectively invisible on every tab - and History dropped
    the account chip entirely while styling it white-on-cream. */
-#app>.topbar #kpThemeToggle,#app>.topbar #userChip{display:grid!important;place-items:center!important;width:36px!important;height:36px!important;min-width:36px!important;padding:0!important;border-radius:50%!important;background:transparent!important;color:#151816!important;box-shadow:none!important}
+/* min-height:44px (the touch-target floor at the top of this file) applies to
+   these, and min-height beats height no matter how many !importants the height
+   carries - so the chip has been rendering 36 wide by 44 tall on every single
+   tab: a visible ellipse, not a circle. Pinned square here, with the 44px
+   touch target restored as an overlay so nothing is lost by making it round. */
+#app>.topbar #kpThemeToggle,#app>.topbar #userChip{position:relative!important;display:grid!important;place-items:center!important;width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;max-height:36px!important;padding:0!important;border-radius:50%!important;background:transparent!important;color:#151816!important;box-shadow:none!important}
+#app>.topbar #kpThemeToggle::after,#app>.topbar #userChip::after{content:''!important;position:absolute!important;top:50%!important;left:50%!important;width:44px!important;height:44px!important;transform:translate(-50%,-50%)!important}
 #app>.topbar #userChip{border:1px solid rgba(21,24,22,.14)!important;font-size:13px!important;font-weight:700!important}
 #app>.topbar #kpThemeToggle{border:0!important;font-size:17px!important}
 html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"] #app>.topbar #userChip{color:#f4f1ea!important}
@@ -130,10 +209,14 @@ html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"
    instead of depending on whichever icon/appearance the platform draws.
    Deliberately sets no `display`, so the Group hub's own rule hiding this row
    still wins. */
-#screen .select-wrap{position:relative!important;width:100%!important;margin:0 0 4px!important;padding:0!important;border:0!important;border-bottom:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+/* Sits directly under the header, so it is held to the header's grid rather
+   than to #app's padding - which put it hard against the screen edge on
+   Matchday (0px) and at 18px on History, under a header at 24px on both.
+   Same border-box escape as the header above, then the same 24px. */
+#screen .select-wrap{position:relative!important;box-sizing:border-box!important;width:min(100vw,430px)!important;margin:0 0 4px calc((100% - min(100vw,430px)) / 2)!important;padding:0 24px!important;border:0!important;border-bottom:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 #screen .select-wrap select{width:100%!important;min-height:52px!important;padding:0 28px 0 0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#151816!important;font:700 15px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.01em!important;appearance:none!important;-webkit-appearance:none!important;box-shadow:none!important}
 #screen .select-wrap>svg{display:none!important}
-#screen .select-wrap::after{content:''!important;position:absolute!important;right:8px!important;top:50%!important;width:8px!important;height:8px!important;margin-top:-7px!important;border-right:2px solid #9a9c97!important;border-bottom:2px solid #9a9c97!important;transform:rotate(45deg)!important;pointer-events:none!important}
+#screen .select-wrap::after{content:''!important;position:absolute!important;right:24px!important;top:50%!important;width:8px!important;height:8px!important;margin-top:-7px!important;border-right:2px solid #9a9c97!important;border-bottom:2px solid #9a9c97!important;transform:rotate(45deg)!important;pointer-events:none!important}
 
 /* History's winner headline was the one place in the app using a condensed
    display face ("Avenir Next Condensed" via --kp-font-display) at 40px/950
