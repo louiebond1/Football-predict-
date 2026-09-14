@@ -79,6 +79,23 @@ html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"
 #screen .select-wrap>svg{display:none!important}
 #screen .select-wrap::after{content:''!important;position:absolute!important;right:8px!important;top:50%!important;width:8px!important;height:8px!important;margin-top:-7px!important;border-right:2px solid #9a9c97!important;border-bottom:2px solid #9a9c97!important;transform:rotate(45deg)!important;pointer-events:none!important}
 
+/* History's winner headline was the one place in the app using a condensed
+   display face ("Avenir Next Condensed" via --kp-font-display) at 40px/950
+   weight - a typeface and weight used on no other screen, which is what made
+   History read as a different product. Same system stack as every other
+   heading, still the largest thing on the screen, no longer shouting over it. */
+#app .winner h1,#app .kp3-winner h1,#app .kp3-latest-winner h1{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif!important;
+  font-stretch:normal!important;font-size:30px!important;font-weight:800!important;
+  line-height:1.04!important;letter-spacing:-.03em!important;max-width:none!important;
+}
+
+/* Same rule as the Admin row: never hide real information behind an ellipsis.
+   This subtitle carries the play mode, member count and treasurer name, and
+   was set to nowrap+ellipsis, so a longer group or treasurer name silently
+   lost the end of the line. */
+.group-reference-hero p{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+
 /* Give every score step its own touch target, without squeezing team names. */
 body.kp-native-matchday .kp-native-match{grid-template-columns:1fr 1fr!important;gap:8px!important;padding:14px 0!important}
 body.kp-native-matchday .kp-native-side{grid-column:1;grid-row:1}
