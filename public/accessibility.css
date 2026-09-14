@@ -206,9 +206,16 @@ html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"
   color:transparent!important;font-size:0!important;line-height:0!important;
   animation:kp-skel 1.5s ease-in-out infinite!important;
 }
-.kp-native-loading,.kp-group-loading-cover{display:flex!important;flex-direction:column!important;padding:6px 0 10px!important;min-height:calc(100dvh - 150px)!important}
+/* The skeleton has to occupy exactly the box the real screen will, or the
+   swap moves things. Same gutter as the hero it stands in for, and a height
+   derived from what is actually above and below it - the shell offset, the
+   header, the group bar (measured into --kp-bar-h by renderGroupBar, since
+   it is 0 for anyone in a single group) and #screen's own padding. It used
+   to be a flat 100dvh-150px, which overran the viewport by 81px and made the
+   page scrollable while loading and not scrollable once loaded. */
+.kp-native-loading,.kp-group-loading-cover{display:flex!important;flex-direction:column!important;padding:6px var(--kp-gutter) 10px!important;min-height:calc(100dvh - var(--kp-shell-top) - var(--kp-topbar-h) - var(--kp-bar-h, 0px) - 116px)!important}
 .kp-native-loading::before,.kp-group-loading-cover::before{
-  content:''!important;display:block!important;flex:0 0 auto!important;height:196px!important;
+  content:''!important;display:block!important;flex:0 0 auto!important;height:190px!important;
   border-radius:18px!important;background:rgba(21,24,22,.06)!important;
 }
 .kp-native-loading::after,.kp-group-loading-cover::after{
@@ -217,12 +224,13 @@ html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"
   background:repeating-linear-gradient(to bottom,rgba(21,24,22,.06) 0 44px,transparent 44px 74px)!important;
 }
 /* History's list sits inside an existing card, so rows only - no hero. */
-.kp-hi-loading{padding:4px 0 0!important;min-height:232px!important}
+.kp-hi-loading{padding:4px var(--kp-gutter) 0!important;min-height:232px!important}
 .kp-hi-loading::after{
   content:''!important;display:block!important;height:228px!important;
   background:repeating-linear-gradient(to bottom,rgba(21,24,22,.06) 0 40px,transparent 40px 64px)!important;
 }
 @keyframes kp-skel{0%,100%{opacity:1}50%{opacity:.55}}
+#groupBar.kp-group-switching{opacity:.5!important;pointer-events:none!important}
 
 /* Season Stats / Awards / Rivalry render a placeholder while their query
    resolves. Only the placeholder carries kp-skel-rows (set in app.js), so the
@@ -247,22 +255,23 @@ html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"
   background:repeating-linear-gradient(to bottom,rgba(21,24,22,.06) 0 30px,transparent 30px 48px)!important;
 }
 
-/* Group switcher (Matchday/History, when you're in more than one group). It
+/* Group switcher. Now a single element in the shell (see renderGroupBar in
+   app.js) rather than a string each screen pasted into its own innerHTML. It
    was rendering as a bare bold label with a stray arrow glyph floating at the
    far right edge - not aligned to the label, not a shape from this app's icon
    set, and with none of the row styling the rest of the app uses. Styled as a
    normal tappable row with a CSS chevron so the affordance is deterministic
    instead of depending on whichever icon/appearance the platform draws.
-   Deliberately sets no `display`, so the Group hub's own rule hiding this row
-   still wins. */
+   Deliberately sets no `display`, so the [hidden] rule at the top of this
+   file still wins when you are only in one group. */
 /* Sits directly under the header, so it is held to the header's grid rather
    than to #app's padding - which put it hard against the screen edge on
    Matchday (0px) and at 18px on History, under a header at 24px on both.
    Same border-box escape as the header above, then the same 24px. */
-#screen .select-wrap{position:relative!important;box-sizing:border-box!important;width:min(100vw,430px)!important;margin:0 0 4px calc((100% - min(100vw,430px)) / 2)!important;padding:0 var(--kp-gutter)!important;border:0!important;border-bottom:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
-#screen .select-wrap select{width:100%!important;min-height:52px!important;padding:0 28px 0 0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#151816!important;font:700 15px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.01em!important;appearance:none!important;-webkit-appearance:none!important;box-shadow:none!important}
-#screen .select-wrap>svg{display:none!important}
-#screen .select-wrap::after{content:''!important;position:absolute!important;right:var(--kp-gutter)!important;top:50%!important;width:8px!important;height:8px!important;margin-top:-7px!important;border-right:2px solid #9a9c97!important;border-bottom:2px solid #9a9c97!important;transform:rotate(45deg)!important;pointer-events:none!important}
+#groupBar{position:relative!important;box-sizing:border-box!important;width:min(100vw,430px)!important;margin:0 0 0 calc((100% - min(100vw,430px)) / 2)!important;padding:0 var(--kp-gutter)!important;border:0!important;border-bottom:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+#groupBar select{width:100%!important;min-height:52px!important;padding:0 28px 0 0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#151816!important;font:700 15px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.01em!important;appearance:none!important;-webkit-appearance:none!important;box-shadow:none!important}
+#groupBar>svg{display:none!important}
+#groupBar::after{content:''!important;position:absolute!important;right:var(--kp-gutter)!important;top:50%!important;width:8px!important;height:8px!important;margin-top:-7px!important;border-right:2px solid #9a9c97!important;border-bottom:2px solid #9a9c97!important;transform:rotate(45deg)!important;pointer-events:none!important}
 
 /* History's winner headline was the one place in the app using a condensed
    display face ("Avenir Next Condensed" via --kp-font-display) at 40px/950
@@ -291,5 +300,8 @@ body.kp-native-matchday .kp-native-score{width:112px!important;height:46px!impor
 body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-native-score b,body.kp-native-matchday .kp-native-score span{height:44px!important;line-height:44px!important;font-size:16px!important;min-width:0!important}
 body.kp-native-matchday .kp-native-team{font-size:14px!important;line-height:1.2!important}
 body.kp-native-matchday .kp-native-lock,body.kp-native-matchday .kp-native-time{font-size:12px!important;color:#686b66!important}
+/* Placeholder only while the badge is in flight - :not([data-loaded]) so a
+   loaded crest with transparent corners doesn't keep a grey disc behind it. */
+.kp-native-side img:not([data-loaded]){background:rgba(21,24,22,.06)!important;border-radius:50%!important}
 .kp-native-side .crest-fallback{display:grid;place-items:center;width:30px;height:30px;border:1px solid currentColor;border-radius:50%;font-size:14px}
 html[data-kp-theme="dark"] body.kp-native-matchday .kp-native-lock,html[data-kp-theme="dark"] body.kp-native-matchday .kp-native-time{color:#bdbfb8!important}

@@ -335,36 +335,33 @@ function meta() {
   return `<div class="hero-meta"><span class="pill">${ic('wallet', 14)} <strong>${pot}</strong> Pot</span><span class="pill">${ic('users', 14)} <strong>${paidCount}/${total}</strong> Paid</span>${lockCountdownPill()}</div>`;
 }
 
-function groupSwitcher() {
-  if (state.groups.length < 2) return '';
-  return `<div class="select-wrap" style="margin-bottom:12px"><select id="groupSwitch" aria-label="Active group" class="scorer-select">${state.groups.map(g => `<option value="${g.id}" ${g.id === state.activeGroupId ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select>${ic('chevronRight', 16)}</div>`;
+/* The group switcher used to be a string each screen pasted into its own
+   innerHTML: Matchday and History rendered one, Group's hub moved the legacy
+   node into itself, and Live had none at all. So the row appeared, moved and
+   vanished as you changed tabs, and every tab switch destroyed and rebuilt it.
+   Measured off a device recording: leaving Matchday for Live dropped the row
+   and everything below it jumped up 59px before the new screen had even
+   arrived.
+
+   It is app chrome, not screen content, so it now lives in the shell between
+   the header and #screen, is rendered once, and survives navigation. Content
+   starts at the same y on every tab and nothing moves mid-transition. */
+function renderGroupBar() {
+  const bar = document.querySelector('#groupBar');
+  if (!bar) return;
+  const show = Boolean(state.session) && state.groups.length > 1;
+  bar.hidden = !show;
+  if (!show) { bar.innerHTML = ''; setBarHeight(); return; }
+  const markup = `<select id="groupSwitch" aria-label="Active group" class="scorer-select">${state.groups.map(g => `<option value="${g.id}"${g.id === state.activeGroupId ? ' selected' : ''}>${esc(g.name)}</option>`).join('')}</select>`;
+  if (bar.innerHTML !== markup) bar.innerHTML = markup;
+  setBarHeight();
 }
-function bindGroupSwitcher() {
-  const el = document.querySelector('#groupSwitch');
-  if (!el || el.dataset.bound === '1') return;
-  el.dataset.bound = '1';
-  el.addEventListener('change', async e => {
-    state.activeGroupId = e.target.value;
-    state.groupsStatus='loading';window.KickPotLive?.unmount();window.KickPotMatchday?.unmount();
-    renderSessionLoading();
-    // Switching groups refetches that group's members/payments/predictions from
-    // Supabase, which can take a second or more on a slow connection. Without
-    // this, the previous group's fully-rendered screen just sits there
-    // untouched (looks frozen/unresponsive) and then snaps to the new group's
-    // content all at once once the fetch resolves - the exact "words change
-    // out of nowhere" feel we're trying to eliminate. Show a lightweight
-    // in-place loading state on the switcher itself for that gap; the wrap
-    // element is destroyed and rebuilt fresh by render(), so nothing needs to
-    // clean this back up.
-    const wrap = el.closest('.select-wrap');
-    el.disabled = true;
-    if (wrap) wrap.classList.add('kp-group-switching');
-    try {
-      await loadGroupData();
-    } finally {
-      render();
-    }
-  });
+/* The loading skeletons size themselves to the space below the bar, and the
+   bar is 0 tall for anyone in a single group, so publish its real height
+   rather than hard-coding one. */
+function setBarHeight() {
+  const bar = document.querySelector('#groupBar');
+  document.documentElement.style.setProperty('--kp-bar-h', (bar && !bar.hidden ? bar.offsetHeight : 0) + 'px');
 }
 
 function paymentBanner() {
@@ -376,7 +373,7 @@ function paymentBanner() {
 }
 
 function renderGW() {
-  window.KickPotMatchday.mount({state,group:activeGroup(),pickFor,groupSwitcher,bindGroupSwitcher});
+  window.KickPotMatchday.mount({state,group:activeGroup(),pickFor});
   return;
 }
 const draftPicks = {};
@@ -400,12 +397,10 @@ function renderHistory() {
   const winners=latestWinner?.winner_user_ids||[latestWinner?.winner_user_id].filter(Boolean);
   const resultTitle=latestWinner?.settlement_kind==='draw'?'DRAW · '+winners.map(profileName).join(' & '):winners.length?profileName(winners[0])+' WINS':'NO WINNER';
   screen.innerHTML = `${latestWinner ? `<section class="card winner"><div class="trophy">${ic('crown', 22)}</div><div class="eyebrow">Gameweek Champion</div><h1>${esc(resultTitle.toUpperCase())}</h1><div class="muted">${esc(latestWinner.gameweeks?.round_name || '')}</div></section>` : `<section class="card"><div class="empty">No Gameweeks settled yet.</div></section>`}
-  ${groupSwitcher()}
   ${isTreasurer()?state.readyWeeks.map(w=>`<section class="card"><div class="card-title">Ready to settle · ${esc(w.gameweeks.round_name)}</div><button class="primary" data-settle-week="${w.gameweek_id}">Settle Matchday & Crown Winner</button></section>`).join(''):''}
   <section class="card"><div class="card-title">${ic('clock')} Past Gameweeks</div>${state.history.length ? state.history.map(h => `<div class="payment-row"><span>${esc(h.gameweeks?.round_name || 'Gameweek')}</span><b>${esc(profileName(h.winner_user_id))}</b></div>`).join('') : '<div class="empty">Settle a Gameweek to see it here.</div>'}</section>
   <section class="card" id="seasonStatsCard"><div class="card-title">${ic('climb')} Your Season Stats</div><div class="empty kp-skel-rows">Loading…</div></section>
   <section class="card" id="awardsCard"><div class="card-title">${ic('award')} Awards</div><div class="empty kp-skel-rows">Loading…</div></section>`;
-  bindGroupSwitcher();
   screen.querySelectorAll('[data-settle-week]').forEach(button=>button.addEventListener('click',async()=>{
     button.disabled=true;
     try{const {error}=await state.supabase.rpc('settle_gameweek',{p_group_id:historyGroup,p_gameweek_id:Number(button.dataset.settleWeek)});if(error)throw error;
@@ -449,7 +444,6 @@ function renderGroup() {
   const modeText = g.payments_required === false ? 'For fun' : `${gbp(g.stake_pence)} / week`;
   screen.innerHTML = `<section class="group-head"><div class="group-emblem">${initials(g.name)}</div><div><div class="private-badge">${ic('shield', 13)} Private Group</div><h1 style="margin:4px 0 2px;font-size:26px;letter-spacing:-1px;line-height:1.1">${esc(g.name)}</h1><div class="hero-sub">${modeText} · ${state.members.length} members · Treasurer: ${esc(profileName(g.treasurer_id))}</div></div></section>
   <div class="pill" style="margin:4px 0 14px">Join code <strong class="accent" style="letter-spacing:3px;margin-left:5px">${esc(g.join_code)}</strong></div>
-  ${groupSwitcher()}
   <section class="card"><div class="card-head"><div class="card-title">${ic('wallet')} ${esc(state.round || 'Gameweek')} Pot</div><span class="badge">${paidCount}/${total} paid</span></div><div class="pot-hero"><div class="pot-amount">${pot}</div><div class="pot-icon">${ic('wallet', 26)}</div></div></section>
   <section class="card"><div class="card-head"><div class="card-title">${ic('users')} Member Payments</div>${isTreasurer() && anyUnconfirmed ? `<button class="secondary chip-btn" id="confirmAllBtn">Confirm All</button>` : ''}</div>${state.members.map(m => {
     const pay = state.payments[m.user_id];
@@ -471,7 +465,6 @@ function renderGroup() {
   </section>`;
 
   const paymentWeek=state.gameweekId,paymentUser=myId();
-  bindGroupSwitcher();
   onAction(document.querySelector('#claimPaid'), async () => {
     const { error } = await state.supabase.from('payments').update({ claimed_paid_at: new Date().toISOString() }).eq('group_id', g.id).eq('gameweek_id', paymentWeek).eq('user_id', paymentUser);
     if (error) return toast(error.message, 'error');
@@ -563,6 +556,7 @@ function renderConfigError() {
 async function render({ resetLive = false } = {}) {
   const run=++renderRun;
   document.body.dataset.kpScreen=state.tab;
+  renderGroupBar();
   delete screen.dataset.groupReference;screen.className='screen';
   document.body.classList.remove('kp-group-panel-open');
   if(state.tab!=='gw')window.KickPotMatchday?.unmount();
@@ -631,6 +625,30 @@ nav.forEach(btn => btn.addEventListener('click', () => {
 history.replaceState({kpTab:state.tab},'');
 window.addEventListener('popstate',event=>{const tab=event.state?.kpTab||'gw';if(['gw','live','history','group'].includes(tab)){state.tab=tab;render().catch(showError);}});
 userChip?.addEventListener('click',()=>openAccountSettings().catch(showError));
+/* Delegated, so it survives the bar's <select> being rebuilt when the group
+   list or selection changes - the element is no longer thrown away by every
+   screen render, but it is still replaced whenever its options change. */
+document.querySelector('#groupBar')?.addEventListener('change', async event => {
+  const el = event.target;
+  if (el.id !== 'groupSwitch') return;
+  state.activeGroupId = el.value;
+  state.groupsStatus='loading';window.KickPotLive?.unmount();window.KickPotMatchday?.unmount();
+  renderSessionLoading();
+  // Switching groups refetches that group's members/payments/predictions from
+  // Supabase, which can take a second or more on a slow connection. Show the
+  // switch as in-flight for that gap rather than leaving the old screen
+  // sitting there looking frozen. The bar persists now, so unlike the old
+  // per-screen switcher this has to be cleaned up explicitly.
+  const bar = document.querySelector('#groupBar');
+  el.disabled = true;
+  bar?.classList.add('kp-group-switching');
+  try {
+    await loadGroupData();
+  } finally {
+    bar?.classList.remove('kp-group-switching');
+    render();
+  }
+});
 document.querySelector('#bellBtn')?.addEventListener('click', () => {
   const p = myPayment();
   if (p && !p.confirmed_paid_at) return toast(p.claimed_paid_at ? 'Waiting on Treasurer confirmation.' : 'You have an unpaid Gameweek stake.', 'warning');

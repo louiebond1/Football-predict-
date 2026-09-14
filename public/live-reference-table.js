@@ -235,7 +235,9 @@
     }, 30000);
   }
   function mount({ reset = false, context = null } = {}) {
-    if(!state.mounted || (context && (context.groupId!==state.context?.groupId || context.userId!==state.context?.userId))) {
+    /* Reset only when this is genuinely a different group or user. Being
+       unmounted is not a reason to throw the cache away - see unmount(). */
+    if(context && (context.groupId!==state.context?.groupId || context.userId!==state.context?.userId)) {
       state.generation++;state.loadPromise=null;state.loaded=false;state.fixtures=[];
       state.members=[];state.predictions={};state.groupPredictions={};state.error='';state.openPicks.clear();
     }
@@ -249,8 +251,15 @@
     refresh();
   }
   function unmount() {
+    /* Leaving Live used to wipe fixtures, members, predictions and the loaded
+       flag, so coming back always started from nothing - measured at 0.42s and
+       0.70s of blank skeleton on two tab switches in a device recording, even
+       though the group and the data had not changed. Matchday keeps its state
+       and repaints instantly; Live now does the same. The in-flight request is
+       still cancelled (generation++) and the poll still stops; only the cache
+       survives, and mount() refreshes it immediately on the way back in. */
     state.mounted = false;
-    state.generation++; state.loadPromise=null; state.loaded=false; state.fixtures=[];state.members=[];state.predictions={};state.groupPredictions={};
+    state.generation++; state.loadPromise=null;
     clearInterval(state.refreshTimer);
     state.refreshTimer = 0;
     document.body.classList.remove('kp-native-live');
