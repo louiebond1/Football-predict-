@@ -92,7 +92,7 @@ test('slow admin data never exposes a second Group UI and mobile back returns to
  await expect(page.locator('.group-reference-hub[data-regression-identity="original"]')).toBeVisible();
  await expect(page.locator('.kp-group-loading-cover')).not.toBeVisible();
 
- await hub.locator('[data-open=members]').click();
+ await hub.locator('.group-reference-menu [data-open=members]').click();
  await expect(page.locator('.group-reference-panel')).toBeVisible();
  await page.goBack();
  await expect(page.locator('.group-reference-panel')).toHaveCount(0);
