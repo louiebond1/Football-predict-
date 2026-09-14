@@ -19,6 +19,38 @@ input,select,textarea{font-size:16px;max-width:100%}
 .group-reference-panel .kp3-drill-header,.group-reference-panel .kp-admin-header{position:relative!important}
 .kp-live-drill-back,.group-reference-back{min-width:44px;min-height:44px}
 .kp-live-hero>.kp-live-hero-photo{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover}
+/* ---------------------------------------------------------------------------
+   ONE APP SHELL.
+
+   Measured before this block existed (computed styles, 430px viewport):
+
+                     Matchday   Live      History        Group
+     #screen pad-x   0          0         0              18px
+     .topbar pad-x   24px       24px      16px           28px
+     .bottom-nav     flush,     flush,    floating pill  floating pill
+                     430 wide   430 wide  inset 10px     inset 10px
+     #app bg         #f7f4ec    #f7f4ec   #f4efe4        #f7f4ec
+     #userChip       36px       36px      display:none   38px
+
+   Matchday/Live got a full shell pass (simple-overhaul-v2.css,
+   matchday-reference-live.css), Group got a partial one, History was left on
+   experience-overhaul-v1.css's older base - so content width, header
+   alignment, nav shape and paper colour all visibly changed tab to tab.
+   These are the Matchday/Live values applied to every tab from one place.
+   This file loads last, so nothing downstream re-splits them. --------------- */
+#screen,#screen.group-reference-screen{padding-left:0!important;padding-right:0!important}
+#app{background:#f7f4ec!important}
+body{background:#ede9e0!important}
+#app>.topbar{padding-left:24px!important;padding-right:24px!important;background:#f7f4ec!important}
+.bottom-nav{position:fixed!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:0!important;width:min(100vw,430px)!important;height:83px!important;padding:0 0 max(9px,env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(4,1fr)!important;background:rgba(247,243,234,.98)!important;border:0!important;border-top:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;box-shadow:none!important;z-index:100!important}
+/* Topbar controls: the toggle glyph was rgb(216,213,226) on cream - about
+   1.3:1 contrast, effectively invisible on every tab - and History dropped
+   the account chip entirely while styling it white-on-cream. */
+#app>.topbar #kpThemeToggle,#app>.topbar #userChip{display:grid!important;place-items:center!important;width:36px!important;height:36px!important;min-width:36px!important;padding:0!important;border-radius:50%!important;background:transparent!important;color:#151816!important;box-shadow:none!important}
+#app>.topbar #userChip{border:1px solid rgba(21,24,22,.14)!important;font-size:13px!important;font-weight:700!important}
+#app>.topbar #kpThemeToggle{border:0!important;font-size:17px!important}
+html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"] #app>.topbar #userChip{color:#f4f1ea!important}
+
 /* Give every score step its own touch target, without squeezing team names. */
 body.kp-native-matchday .kp-native-match{grid-template-columns:1fr 1fr!important;gap:8px!important;padding:14px 0!important}
 body.kp-native-matchday .kp-native-side{grid-column:1;grid-row:1}

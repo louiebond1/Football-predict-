@@ -5,7 +5,9 @@ body.kp-native-matchday .topbar,
 body.kp-native-live .topbar,
 body:has(#screen.group-reference-screen) .topbar{
   position:relative!important;inset:auto!important;height:auto!important;
-  padding:44px 28px 13px!important;background:var(--kp-paper,#f7f3ea)!important;
+  /* 24px matches the shared shell in accessibility.css; this used to be 28px
+     here, which shifted the Group header 4px inward against every other tab. */
+  padding:44px 24px 13px!important;background:var(--kp-paper,#f7f3ea)!important;
   border:0!important;box-shadow:none!important;display:flex!important;
   align-items:center!important;justify-content:space-between!important;
 }
@@ -49,7 +51,10 @@ body[data-kp-screen="history"] .topbar .brand>span,
 body:has(#screen.group-reference-screen) .topbar .brand>span{font:750 21px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.035em!important;text-transform:uppercase!important}
 body:has(#screen.group-reference-screen) #installBtn,
 body:has(#screen.group-reference-screen) #bellBtn{display:none!important}
-body:has(#screen.group-reference-screen) #userChip{display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;border:1px solid rgba(20,20,20,.18)!important;border-radius:50%!important;background:transparent!important;color:#171717!important;font-size:13px!important;font-weight:700!important;box-shadow:none!important}
+/* 36px + the shared border/ink match the shell in accessibility.css; these
+   were 38px and #171717 here, making the account chip visibly jump size and
+   shade when moving between Group and every other tab. */
+body:has(#screen.group-reference-screen) #userChip{display:grid!important;place-items:center!important;width:36px!important;height:36px!important;min-width:36px!important;padding:0!important;border:1px solid rgba(21,24,22,.14)!important;border-radius:50%!important;background:transparent!important;color:#151816!important;font-size:13px!important;font-weight:700!important;box-shadow:none!important}
 
 /* Stronger but still quiet bottom navigation. */
 body.kp-native-matchday .bottom-nav .nav-item,
@@ -98,7 +103,10 @@ body:has(#screen.group-reference-screen) .bottom-nav .nav-item.active{color:#267
 /* Purpose-built route hold: keeps navigation from flashing blank/legacy UI. */
 
 @media(max-width:395px){
-  body.kp-native-matchday .topbar,body.kp-native-live .topbar,body:has(#screen.group-reference-screen) .topbar{padding-left:22px!important;padding-right:22px!important}
+  /* Topbar padding deliberately not narrowed here any more: this rule only
+     covered Matchday/Live/Group, so on a <=395px screen History kept 24px
+     while the others dropped to 22px. One value at every width instead - the
+     shared 24px from accessibility.css. */
   .kp-live-board{margin-left:16px!important;margin-right:16px!important}
   .kp-live-fx-scroll{padding-left:16px!important;padding-right:16px!important}
 }
