@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 const uid='10000000-0000-0000-0000-000000000001',other='10000000-0000-0000-0000-000000000002';
 const gid='20000000-0000-0000-0000-000000000001',g2='20000000-0000-0000-0000-000000000002';
-async function setup(page,{signedIn=true,paid=true,picksFailure=false,saveFailure=false,pendingSettlement=false}={}){
+async function setup(page,{signedIn=true,paid=true,picksFailure=false,saveFailure=false,pendingSettlement=false,adminDelayMs=0}={}){
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const user={id:uid,email:'louie@example.test',aud:'authenticated',role:'authenticated',app_metadata:{provider:'email'},user_metadata:{},created_at:'2026-01-01T00:00:00Z'};
  if(signedIn)await page.addInitScript(({user})=>{
@@ -17,6 +17,10 @@ async function setup(page,{signedIn=true,paid=true,picksFailure=false,saveFailur
    const req=route.request(),url=new URL(req.url()),table=url.pathname.split('/').at(-1),method=req.method();
    if(url.pathname.includes('/auth/v1/'))return route.fulfill({json:user});
    if(url.pathname.includes('/rpc/'))return route.fulfill({json:table==='group_pick_status'?[{user_id:uid,submitted_count:1},{user_id:other,submitted_count:1}]:table.startsWith('ensure')?4:null});
+   // Admin enhancement performs this secondary read after the base Group DOM
+   // exists. Delaying it reproduces the slow mobile-network race that used to
+   // expose the legacy Group screen before replacing it with the real hub.
+   if(adminDelayMs&&method==='GET'&&table==='point_adjustments')await new Promise(resolve=>setTimeout(resolve,adminDelayMs));
    if(method==='POST'||method==='PATCH'){
      mutations.push({table,body:req.postDataJSON(),query:Object.fromEntries(url.searchParams)});
      if(saveFailure&&table==='predictions')return route.fulfill({status:503,json:{message:'Save unavailable. Try again.'}});
@@ -65,6 +69,36 @@ test('Group panels, payments, admin, history, account and small-screen layout',a
  await page.locator('[data-tab=history]').click();await expect(page.locator('#kpHistoryInlineV2')).toContainText('No completed Matchdays');
  await page.locator('#userChip').click();await expect(page.getByRole('dialog',{name:'Account settings'})).toBeVisible();await page.getByRole('button',{name:'Close',exact:true}).click();
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);expect(overflow).toBe(false);expect(h.errors).toEqual([]);
+});
+
+test('slow admin data never exposes a second Group UI and mobile back returns to the hub',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ const h=await setup(page,{adminDelayMs:900});
+ await page.goto('/');await expect(page.locator('.kp-native-hero')).toBeVisible();
+ await page.locator('[data-tab=group]').click();
+
+ // During the delayed role/admin read, only the neutral loading treatment may
+ // paint. The legacy card list is still present for logic hooks, but hidden.
+ await expect(page.locator('.kp-group-loading-cover')).toBeVisible();
+ await expect(page.locator('#screen > .kp3-group-root')).not.toBeVisible();
+ await expect(page.locator('.group-reference-hub')).toBeVisible();
+ const hub=page.locator('.group-reference-hub');
+ const originalHub=await hub.evaluate(element=>{element.dataset.regressionIdentity='original';return element.dataset.regressionIdentity;});
+ expect(originalHub).toBe('original');
+ await expect(hub.getByRole('button',{name:/Admin/})).toBeVisible();
+
+ // Waiting beyond the old delayed-render window must not replace the hub.
+ await page.waitForTimeout(1100);
+ await expect(page.locator('.group-reference-hub[data-regression-identity="original"]')).toBeVisible();
+ await expect(page.locator('.kp-group-loading-cover')).toHaveCount(0);
+
+ await hub.locator('[data-open=members]').click();
+ await expect(page.locator('.group-reference-panel')).toBeVisible();
+ await page.goBack();
+ await expect(page.locator('.group-reference-panel')).toHaveCount(0);
+ await expect(page.locator('.group-reference-hub')).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
+ expect(h.errors).toEqual([]);
 });
 test('unpaid users cannot edit or save; reveal failures are visible',async({page})=>{
  const h=await setup(page,{paid:false,picksFailure:true});await page.goto('/');await expect(page.locator('#kpNativeLock')).toBeDisabled();
