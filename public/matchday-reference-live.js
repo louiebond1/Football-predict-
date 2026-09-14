@@ -43,7 +43,17 @@
     }catch(error){if(status.isConnected)status.textContent=error.message||'Could not save. Check your connection and try again.';}
     finally{saving=false;if(btn.isConnected){btn.disabled=!S.paid;btn.textContent='Lock in my picks';}}
   }
-  screen.addEventListener('load',e=>{if(e.target.tagName==='IMG')e.target.dataset.loaded='1';},true);
+  /* On document, not on `screen`: this module has no module-scope `screen`
+     binding (render() declares its own local one), so `screen` here resolved
+     to window.screen. Chromium's Screen extends EventTarget and silently
+     accepted the listener; WebKit's does not, so this threw at module
+     evaluation and took KickPotMatchday with it - every Safari test that
+     waits for .kp-native-hero failed. Capture phase because load does not
+     bubble. */
+  document.addEventListener('load',event=>{
+    const img=event.target;
+    if(img instanceof HTMLImageElement&&img.classList.contains('crest'))img.dataset.loaded='1';
+  },true);
   document.addEventListener('click',e=>{
     if(!mounted||!isGW())return;
     const step=e.target.closest('[data-score-step]');
