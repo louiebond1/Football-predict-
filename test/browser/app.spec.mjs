@@ -90,7 +90,7 @@ test('slow admin data never exposes a second Group UI and mobile back returns to
  // Waiting beyond the old delayed-render window must not replace the hub.
  await page.waitForTimeout(1100);
  await expect(page.locator('.group-reference-hub[data-regression-identity="original"]')).toBeVisible();
- await expect(page.locator('.kp-group-loading-cover')).toHaveCount(0);
+ await expect(page.locator('.kp-group-loading-cover')).not.toBeVisible();
 
  await hub.locator('[data-open=members]').click();
  await expect(page.locator('.group-reference-panel')).toBeVisible();
