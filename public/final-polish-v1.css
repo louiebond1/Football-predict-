@@ -19,10 +19,34 @@ body:has(#screen.group-reference-screen) .topbar{
    this floor always applies: never less than 44px, but grows to clear a
    taller real safe area whenever the OS reports one. */
 #app > .topbar{ padding-top:max(44px, calc(env(safe-area-inset-top, 0px) + 12px))!important; }
-body:has(#screen.group-reference-screen) .topbar .brand{display:flex!important;align-items:center!important;gap:14px!important;color:#171717!important}
-body:has(#screen.group-reference-screen) .topbar .brand-mark{width:24px!important;height:19px!important;color:#a58a48!important;background:none!important;border:0!important}
-body:has(#screen.group-reference-screen) .topbar .brand-mark svg{width:24px!important;height:19px!important}
-body:has(#screen.group-reference-screen) .topbar .brand>span{font-size:16px!important;font-weight:650!important;letter-spacing:.31em!important;text-transform:uppercase!important}
+body.kp-native-matchday .topbar .brand,
+body.kp-native-live .topbar .brand,
+body[data-kp-screen="history"] .topbar .brand,
+body:has(#screen.group-reference-screen) .topbar .brand{display:flex!important;align-items:center!important;gap:9px!important;color:#171717!important}
+/* Wordmark/crest: one definition shared by all four tabs, not four. This
+   exact block used to exist only for Group, with values (16px, uppercase,
+   0.31em letter-spacing) that didn't match what Matchday/Live actually use
+   (simple-overhaul-v2.css: 21px/750-weight/-0.035em/normal-case) - so Group
+   alone rendered as widely-tracked "K I C K P O T" while Matchday/Live read
+   as a normal tight "KICKPOT". History had no equivalent rule at all and
+   fell back to inheriting its wordmark's size/weight from the unrelated
+   .brand div-level rule in experience-overhaul-v1.css, rendering small and
+   condensed. Same for the crest: Group had its own display:grid override,
+   Matchday/Live/History had none, leaving them dependent on whatever else
+   happened to re-enable it over experience-overhaul-v1.css's unconditional
+   .brand-mark{display:none}. All four now share the exact same values. */
+body.kp-native-matchday .topbar .brand-mark,
+body.kp-native-live .topbar .brand-mark,
+body[data-kp-screen="history"] .topbar .brand-mark,
+body:has(#screen.group-reference-screen) .topbar .brand-mark{display:grid!important;place-items:center!important;width:20px!important;height:18px!important;color:#a58a48!important;background:none!important;border:0!important}
+body.kp-native-matchday .topbar .brand-mark svg,
+body.kp-native-live .topbar .brand-mark svg,
+body[data-kp-screen="history"] .topbar .brand-mark svg,
+body:has(#screen.group-reference-screen) .topbar .brand-mark svg{width:20px!important;height:18px!important}
+body.kp-native-matchday .topbar .brand>span,
+body.kp-native-live .topbar .brand>span,
+body[data-kp-screen="history"] .topbar .brand>span,
+body:has(#screen.group-reference-screen) .topbar .brand>span{font:750 21px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.035em!important;text-transform:uppercase!important}
 body:has(#screen.group-reference-screen) #installBtn,
 body:has(#screen.group-reference-screen) #bellBtn{display:none!important}
 body:has(#screen.group-reference-screen) #userChip{display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;border:1px solid rgba(20,20,20,.18)!important;border-radius:50%!important;background:transparent!important;color:#171717!important;font-size:13px!important;font-weight:700!important;box-shadow:none!important}
