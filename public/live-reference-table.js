@@ -151,12 +151,25 @@
       <div class="kp-live-hero-sub">REAL GAMES. REAL POINTS.</div>
       <div class="kp-live-stats"><span class="kp-live-dot on"></span>${liveCount} LIVE<span class="sep">|</span>🔒 ${locked}/${roster.length} LOCKED<span class="sep">|</span>${upcoming} UPCOMING</div></section>`;
   }
+  /* .kp-actions / .kp-action are shared with Matchday - same markup, same CSS,
+     so the row has identical geometry on both tabs and only the copy differs. */
+  const ICON = {
+    fixtures: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 9.5h18M8 4.5v-2M16 4.5v-2"/></svg>',
+    picks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg>'
+  };
+  function actionHTML({ icon, title, sub, attrs }) {
+    return `<button type="button" class="kp-action" ${attrs}><span class="kp-action-icon" aria-hidden="true">${icon}</span><span class="kp-action-copy"><b>${esc(title)}</b><small>${esc(sub)}</small></span><span class="kp-action-go" aria-hidden="true">›</span></button>`;
+  }
   function actionsHTML() {
-    return `<div class="kp-live-primary-actions"><button type="button" data-live-page="fixtures"><span>Live fixtures</span><span aria-hidden="true">›</span></button><button type="button" data-live-page="picks"><span>My picks</span><span aria-hidden="true">›</span></button></div>`;
+    return `<div class="kp-actions">${
+      actionHTML({ icon: ICON.fixtures, title: 'Live fixtures', sub: 'Follow all matches', attrs: 'data-live-page="fixtures"' })
+    }${
+      actionHTML({ icon: ICON.picks, title: 'My picks', sub: 'Your predictions', attrs: 'data-live-page="picks"' })
+    }</div>`;
   }
   function tableHTML(roster) {
     const locked = roster.filter(member => member.total && member.submitted === member.total).length;
-    return `<div class="kp-live-table-head"><h1>Live Table</h1><div class="kp-live-locked">🔒 ${locked}/${roster.length} locked</div></div><div class="kp-live-board">${roster.length ? roster.map(tableRowHTML).join('') : '<div class="kp-native-loading">No standings yet.</div>'}</div>`;
+    return `<div class="kp-live-table-head kp-sechead"><h1>Live Table</h1><div class="kp-live-locked kp-sechead-meta">🔒 ${locked}/${roster.length} locked</div></div><div class="kp-live-board">${roster.length ? roster.map(tableRowHTML).join('') : '<div class="kp-native-loading">No standings yet.</div>'}</div>`;
   }
   function drillHeaderHTML(title) {
     return `<div class="kp-live-drill-head"><button type="button" class="kp-live-drill-back" data-live-back aria-label="Back to Live Table">‹</button><div><h1>${title}</h1></div></div>`;
@@ -234,6 +247,10 @@
       if (state.mounted && isLiveRoute() && document.visibilityState!=='hidden') refresh();
     }, 30000);
   }
+  /* Matchday's "Others' picks" card sends the user to the Live fixtures page,
+     which is where group picks already live. The request is stored until mount
+     runs, because the tab switch renders before this controller mounts. */
+  let pendingPage = null;
   function mount({ reset = false, context = null } = {}) {
     /* Reset only when this is genuinely a different group or user. Being
        unmounted is not a reason to throw the cache away - see unmount(). */
@@ -243,7 +260,8 @@
     }
     state.context=context;
     state.mounted = true;
-    if (reset) state.page = 'table';
+    if (pendingPage && VALID_PAGES.has(pendingPage)) { state.page = pendingPage; pendingPage = null; }
+    else if (reset) state.page = 'table';
     else if(VALID_PAGES.has(history.state?.kpLivePage))state.page=history.state.kpLivePage;
     updateHistory(state.page, 'replace');
     render();
@@ -302,5 +320,5 @@
     if (document.visibilityState === 'visible' && state.mounted && isLiveRoute()) refresh();
   });
 
-  window.KickPotLive = Object.freeze({ mount, unmount, showTable: () => setPage('table', { historyMode: 'replace' }) });
+  window.KickPotLive = Object.freeze({ mount, unmount, showTable: () => setPage('table', { historyMode: 'replace' }), requestPage: page => { if (VALID_PAGES.has(page)) pendingPage = page; } });
 })();

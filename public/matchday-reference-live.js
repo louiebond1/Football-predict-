@@ -20,13 +20,37 @@
      device recording. They are fetched with the row now, and the slot carries a
      placeholder until each one lands (see data-loaded below). */
   const crest=team=>team?.logo?'<img class="crest" src="'+esc(team.logo)+'" data-initial="'+esc((team.name||'?')[0])+'" alt="" fetchpriority="high">':'<span class="crest-fallback" aria-hidden="true">'+esc((team?.name||'?')[0])+'</span>';
-  function fixtureHTML(f){const kickLocked=!Number.isFinite(Date.parse(f.kickoff))||Date.now()>=Date.parse(f.kickoff),locked=!S.paid||kickLocked,p=kickLocked?(S.predictions[f.id]?{home:S.predictions[f.id].predicted_home,away:S.predictions[f.id].predicted_away}:{home:'–',away:'–'}):draftFor(String(f.id));return `<div class="kp-native-match"><div class="kp-native-side">${crest(f.home)}<div><div class="kp-native-team">${esc(displayName(f.home?.name))}</div>${form(f.home?.id)}</div></div><div class="kp-native-mid"><div class="kp-native-time">${fmtTime(f.kickoff)}</div><div class="kp-native-lock">${locked?(kickLocked?'Locked':'Payment required'):`Locks in ${rel(f.kickoff)}`}</div><div class="kp-native-scores">${scoreControl(f,'home',p.home,locked)}<span class="kp-native-divider"></span>${scoreControl(f,'away',p.away,locked)}</div></div><div class="kp-native-side away"><div><div class="kp-native-team">${esc(displayName(f.away?.name))}</div>${form(f.away?.id)}</div>${crest(f.away)}</div></div>`}
+  function fixtureHTML(f){const kickLocked=!Number.isFinite(Date.parse(f.kickoff))||Date.now()>=Date.parse(f.kickoff),locked=!S.paid||kickLocked,p=kickLocked?(S.predictions[f.id]?{home:S.predictions[f.id].predicted_home,away:S.predictions[f.id].predicted_away}:{home:'–',away:'–'}):draftFor(String(f.id));return `<div class="kp-native-match" data-fixture="${esc(f.id)}"><div class="kp-native-side">${crest(f.home)}<div><div class="kp-native-team">${esc(displayName(f.home?.name))}</div>${form(f.home?.id)}</div></div><div class="kp-native-mid"><div class="kp-native-time">${fmtTime(f.kickoff)}</div><div class="kp-native-lock">${locked?(kickLocked?'Locked':'Payment required'):`Locks in ${rel(f.kickoff)}`}</div></div><div class="kp-native-side away"><div><div class="kp-native-team">${esc(displayName(f.away?.name))}</div>${form(f.away?.id)}</div>${crest(f.away)}</div><div class="kp-native-scores">${scoreControl(f,'home',p.home,locked)}<span class="kp-native-divider"></span>${scoreControl(f,'away',p.away,locked)}</div></div>`}
+  /* Same .kp-actions / .kp-action / .kp-sechead components Live uses - identical
+     markup and CSS, so both rows occupy the same vertical slot and only the copy
+     differs. Progress comes from S.predictions, which is the saved prediction per
+     fixture for this user; it is the same thing the Live Table counts as a locked
+     pick, so the two screens cannot disagree. */
+  const ACTION_ICON = {
+    progress: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.4 12.3 2.5 2.5 4.7-5"/></svg>',
+    others: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><circle cx="17.4" cy="8.6" r="2.4"/><path d="M16 14.2h.6a4.4 4.4 0 0 1 4.4 4.4V20"/></svg>'
+  };
+  const pickedCount=()=>S.fixtures.reduce((n,f)=>n+(S.predictions[f.id]?1:0),0);
+  function actionHTML({icon,title,sub,attrs}){
+    return `<button type="button" class="kp-action" ${attrs}><span class="kp-action-icon" aria-hidden="true">${icon}</span><span class="kp-action-copy"><b>${esc(title)}</b><small>${esc(sub)}</small></span><span class="kp-action-go" aria-hidden="true">\u203a</span></button>`;
+  }
+  function actionsHTML(){
+    const total=S.fixtures.length,picked=pickedCount(),done=total>0&&picked===total;
+    return `<div class="kp-actions">${
+      actionHTML({icon:ACTION_ICON.progress,title:`${picked}/${total} picked`,sub:done?'Review your picks':'View your picks',attrs:'data-kp-goto="picks"'})
+    }${
+      actionHTML({icon:ACTION_ICON.others,title:'Others\u2019 picks',sub:'See group picks',attrs:'data-kp-goto="others"'})
+    }</div>`;
+  }
+  function secheadHTML(round){
+    return `<div class="kp-sechead"><h1>Fixtures</h1><div class="kp-sechead-meta">Matchday ${esc(round)}</div></div>`;
+  }
   function fixtureList(){
     let day='';return [...S.fixtures].sort((a,b)=>Date.parse(a.kickoff)-Date.parse(b.kickoff)).map(f=>{
       const next=fmtDate(f.kickoff),heading=next!==day?'<div class="kp-native-date">'+esc(next)+'</div>':'';day=next;return heading+fixtureHTML(f);
     }).join('');
   }
-  function render(){if(!mounted||!isGW())return;document.body.classList.add('kp-native-matchday');const screen=$('#screen');if(!screen)return;if(!S.loaded){screen.innerHTML='<div class="kp-native-loading">Loading fixtures…</div>';return;}const rn=(String(S.round).match(/\d+/)||['4'])[0],next=S.fixtures.filter(f=>new Date(f.kickoff)>new Date()).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))[0],first=S.fixtures.slice().sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))[0];screen.innerHTML=`<div class="kp-native-tabs"><span>Fixtures</span></div><section class="kp-native-hero"><img class="kp-native-hero-photo" src="/kickpot-hero-final.jpg?v=3" alt="Football stadium"><div class="kp-native-eyebrow">Matchday ${rn}</div><h1>Premier <br>League</h1><div class="kp-native-count"><small>Picks close in</small><strong>${esc(next?heroRel(next.kickoff):'Closed')}</strong></div></section><section class="kp-native-list">${fixtureList()}<button class="kp-native-lock-button" id="kpNativeLock" ${!S.paid||saving||!S.fixtures.some(f=>Date.now()<Date.parse(f.kickoff))?'disabled':''}>${S.paid?'Lock in my picks':'Predictions unavailable'}</button><div class="kp-native-status" id="kpNativeStatus" role="status">${!S.fixtures.length?'No fixtures available yet.':!S.paid?'Pay the Treasurer and wait for confirmation in Group → Payments.':'You can edit saved picks until each fixture kicks off.'}</div></section>`;}
+  function render(){if(!mounted||!isGW())return;document.body.classList.add('kp-native-matchday');const screen=$('#screen');if(!screen)return;if(!S.loaded){screen.innerHTML='<div class="kp-native-loading">Loading fixtures…</div>';return;}const rn=(String(S.round).match(/\d+/)||['4'])[0],next=S.fixtures.filter(f=>new Date(f.kickoff)>new Date()).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))[0],first=S.fixtures.slice().sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))[0];screen.innerHTML=`<div class="kp-native-tabs"><span>Fixtures</span></div><section class="kp-native-hero"><img class="kp-native-hero-photo" src="/kickpot-hero-final.jpg?v=3" alt="Football stadium"><div class="kp-native-eyebrow">Matchday ${rn}</div><h1>Premier <br>League</h1><div class="kp-native-count"><small>Picks close in</small><strong>${esc(next?heroRel(next.kickoff):'Closed')}</strong></div></section>${actionsHTML()}${secheadHTML(rn)}<section class="kp-native-list">${fixtureList()}<button class="kp-native-lock-button" id="kpNativeLock" ${!S.paid||saving||!S.fixtures.some(f=>Date.now()<Date.parse(f.kickoff))?'disabled':''}>${S.paid?'Lock in my picks':'Predictions unavailable'}</button><div class="kp-native-status" id="kpNativeStatus" role="status">${!S.fixtures.length?'No fixtures available yet.':!S.paid?'Pay the Treasurer and wait for confirmation in Group → Payments.':'You can edit saved picks until each fixture kicks off.'}</div></section>`;}
   async function save(){
     if(!mounted||saving||!S.paid)return;
     const status=$('#kpNativeStatus'),btn=$('#kpNativeLock'),gid=S.groupId,uid=context.state.session?.user.id;
@@ -55,6 +79,24 @@
     if(img instanceof HTMLImageElement&&img.classList.contains('crest'))img.dataset.loaded='1';
   },true);
   document.addEventListener('click',e=>{
+    const go=e.target.closest?.('[data-kp-goto]');
+    if(go&&isGW()){
+      e.preventDefault();
+      if(go.dataset.kpGoto==='picks'){
+        /* Matchday IS the picks screen, so this focuses the first fixture still
+           missing a prediction rather than inventing a second view of them. */
+        const next=S.fixtures.find(f=>!S.predictions[f.id])||S.fixtures[0];
+        const el=next&&document.querySelector(`.kp-native-match[data-fixture="${next.id}"]`);
+        (el||document.querySelector('.kp-native-list'))?.scrollIntoView({behavior:'smooth',block:'start'});
+      } else {
+        /* Group picks already exist on Live's fixtures page, behind the existing
+           per-fixture kickoff reveal. Send the user there instead of building a
+           second way to read other people's predictions. */
+        window.KickPotLive?.requestPage?.('fixtures');
+        document.querySelector('.bottom-nav .nav-item[data-tab="live"]')?.click();
+      }
+      return;
+    }
     if(!mounted||!isGW())return;
     const step=e.target.closest('[data-score-step]');
     if(step){const[id,side,delta]=step.dataset.scoreStep.split(',');const f=S.fixtures.find(f=>String(f.id)===id);

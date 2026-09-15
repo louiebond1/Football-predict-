@@ -62,7 +62,7 @@ input,select,textarea{font-size:16px;max-width:100%}
       header into place afterwards.
 
    Nothing here is screen-scoped. There is no tab-specific header any more. */
-:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px;--kp-radius:18px;--kp-gap:14px;--kp-row-lead:40px;--kp-row-gap:12px;--kp-section-gap:24px}
+:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px;--kp-radius:18px;--kp-gap:14px;--kp-row-lead:40px;--kp-row-gap:12px;--kp-section-gap:24px;--kp-action-h:56px;--kp-sechead-h:48px}
 
 /* ---------------------------------------------------------------------------
    ONE GRID.
@@ -103,6 +103,84 @@ input,select,textarea{font-size:16px;max-width:100%}
    #app's, and those totalled 86/86/90/230px - Group scrolled to 154px of
    dead space under its last row, the other three to none to speak of. */
 #app{padding-bottom:0!important}
+/* ---------------------------------------------------------------------------
+   SHARED MATCHDAY / LIVE BLOCKS.
+
+   Matchday and Live diverged because Live had two structural blocks Matchday
+   did not have at all - an action row and a section header - so there was
+   nothing to align. Matchday went hero -> date label -> fixture rows while
+   Live went hero -> actions -> heading -> table rows. No amount of spacing
+   tokens fixes a missing block.
+
+   Both screens now emit the same two components (see actionsHTML/secheadHTML
+   in matchday-reference-live.js and live-reference-table.js), styled once
+   here. The copy differs; the geometry cannot, because there is one rule.
+
+   Vertical slots, from the hero down, identical on both tabs:
+     hero            --kp-hero-h
+     --kp-gap        14
+     .kp-actions     --kp-action-h   56
+     --kp-section-gap 24
+     .kp-sechead     --kp-sechead-h  48
+     content                                                                */
+.kp-actions{
+  display:grid!important;grid-template-columns:1fr 1fr!important;
+  gap:var(--kp-row-gap)!important;
+  margin:var(--kp-gap) var(--kp-gutter) 0!important;padding:0!important;
+  border:0!important;background:none!important;
+}
+.kp-action{
+  display:grid!important;grid-template-columns:28px minmax(0,1fr) 10px!important;
+  align-items:center!important;gap:10px!important;
+  width:100%!important;min-height:var(--kp-action-h)!important;height:var(--kp-action-h)!important;
+  padding:0 12px!important;margin:0!important;text-align:left!important;
+  border:1px solid rgba(21,24,22,.12)!important;border-radius:var(--kp-radius)!important;
+  background:rgba(255,255,255,.4)!important;color:#151816!important;box-shadow:none!important;
+}
+.kp-action+.kp-action{border-left:1px solid rgba(21,24,22,.12)!important}
+.kp-action:active{background:rgba(21,24,22,.04)!important}
+.kp-action-icon{display:grid!important;place-items:center!important;width:28px!important;height:28px!important;color:#267a50!important}
+.kp-action-icon svg{width:19px!important;height:19px!important}
+.kp-action-copy{display:block!important;min-width:0!important}
+.kp-action-copy b{display:block!important;font:650 13px/1.15 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.01em!important;color:#151816!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.kp-action-copy small{display:block!important;margin-top:2px!important;font:500 10.5px/1.15 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;color:#7b7c77!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.kp-action-go{justify-self:end!important;font:400 17px/1 Georgia,"Times New Roman",serif!important;color:#aaa8a4!important}
+
+.kp-sechead{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;
+  height:var(--kp-sechead-h)!important;min-height:var(--kp-sechead-h)!important;
+  margin:var(--kp-section-gap) var(--kp-gutter) 0!important;padding:0!important;border:0!important;
+}
+.kp-sechead h1,.kp-sechead h2{margin:0!important;font:800 24px/1 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif!important;letter-spacing:-.03em!important;color:#151816!important}
+.kp-sechead{border-bottom:1px solid rgba(21,24,22,.09)!important}
+.kp-sechead-meta{display:flex!important;align-items:center!important;gap:6px!important;margin:0!important;font:650 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;color:#7b7c77!important;white-space:nowrap!important}
+
+/* The two screens' own wrappers must not re-pad what the shared blocks own. */
+/* .kp-live-table-head carries .kp-sechead, so only its old padding/border are
+   neutralised - zeroing its margin here would cancel the shared gutter. */
+.kp-live-table-head{padding:0!important;border:0!important;background:none!important}
+.kp-live-board{margin-top:0!important;border-top:0!important}
+.kp-native-list{padding-top:0!important}
+.kp-native-list>.kp-native-date:first-child{padding-top:var(--kp-row-gap)!important}
+
+/* Compact fixture row: teams and kickoff on one line, the two steppers beneath,
+   rather than a full-width mid block stacking time, lock and both steppers -
+   which is what made a fixture 153px tall against a Live row of 68px. */
+body.kp-native-matchday .kp-native-match{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
+  grid-template-areas:"home mid away" "scores scores scores"!important;
+  align-items:center!important;gap:6px 10px!important;padding:10px 0!important;min-height:0!important;
+}
+body.kp-native-matchday .kp-native-side{grid-area:home!important}
+body.kp-native-matchday .kp-native-side.away{grid-area:away!important}
+body.kp-native-matchday .kp-native-mid{grid-area:mid!important;width:auto!important;min-width:84px!important}
+body.kp-native-matchday .kp-native-scores{grid-area:scores!important;display:grid!important;grid-template-columns:1fr 8px 1fr!important;gap:6px!important;margin:0!important}
+body.kp-native-matchday .kp-native-score{width:100%!important;max-width:150px!important;height:44px!important;justify-self:center!important}
+body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-native-score b,body.kp-native-matchday .kp-native-score span{height:42px!important;line-height:42px!important}
+/* Live rows come up to meet them: 72px is the concept's row height and it
+   gives the table the air the fixtures need for a 44px stepper. */
+.kp-live-trow{min-height:72px!important}
+
 /* ---------------------------------------------------------------------------
    ONE SECTION SPACING.
 
