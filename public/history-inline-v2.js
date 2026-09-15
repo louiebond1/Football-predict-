@@ -75,7 +75,14 @@
     root.addEventListener('click',e=>{const w=e.target.closest('[data-hi-week]');if(w){selected=String(w.dataset.hiWeek);renderWeek();return}const p=e.target.closest('[data-hi-user]');if(p){showPlayer(root,p).catch(()=>{if(root.isConnected)root.innerHTML='<button type="button" class="kp-hi-back">Back to table</button><p>Couldn’t load predictions. Try again.</p>';});return}if(e.target.closest('.kp-hi-back'))renderWeek()});
 
     const seq=++renderSeq,sb=await client(); if(!root.isConnected||seq!==renderSeq||!historyActive())return;
-    const gid=await getGroupId(sb),cached=null;
+    /* boardCache is written at the end of this function but was read back as a
+       hard-coded null, so every visit to History threw the previous result
+       away and rendered the loading block again - and because that block is a
+       fixed 232px while the real list is a different height, everything below
+       it jumped when the data landed (measured: the card going 270px -> 88px
+       on one visit). Reading the cache paints the previous result straight
+       away and the fetch below refreshes it in place. */
+    const gid=await getGroupId(sb),cached=gid?boardCache.get(gid)||null:null;
     if(cached){weeks=cached.weeks;byWeek=cached.byWeek;selected=String(weeks[0]?.id||'');renderWeek()}else root.innerHTML='<div class="kp-hi-loading">Loading previous Matchdays…</div>';
     if(!sb||!gid){if(!cached)root.innerHTML='<div class="kp-hi-empty">Couldn’t load previous Matchdays.</div>';return}
     const {data:board,error:boardErr}=await import('./standings.js').then(m=>m.readStandings(sb,gid)).then(data=>({data}),error=>({error})); if(seq!==renderSeq||!root.isConnected)return;
