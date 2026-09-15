@@ -2,7 +2,9 @@
 body[data-kp-screen="history"] #screen{padding-bottom:22px}
 body[data-kp-screen="history"] #screen>.card{margin-left:0!important;margin-right:0!important}
 /* History is already scoped to the selected group: don't repeat the large group selector here. */
-body[data-kp-screen="history"] #groupBar{display:none!important}
+/* #groupBar hidden here made History the one tab without the group row, so
+   its content started 59px higher than every other tab. The bar is shared
+   chrome now - the shell shows it on all four tabs, or on none. */
 
 /* Winner: neutral charcoal trophy treatment so History does not become another green screen. */
 body[data-kp-screen="history"] #screen>.winner{

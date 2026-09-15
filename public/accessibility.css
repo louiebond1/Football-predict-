@@ -103,6 +103,40 @@ input,select,textarea{font-size:16px;max-width:100%}
    #app's, and those totalled 86/86/90/230px - Group scrolled to 154px of
    dead space under its last row, the other three to none to speak of. */
 #app{padding-bottom:0!important}
+/* ---------------------------------------------------------------------------
+   ONE HERO BOX.
+
+   Measured off the device recording and reproduced in a browser. Every tab
+   opens with a hero, and all three numbers that describe it differed:
+
+                  top    height   (browser coords, #screen top 127 + 8 padding)
+     Matchday     143      190
+     Live         143      190
+     History      147      244
+     Group        135      214
+
+   Two separate causes. The tops split because simple-overhaul-v2 gives
+   Matchday's and Live's heroes `margin:8px 18px 0` - an 8px top margin that
+   Group's and History's heroes do not have, so those two start at the padding
+   edge and the other two start 8px lower. The heights split because four
+   files each set their own: 244px in matchday-reference-live and
+   live-reference-table, 190px in simple-overhaul-v2, 214px in
+   group-reference-v1 (112px in its compact variant, 204px in its media
+   query), and the History champion card sizes itself from its content.
+
+   One box now, named once. 190px because it is what Matchday and Live - the
+   two screens that got a full design pass - already use, so the two tabs that
+   look right do not move. Group loses 24px, History loses 54px, and all four
+   start at the same y. Only what is inside the box changes between tabs. */
+:root{--kp-hero-h:190px}
+.kp-native-hero,.kp-live-hero,.group-reference-hero,
+.group-reference-hub--compact .group-reference-hero,
+#screen>.card.winner,#screen>.winner{
+  height:var(--kp-hero-h)!important;min-height:var(--kp-hero-h)!important;
+  margin-top:0!important;margin-bottom:14px!important;
+  border-radius:18px!important;overflow:hidden!important;
+}
+
 /* Inside the blocks, two leftovers: hero copy sat 22px in from the photo edge
    on Matchday/Live but 18px on Group, and Group's mode/avatars rows carried a
    stray 2px that put their text 20px from the screen edge under a 18px block.

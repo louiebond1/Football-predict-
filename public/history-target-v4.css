@@ -1,8 +1,15 @@
 /* Approved History reference — final visual override only. */
-body[data-kp-screen="history"] #groupBar{display:block!important}
-body[data-kp-screen="history"] .topbar .brand{position:relative;padding-bottom:13px}
-body[data-kp-screen="history"] .topbar .brand:after{content:"PLAY · PREDICT · WIN";position:absolute;left:31px;bottom:-1px;color:#9a998f;font-size:7px;font-weight:600;letter-spacing:.22em;white-space:nowrap}
-body[data-kp-screen="history"] #screen>.winner{min-height:244px!important;margin:12px 14px 26px!important;padding:45px 28px!important;border-radius:17px!important;border:0!important;background-image:linear-gradient(90deg,rgba(10,27,21,.93) 0%,rgba(10,27,21,.79) 44%,rgba(10,27,21,.18) 70%,rgba(10,27,21,.02) 100%),url('https://sangharshpremierleague.com/assets/images/trophy.png')!important;background-size:cover!important;background-position:center 49%!important;box-shadow:none!important}
+/* The "PLAY · PREDICT · WIN" lockup and the padding that made room for it
+   lived here, on History only, which made History the one tab with a taller
+   header and a wordmark sitting ~7px higher than the other three. The header
+   is shared chrome, so it is the same on every tab now. */
+/* Same trophy hero, in the shared box: --kp-hero-h tall, on the --kp-gutter
+   grid, no top margin - so it opens at exactly the same y and the same size
+   as Matchday's, Live's and Group's heroes. It was 244px tall, inset 14px
+   and pushed down 12px, which is what made History sit lower and read as a
+   different screen. Padding comes down with the height so the trophy,
+   eyebrow, name and matchday line still fit. */
+body[data-kp-screen="history"] #screen>.winner{height:var(--kp-hero-h)!important;min-height:var(--kp-hero-h)!important;margin:0 var(--kp-gutter) 14px!important;padding:20px 24px!important;border-radius:17px!important;border:0!important;background-image:linear-gradient(90deg,rgba(10,27,21,.93) 0%,rgba(10,27,21,.79) 44%,rgba(10,27,21,.18) 70%,rgba(10,27,21,.02) 100%),url('https://sangharshpremierleague.com/assets/images/trophy.png')!important;background-size:cover!important;background-position:center 49%!important;box-shadow:none!important}
 body[data-kp-screen="history"] #screen>.winner:before,body[data-kp-screen="history"] #screen>.winner:after{display:none!important}
 body[data-kp-screen="history"] #screen>.winner .trophy{width:22px!important;height:22px!important;margin:0 0 25px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#b88e28!important}
 body[data-kp-screen="history"] #screen>.winner .trophy svg{width:22px!important;height:22px!important}
@@ -19,4 +26,4 @@ body[data-kp-screen="history"] #screen>.card:has(#kpHistoryInlineV2){padding:0 2
 .kp-hi-avatar{width:48px!important;height:48px!important;font-size:11px!important}
 .kp-hi-name strong{font-size:16px!important}.kp-hi-name small{margin-top:5px;font-size:11px!important}
 .kp-hi-points strong{font-size:26px!important}.kp-hi-points small{font-size:9px!important}
-@media(max-width:390px){body[data-kp-screen="history"] #screen>.winner{min-height:218px!important;margin-left:8px!important;margin-right:8px!important;padding:38px 22px!important}.kp-hi-week{min-height:48px!important;padding:0 18px!important}.kp-hi-row{min-height:84px!important;grid-template-columns:27px 44px minmax(0,1fr) 45px 10px!important;gap:9px!important}.kp-hi-avatar{width:42px!important;height:42px!important}}
+@media(max-width:390px){body[data-kp-screen="history"] #screen>.winner{padding:18px 20px!important}.kp-hi-week{min-height:48px!important;padding:0 18px!important}.kp-hi-row{min-height:84px!important;grid-template-columns:27px 44px minmax(0,1fr) 45px 10px!important;gap:9px!important}.kp-hi-avatar{width:42px!important;height:42px!important}}
