@@ -25,7 +25,10 @@ body[data-kp-screen="history"] #screen>.winner .trophy svg{width:22px!important;
 body[data-kp-screen="history"] #screen>.winner .eyebrow{margin-bottom:9px!important;color:#f2eee5!important;font-size:9px!important;font-weight:850!important;letter-spacing:.22em!important}
 body[data-kp-screen="history"] #screen>.winner h1{max-width:54%!important;color:#fff!important;font-size:clamp(33px,9vw,45px)!important;font-weight:900!important;line-height:.94!important;letter-spacing:-1.6px!important;text-transform:none!important}
 body[data-kp-screen="history"] #screen>.winner>.muted{margin-top:13px!important;color:#f0ede6!important;font-size:13px!important;font-weight:700!important}
-body[data-kp-screen="history"] #screen>.card:has(#kpHistoryInlineV2){padding:0 var(--kp-gutter)!important}
+/* No inner gutter: the card itself is already on --kp-gutter, so padding it
+   again indented every standings row to 36px while every other tab's rows
+   start at 18px. */
+body[data-kp-screen="history"] #screen>.card:has(#kpHistoryInlineV2){padding:0!important}
 .kp-hi-weekbar{gap:12px!important;padding:0 0 31px!important}
 .kp-hi-week{min-height:54px!important;padding:0 23px!important;border-radius:17px!important;font-size:13px!important}
 #kpHistoryInlineV2:before{margin:0 0 8px!important;font-size:30px!important;letter-spacing:-1px!important}

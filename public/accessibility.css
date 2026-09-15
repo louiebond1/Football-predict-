@@ -62,7 +62,7 @@ input,select,textarea{font-size:16px;max-width:100%}
       header into place afterwards.
 
    Nothing here is screen-scoped. There is no tab-specific header any more. */
-:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px;--kp-radius:18px;--kp-gap:14px}
+:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px;--kp-radius:18px;--kp-gap:14px;--kp-row-lead:40px;--kp-row-gap:12px}
 
 /* ---------------------------------------------------------------------------
    ONE GRID.
@@ -103,6 +103,44 @@ input,select,textarea{font-size:16px;max-width:100%}
    #app's, and those totalled 86/86/90/230px - Group scrolled to 154px of
    dead space under its last row, the other three to none to speak of. */
 #app{padding-bottom:0!important}
+/* ---------------------------------------------------------------------------
+   ONE ROW GRID.
+
+   Headings all sit on the gutter already. What was still ragged was the text
+   inside list rows - the thing you actually read down the page. Measured at
+   390px with each screen's own markup:
+
+                   row starts    text column
+     Matchday          18            55
+     Live              18            63
+     Group             18            70
+     History           36           125
+
+   Two separate faults. History's rows started at 36 because its card is on
+   the shared gutter AND history-target-v4 padded the same card by the gutter
+   again - a double inset. And the leading column that pushes the text in is
+   declared thirteen times across six files (34/6, 31/5, 30/7 for Matchday;
+   34/8, 30/10 for Live; six different pairs for History; 38/12 for Group),
+   so no two screens indented their text by the same amount.
+
+   One leading column now - --kp-row-lead plus --kp-row-gap - which puts the
+   first character of every row on the same vertical line as every other tab:
+   18 + 40 + 12 = 70px. Headings stay on the gutter at 18, so the page reads
+   as two rules, not thirteen. */
+.kp-native-side{grid-template-columns:var(--kp-row-lead) minmax(0,1fr)!important;gap:var(--kp-row-gap)!important}
+.kp-native-side.away{grid-template-columns:minmax(0,1fr) var(--kp-row-lead)!important}
+.kp-live-trow{grid-template-columns:var(--kp-row-lead) minmax(0,1fr) 42px 14px!important;gap:var(--kp-row-gap)!important}
+/* Four columns, not five: the standings avatar is hidden just below, so the
+   rank becomes the lead and this row matches Live's - the two screens are the
+   same thing, a ranked table of players. */
+.kp-hi-row{grid-template-columns:var(--kp-row-lead) minmax(0,1fr) 50px 12px!important;gap:var(--kp-row-gap)!important}
+.kp-hi-avatar{display:none!important}
+.group-reference-menu>button{grid-template-columns:var(--kp-row-lead) minmax(0,1fr) auto!important;gap:var(--kp-row-gap)!important}
+/* Rows carry no horizontal padding of their own - Live had 2-3px and Group a
+   couple more, which slid their whole grid off the gutter and put their text
+   at 73 and 72 against everyone else's 70. The gutter is the row's edge. */
+.kp-live-trow,.kp-hi-row,.group-reference-menu>button,.kp-native-match{padding-left:0!important;padding-right:0!important}
+
 /* ---------------------------------------------------------------------------
    ONE SECTION GRID.
 
