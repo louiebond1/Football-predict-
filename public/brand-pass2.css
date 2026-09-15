@@ -1,9 +1,6 @@
 /* KickPot visual foundation — Pass 2
-   Surface hierarchy + flow. No data, interaction, icon or hero-asset changes. */
-
-/* Make dark mode visibly bottle-green rather than generic charcoal. */
-html:not([data-kp-theme="light"]),
-html[data-kp-theme="dark"]{
+   Surface hierarchy + flow. No data, interaction, icon or hero-asset changes. *//* Make dark mode visibly bottle-green rather than generic charcoal. */
+html:not([data-kp-theme="light"]){
   --kp-bg:#06130d;
   --kp-surface:#0b1a12;
   --kp-surface-2:#11241a;

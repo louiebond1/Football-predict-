@@ -5,11 +5,8 @@
   --kp-font-body:"Avenir Next","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --kp-font-display:"Avenir Next Condensed","Arial Narrow","Roboto Condensed","HelveticaNeue-CondensedBold","Franklin Gothic Condensed","Aptos Narrow",sans-serif;
   --kp-gold:#e1b24a;
-}
-
-/* Dark is a bottle-green night palette, not a neutral charcoal inversion. */
-html:not([data-kp-theme="light"]),
-html[data-kp-theme="dark"]{
+}/* Dark is a bottle-green night palette, not a neutral charcoal inversion. */
+html:not([data-kp-theme="light"]){
   --kp-bg:#07100c;
   --kp-surface:#0d1711;
   --kp-surface-2:#132018;

@@ -119,15 +119,17 @@ test('visual baseline has no horizontal overflow on key screens',async({page},te
  expect(h.errors).toEqual([]);
 });
 
-test('score targets stay visible and theme preference survives navigation',async({page})=>{
+test('score targets stay visible and there is no dark theme to switch to',async({page})=>{
  await setup(page);await page.goto('/');await expect(page.locator('.kp-native-hero')).toBeVisible();
  for(const button of await page.locator('[data-score-step]').all()){
   const box=await button.boundingBox();expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
   expect(await button.evaluate(el=>{const r=el.getBoundingClientRect(),p=el.parentElement.getBoundingClientRect();return r.left>=p.left&&r.right<=p.right+1&&r.bottom<=p.bottom+1;})).toBe(true);
  }
  await page.locator('[data-tab=group]').click();await expect(page.locator('.group-reference-hub')).toBeVisible();
- await page.locator('#kpThemeToggle').click();await expect(page.locator('html')).toHaveAttribute('data-kp-theme','dark');
- await expect(page.locator('html')).toHaveAttribute('data-kp-theme','dark');await page.reload();await expect(page.locator('html')).toHaveAttribute('data-kp-theme','dark');
+ await expect(page.locator('#kpThemeToggle')).toHaveCount(0);
+ await expect(page.locator('html')).toHaveAttribute('data-kp-theme','light');
+ await page.reload();await expect(page.locator('html')).toHaveAttribute('data-kp-theme','light');
+ expect(await page.evaluate(()=>document.querySelector('meta[name="theme-color"]').content)).toBe('#f4efe4');
 });
 
 test('payment claim stays scoped to the displayed week and admin confirmation is deliberate',async({page})=>{

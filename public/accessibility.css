@@ -458,20 +458,16 @@ body{background:#ede9e0!important}
    Safari trigger for the bar detaching and painting at a stale offset during
    momentum scrolling - it floats up into the middle of the content and snaps
    back when the scroll settles. Opaque background, no blur layer, no artifact. */
-#app .bottom-nav{position:fixed!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:0!important;width:min(100vw,430px)!important;height:var(--kp-nav-h)!important;padding:0 0 max(9px,env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(4,1fr)!important;background:#f7f4ec!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;border-top:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;box-shadow:none!important;z-index:100!important}
-/* Topbar controls: the toggle glyph was rgb(216,213,226) on cream - about
+#app .bottom-nav{position:fixed!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:0!important;width:min(100vw,430px)!important;height:var(--kp-nav-h)!important;padding:0 0 max(9px,env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(4,1fr)!important;background:#f7f4ec!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;border-top:1px solid rgba(21,24,22,.09)!important;border-radius:0!important;box-shadow:none!important;z-index:100!important}/* Topbar controls: the toggle glyph was rgb(216,213,226) on cream - about
    1.3:1 contrast, effectively invisible on every tab - and History dropped
-   the account chip entirely while styling it white-on-cream. */
-/* min-height:44px (the touch-target floor at the top of this file) applies to
+   the account chip entirely while styling it white-on-cream. *//* min-height:44px (the touch-target floor at the top of this file) applies to
    these, and min-height beats height no matter how many !importants the height
    carries - so the chip has been rendering 36 wide by 44 tall on every single
    tab: a visible ellipse, not a circle. Pinned square here, with the 44px
    touch target restored as an overlay so nothing is lost by making it round. */
-#app>.topbar #kpThemeToggle,#app>.topbar #userChip{position:relative!important;display:grid!important;place-items:center!important;width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;max-height:36px!important;padding:0!important;border-radius:50%!important;background:transparent!important;color:#151816!important;box-shadow:none!important}
-#app>.topbar #kpThemeToggle::after,#app>.topbar #userChip::after{content:''!important;position:absolute!important;top:50%!important;left:50%!important;width:44px!important;height:44px!important;transform:translate(-50%,-50%)!important}
+#app>.topbar #userChip{position:relative!important;display:grid!important;place-items:center!important;width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;max-height:36px!important;padding:0!important;border-radius:50%!important;background:transparent!important;color:#151816!important;box-shadow:none!important}
+#app>.topbar #userChip::after{content:''!important;position:absolute!important;top:50%!important;left:50%!important;width:44px!important;height:44px!important;transform:translate(-50%,-50%)!important}
 #app>.topbar #userChip{border:1px solid rgba(21,24,22,.14)!important;font-size:13px!important;font-weight:700!important}
-#app>.topbar #kpThemeToggle{border:0!important;font-size:17px!important}
-html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"] #app>.topbar #userChip{color:#f4f1ea!important}
 
 /* Loading states are skeletons of the screen that is coming, not a line of
    text in an empty page.
@@ -578,4 +574,3 @@ body.kp-native-matchday .kp-native-lock,body.kp-native-matchday .kp-native-time{
    loaded crest with transparent corners doesn't keep a grey disc behind it. */
 .kp-native-side img:not([data-loaded]){background:rgba(21,24,22,.06)!important;border-radius:50%!important}
 .kp-native-side .crest-fallback{display:grid;place-items:center;width:30px;height:30px;border:1px solid currentColor;border-radius:50%;font-size:14px}
-html[data-kp-theme="dark"] body.kp-native-matchday .kp-native-lock,html[data-kp-theme="dark"] body.kp-native-matchday .kp-native-time{color:#bdbfb8!important}

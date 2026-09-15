@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="en">
+<!-- data-kp-theme is pinned to light. There is no dark theme and no toggle;
+     the attribute remains only because kickpot-recording-fixes.css scopes real
+     light-mode rules to it, and dropping it would change their specificity. -->
+<html lang="en" data-kp-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
@@ -50,7 +53,6 @@
     <main id="screen" class="screen"></main><div id="toast" role="status" aria-live="polite" class="status toast"></div>
     <nav class="bottom-nav" aria-label="Main navigation"><button data-tab="gw" class="nav-item active"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><small>Matchday</small></button><button data-tab="live" class="nav-item"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.5 5.5a9.5 9.5 0 0 0 0 13M18.5 5.5a9.5 9.5 0 0 1 0 13"/></svg><small>Live</small></button><button data-tab="history" class="nav-item"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg><small>History</small></button><button data-tab="group" class="nav-item"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><circle cx="17.5" cy="8.5" r="2.4"/></svg><small>Group</small></button></nav>
   </div>
-  <script src="/theme.js"></script>
   <script src="/live-reference-table.js"></script>
   <script src="/matchday-reference-live.js"></script>
   <script src="/group-reference-v1.js"></script>

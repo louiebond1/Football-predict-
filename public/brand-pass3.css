@@ -98,19 +98,12 @@ body.kp-studio .avatar[data-kp-tone]{
   letter-spacing:-.02em!important;
 }
 body.kp-studio .avatar.sm[data-kp-tone]{border-radius:8px!important}
-
-html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="0"],
-html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="0"]{background:#1b3a29!important;color:#bfe8ce!important}
-html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="1"],
-html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="1"]{background:#4b3b1d!important;color:#f4d887!important}
-html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="2"],
-html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="2"]{background:#432c24!important;color:#efc5ae!important}
-html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="3"],
-html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="3"]{background:#20373c!important;color:#b8dce2!important}
-html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="4"],
-html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="4"]{background:#32371f!important;color:#d9e2a9!important}
-html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="5"],
-html[data-kp-theme="dark"] body.kp-studio .avatar[data-kp-tone="5"]{background:#2b3338!important;color:#d4dde1!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="0"]{background:#1b3a29!important;color:#bfe8ce!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="1"]{background:#4b3b1d!important;color:#f4d887!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="2"]{background:#432c24!important;color:#efc5ae!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="3"]{background:#20373c!important;color:#b8dce2!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="4"]{background:#32371f!important;color:#d9e2a9!important}
+html:not([data-kp-theme="light"]) body.kp-studio .avatar[data-kp-tone="5"]{background:#2b3338!important;color:#d4dde1!important}
 
 html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="0"]{background:#cfe3d5!important;color:#24583a!important}
 html[data-kp-theme="light"] body.kp-studio .avatar[data-kp-tone="1"]{background:#ead9ad!important;color:#76540d!important}
