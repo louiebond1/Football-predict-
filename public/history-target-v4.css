@@ -18,7 +18,7 @@
    cream showed straight through it, which is the white glow down that side.
    /kickpot-hero-final.jpg is this app's own asset and is in the service
    worker's precache, so it cannot fail to load or be taken away. */
-body[data-kp-screen="history"] #screen>.winner{height:var(--kp-hero-h)!important;min-height:var(--kp-hero-h)!important;margin:0 var(--kp-gutter) 14px!important;padding:20px 24px!important;border-radius:17px!important;border:0!important;background-image:linear-gradient(90deg,rgba(3,7,5,.76),rgba(3,7,5,.18) 75%),url('/kickpot-hero-final.jpg')!important;background-size:cover!important;background-position:center 48%!important;box-shadow:none!important}
+body[data-kp-screen="history"] #screen>.winner{height:var(--kp-hero-h)!important;min-height:var(--kp-hero-h)!important;margin:0 var(--kp-gutter) 14px!important;padding:20px 24px!important;border-radius:var(--kp-radius)!important;border:0!important;background-image:linear-gradient(90deg,rgba(3,7,5,.76),rgba(3,7,5,.18) 75%),url('/kickpot-hero-final.jpg')!important;background-size:cover!important;background-position:center 48%!important;box-shadow:none!important}
 body[data-kp-screen="history"] #screen>.winner:before,body[data-kp-screen="history"] #screen>.winner:after{display:none!important}
 body[data-kp-screen="history"] #screen>.winner .trophy{width:22px!important;height:22px!important;margin:0 0 25px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#b88e28!important}
 body[data-kp-screen="history"] #screen>.winner .trophy svg{width:22px!important;height:22px!important}

@@ -22,7 +22,7 @@ body.kp-native-matchday #userChip,body.kp-native-live #userChip{width:36px!impor
 .kp-live-stats{left:22px!important;bottom:18px!important;font-size:9px!important;letter-spacing:.04em!important;gap:6px!important;text-transform:none!important}
 
 /* Matchday: readable rows, less visual noise. */
-.kp-native-list{padding:18px 18px 24px!important}
+.kp-native-list{padding:0 18px 24px!important}
 .kp-native-date{margin:0 0 8px!important;font-size:10px!important;letter-spacing:.08em!important;color:#817d73!important}
 .kp-native-match{grid-template-columns:minmax(0,1fr) 112px minmax(0,1fr)!important;min-height:82px!important;gap:6px!important;border-bottom:1px solid var(--kp-line)!important}
 .kp-native-side{grid-template-columns:30px minmax(0,1fr)!important;gap:7px!important}
@@ -37,7 +37,7 @@ body.kp-native-matchday #userChip,body.kp-native-live #userChip{width:36px!impor
 .kp-native-lock-button{height:46px!important;border-radius:12px!important;margin-top:16px!important}
 
 /* Live landing page — no extra decorative sections. */
-.kp-live-primary-actions{margin:12px 18px 0!important;border:1px solid var(--kp-line)!important;border-radius:14px!important;overflow:hidden!important;background:rgba(255,255,255,.36)!important}
+.kp-live-primary-actions{border:1px solid var(--kp-line)!important;overflow:hidden!important;background:rgba(255,255,255,.36)!important}
 .kp-live-primary-actions button{min-height:52px!important;padding:0 16px!important;font:650 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
 .kp-live-table-head{padding:28px 22px 9px!important;align-items:center!important}
 .kp-live-table-head h1{font:700 31px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.045em!important}
@@ -69,4 +69,4 @@ body.kp-native-matchday .bottom-nav .nav-item.active,body.kp-native-live .bottom
 /* Remove route-hold/skeleton artefacts if an older cached script briefly creates one. */
 .kp-native-loading{min-height:260px!important;padding:80px 24px!important;background:var(--kp-paper)!important}
 
-@media(max-width:395px){.kp-native-hero,.kp-live-hero{margin-left:14px!important;margin-right:14px!important}.kp-native-list{padding-left:14px!important;padding-right:14px!important}.kp-live-primary-actions{margin-left:14px!important;margin-right:14px!important}.kp-live-board{margin-left:14px!important;margin-right:14px!important}}
+@media(max-width:395px){.kp-native-hero,.kp-live-hero{margin-left:14px!important;margin-right:14px!important}.kp-live-board{margin-left:14px!important;margin-right:14px!important}}

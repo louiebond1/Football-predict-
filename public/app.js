@@ -269,11 +269,17 @@ async function refreshLeaderboard() {
   state.leaderboard = lb || [];
 }
 
+/* Held per group so reopening History paints the real numbers immediately and
+   the refetch updates them in place. Without it every visit re-ran the query
+   and the two season cards sat as placeholders again each time. */
+const seasonBoardCache=new Map();
 async function loadGroupSeasonBoard() {
   const groupId=state.activeGroupId;
   const data=await readStandings(state.supabase,groupId);
   const settled=new Set(state.history.map(h=>String(h.gameweek_id)));
-  return (data||[]).filter(r=>settled.has(String(r.gameweek_id)));
+  const rows=(data||[]).filter(r=>settled.has(String(r.gameweek_id)));
+  seasonBoardCache.set(groupId,rows);
+  return rows;
 }
 
 function computeAwards(rows, history) {
@@ -399,33 +405,54 @@ function renderHistory() {
   screen.innerHTML = `${latestWinner ? `<section class="card winner"><div class="trophy">${ic('crown', 22)}</div><div class="eyebrow">Gameweek Champion</div><h1>${esc(resultTitle.toUpperCase())}</h1><div class="muted">${esc(latestWinner.gameweeks?.round_name || '')}</div></section>` : `<section class="card"><div class="empty">No Gameweeks settled yet.</div></section>`}
   ${isTreasurer()?state.readyWeeks.map(w=>`<section class="card"><div class="card-title">Ready to settle · ${esc(w.gameweeks.round_name)}</div><button class="primary" data-settle-week="${w.gameweek_id}">Settle Matchday & Crown Winner</button></section>`).join(''):''}
   <section class="card"><div class="card-title">${ic('clock')} Past Gameweeks</div>${state.history.length ? state.history.map(h => `<div class="payment-row"><span>${esc(h.gameweeks?.round_name || 'Gameweek')}</span><b>${esc(profileName(h.winner_user_id))}</b></div>`).join('') : '<div class="empty">Settle a Gameweek to see it here.</div>'}</section>
-  <section class="card" id="seasonStatsCard"><div class="card-title">${ic('climb')} Your Season Stats</div><div class="empty kp-skel-rows">Loading…</div></section>
-  <section class="card" id="awardsCard"><div class="card-title">${ic('award')} Awards</div><div class="empty kp-skel-rows">Loading…</div></section>`;
+  <section class="card" id="seasonStatsCard">${seasonStatsHTML(null)}</section>
+  <section class="card" id="awardsCard">${awardsHTML(null)}</section>`;
   screen.querySelectorAll('[data-settle-week]').forEach(button=>button.addEventListener('click',async()=>{
     button.disabled=true;
     try{const {error}=await state.supabase.rpc('settle_gameweek',{p_group_id:historyGroup,p_gameweek_id:Number(button.dataset.settleWeek)});if(error)throw error;
       toast('Matchday settled.');await loadGroupData();await render();
     }catch(error){toast(error.message||'Could not settle. Try again.','error');button.disabled=false;}
   }));
-  loadGroupSeasonBoard().then(rows => {
+  const paintSeason = rows => {
     if (state.tab !== 'history'||state.activeGroupId!==historyGroup||myId()!==historyUser) return;
-    const mine = rows.filter(r => r.user_id === myId());
-    const s = {
-      points: mine.reduce((a, r) => a + r.points, 0),
-      exact: mine.reduce((a, r) => a + (r.exact_scores || 0), 0),
-      wins: state.history.filter(h => h.winner_user_id === myId()).length
-    };
     const statsCard = document.querySelector('#seasonStatsCard');
-    if (statsCard) statsCard.innerHTML = `<div class="card-title">${ic('climb')} Your Season Stats</div><div class="statgrid"><div class="stat"><b>${s.points}</b><small>Total points</small></div><div class="stat"><b>${s.exact}</b><small>Exact scores</small></div><div class="stat"><b>${s.wins}</b><small>Gameweeks won</small></div></div>`;
-
-    const a = computeAwards(rows, state.history);
-    const tiles = [];
-    if (a?.champion) tiles.push({ icon: 'crown', label: 'Champion', name: profileName(a.champion[0]) });
-    if (a?.climber) tiles.push({ icon: 'climb', label: 'Biggest Climber', name: profileName(a.climber.user_id) });
-    if (a?.mostExact) tiles.push({ icon: 'star', label: 'Sharpshooter', name: profileName(a.mostExact[0]) });
+    if (statsCard) statsCard.innerHTML = seasonStatsHTML(rows);
     const awardsCard = document.querySelector('#awardsCard');
-    if (awardsCard) awardsCard.innerHTML = `<div class="card-title">${ic('award')} Awards</div>${tiles.length ? `<div class="award-grid">${tiles.map(t => `<div class="award-tile"><div class="award-icon">${ic(t.icon, 18)}</div><b>${esc(t.name)}</b><small>${esc(t.label)}</small></div>`).join('')}</div>` : '<div class="empty">Not enough settled Gameweeks yet.</div>'}`;
-  }).catch(()=>{for(const id of ['seasonStatsCard','awardsCard']){const el=document.getElementById(id);if(el)el.textContent='Stats unavailable. Reopen History to try again.';}});
+    if (awardsCard) awardsCard.innerHTML = awardsHTML(rows);
+  };
+  const cached = seasonBoardCache.get(historyGroup);
+  if (cached) paintSeason(cached);
+  loadGroupSeasonBoard().then(paintSeason)
+    .catch(()=>{for(const id of ['seasonStatsCard','awardsCard']){const el=document.getElementById(id);if(el)el.textContent='Stats unavailable. Reopen History to try again.';}});
+}
+
+/* Both cards render the same shape whether or not the board has arrived - the
+   pending state is the real grid with em-dashes rather than a grey block, so
+   the page does not change layout when the numbers land. Passing null means
+   "not loaded yet"; an empty array means loaded-but-nothing-to-show, which is
+   a different thing and says so. */
+function seasonStatsHTML(rows) {
+  const mine = rows ? rows.filter(r => r.user_id === myId()) : null;
+  const val = n => mine ? n : '—';
+  const cells = [
+    [val(mine && mine.reduce((a, r) => a + r.points, 0)), 'Total points'],
+    [val(mine && mine.reduce((a, r) => a + (r.exact_scores || 0), 0)), 'Exact scores'],
+    [val(mine && state.history.filter(h => h.winner_user_id === myId()).length), 'Gameweeks won']
+  ];
+  return `<div class="card-title">${ic('climb')} Your Season Stats</div><div class="statgrid">${
+    cells.map(([v, label]) => `<div class="stat"><b>${esc(String(v))}</b><small>${label}</small></div>`).join('')}</div>`;
+}
+function awardsHTML(rows) {
+  const title = `<div class="card-title">${ic('award')} Awards</div>`;
+  const a = rows ? computeAwards(rows, state.history) : null;
+  const tiles = [];
+  if (a?.champion) tiles.push({ icon: 'crown', label: 'Champion', name: profileName(a.champion[0]) });
+  if (a?.climber) tiles.push({ icon: 'climb', label: 'Biggest Climber', name: profileName(a.climber.user_id) });
+  if (a?.mostExact) tiles.push({ icon: 'star', label: 'Sharpshooter', name: profileName(a.mostExact[0]) });
+  if (tiles.length) return `${title}<div class="award-grid">${tiles.map(t => `<div class="award-tile"><div class="award-icon">${ic(t.icon, 18)}</div><b>${esc(t.name)}</b><small>${esc(t.label)}</small></div>`).join('')}</div>`;
+  // Same tile grid, same height, no copy that claims a result we do not have yet.
+  if (!rows) return `${title}<div class="award-grid">${[0,1,2].map(()=>`<div class="award-tile is-pending"><div class="award-icon"></div><b>—</b><small></small></div>`).join('')}</div>`;
+  return `${title}<div class="empty">Not enough settled Gameweeks yet.</div>`;
 }
 
 function onAction(button,action){
@@ -453,7 +480,7 @@ function renderGroup() {
     return `<div class="payment-row"><div class="row-left">${avatar(profileName(m.user_id), 'sm')}<strong>${esc(profileName(m.user_id))}${m.user_id === myId() ? ' (you)' : ''}</strong></div><span><span class="${cls}">${pay?.confirmed_paid_at ? ic('check', 15) : ''} ${status}</span>${canConfirm ? `<button class="secondary confirm-btn chip-btn" data-user="${m.user_id}">Confirm</button>` : ''}</span></div>`;
   }).join('')}</section>
   <section class="card"><div class="card-title">${ic('clock')} This Week</div><div class="rivalry-row"><span class="row-left">${ic('trophy', 15)} Winner takes all</span></div><div class="rivalry-row"><span class="row-left">${ic('lock', 15)} Predictions lock per fixture kickoff</span></div><div class="rivalry-row"><span class="row-left">${ic('target', 15)} Exact score +3 · Correct result +1</span></div></section>
-  <section class="card" id="rivalryCard"><div class="card-title">${ic('award')} Group Rivalry</div><div class="empty kp-skel-rows">Loading…</div></section>
+  <section class="card" id="rivalryCard">${rivalryHTML(null)}</section>
   <section class="card"><div class="card-title">${ic('landmark')} Pay the Treasurer</div><p class="muted">Money is sent separately. KickPot only records whether the Treasurer has confirmed payment.</p>
   <div class="bankbox"><div class="bankline"><span>Account name</span><b>${esc(g.bank_account_name || 'Not set')}</b></div><div class="bankline"><span>Sort code</span><b>${esc(g.bank_sort_code || '••-••-••')}</b></div><div class="bankline"><span>Account no.</span><b>${esc(g.bank_account_number || '••••••••')}</b></div><div class="bankline"><span>Reference</span><b>${esc(state.round || 'GW')}-${esc((state.session.user.email || '').split('@')[0].toUpperCase())}</b></div></div>
   ${p?.claimed_paid_at ? `<div class="status warning" style="margin-top:12px">${ic('clock', 15)} Waiting on Treasurer confirmation.</div>` : `<button class="secondary" id="claimPaid" style="margin-top:12px">I've Paid</button>`}
@@ -498,18 +525,29 @@ function renderGroup() {
     toast('Left the group.'); await loadGroups(); state.groupsStatus = 'loaded'; await render();
   });
 
-  loadGroupSeasonBoard().then(rows => {
+  const paintRivalry = rows => {
     if (state.tab !== 'group') return;
-    const a = computeAwards(rows, state.history);
     const card = document.querySelector('#rivalryCard');
-    if (!card) return;
-    if (!a || (!a.champion && !a.mostExact && !a.spoon)) { card.innerHTML = `<div class="card-title">${ic('award')} Group Rivalry</div><div class="empty">Play a few Gameweeks to build rivalry stats.</div>`; return; }
-    const rows2 = [];
-    if (a.champion) rows2.push(['trophy', 'Most weekly wins', `${profileName(a.champion[0])} (${a.champion[1]})`]);
-    if (a.mostExact) rows2.push(['target', 'Most exact scores', `${profileName(a.mostExact[0])} (${a.mostExact[1]})`]);
-    if (a.spoon) rows2.push(['dash', 'Wooden spoon', `${profileName(a.spoon[0])} (${a.spoon[1]})`]);
-    card.innerHTML = `<div class="card-title">${ic('award')} Group Rivalry</div>${rows2.map(([icon, label, val]) => `<div class="rivalry-row"><span class="row-left">${ic(icon, 15)} ${label}</span><b class="accent">${esc(val)}</b></div>`).join('')}`;
-  }).catch(()=>{});
+    if (card) card.innerHTML = rivalryHTML(rows);
+  };
+  const cachedBoard = seasonBoardCache.get(state.activeGroupId);
+  if (cachedBoard) paintRivalry(cachedBoard);
+  loadGroupSeasonBoard().then(paintRivalry).catch(()=>{});
+}
+
+/* Same idea as the two History cards: the pending state is the real row list
+   with em-dashes, so the card is its final size from the first paint. */
+function rivalryHTML(rows) {
+  const title = `<div class="card-title">${ic('award')} Group Rivalry</div>`;
+  const labels = [['trophy','Most weekly wins'],['target','Most exact scores'],['dash','Wooden spoon']];
+  if (!rows) return `${title}${labels.map(([icon,label])=>`<div class="rivalry-row"><span class="row-left">${ic(icon,15)} ${label}</span><b class="accent">—</b></div>`).join('')}`;
+  const a = computeAwards(rows, state.history);
+  if (!a || (!a.champion && !a.mostExact && !a.spoon)) return `${title}<div class="empty">Play a few Gameweeks to build rivalry stats.</div>`;
+  const rows2 = [];
+  if (a.champion) rows2.push(['trophy', 'Most weekly wins', `${profileName(a.champion[0])} (${a.champion[1]})`]);
+  if (a.mostExact) rows2.push(['target', 'Most exact scores', `${profileName(a.mostExact[0])} (${a.mostExact[1]})`]);
+  if (a.spoon) rows2.push(['dash', 'Wooden spoon', `${profileName(a.spoon[0])} (${a.spoon[1]})`]);
+  return `${title}${rows2.map(([icon, label, val]) => `<div class="rivalry-row"><span class="row-left">${ic(icon, 15)} ${label}</span><b class="accent">${esc(val)}</b></div>`).join('')}`;
 }
 
 function renderOnboarding() {

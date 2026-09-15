@@ -62,7 +62,7 @@ input,select,textarea{font-size:16px;max-width:100%}
       header into place afterwards.
 
    Nothing here is screen-scoped. There is no tab-specific header any more. */
-:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px}
+:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px;--kp-radius:18px;--kp-gap:14px}
 
 /* ---------------------------------------------------------------------------
    ONE GRID.
@@ -104,6 +104,40 @@ input,select,textarea{font-size:16px;max-width:100%}
    dead space under its last row, the other three to none to speak of. */
 #app{padding-bottom:0!important}
 /* ---------------------------------------------------------------------------
+   ONE SECTION GRID.
+
+   The heroes were already shared (see ONE HERO BOX below); what still drifted
+   was the band immediately under them - the first real section on each tab.
+   Measured with each screen's own markup:
+
+                     first section after the hero      inset   radius
+     Matchday        .kp-native-list                    18       -
+     Live            .kp-live-primary-actions           14      14px
+     History         #screen > .card                     0      15px
+     Group           .group-reference-members-strip     18       -
+
+   Three different insets and three different radii for elements doing the
+   same job, which is what makes the tabs read as different screens even
+   though the header and hero now match. Each came from a different file:
+   simple-overhaul-v2 puts Live's action bar on 18px and then 14px again in
+   its own media query; history-premium-v3 explicitly zeroes History's card
+   gutter, overriding the shared rule; final-polish gives Group's menu a 34px
+   tail where everything else uses 14px.
+
+   --kp-radius and --kp-gap join --kp-gutter and --kp-hero-h as the four
+   numbers that describe a section, and the per-file values are deleted at
+   source rather than out-specified, so a later edit to one screen cannot pull
+   it off the grid again. */
+.kp-live-primary-actions{margin:var(--kp-gap) var(--kp-gutter) 0!important;border-radius:var(--kp-radius)!important}
+body[data-kp-screen="history"] #screen>.card{margin-left:var(--kp-gutter)!important;margin-right:var(--kp-gutter)!important}
+.group-reference-menu{margin-bottom:var(--kp-gap)!important}
+/* Matchday's fixture list carried an extra 18px of top padding on top of the
+   shared hero gap, so its first row - the date label - sat 37px lower than
+   the first section on Live, History and Group. The gap below a hero is
+   --kp-gap, once, wherever you are. */
+.kp-native-list{padding-top:0!important}
+
+/* ---------------------------------------------------------------------------
    ONE HERO BOX.
 
    Measured off the device recording and reproduced in a browser. Every tab
@@ -134,7 +168,7 @@ input,select,textarea{font-size:16px;max-width:100%}
 #screen>.card.winner,#screen>.winner{
   height:var(--kp-hero-h)!important;min-height:var(--kp-hero-h)!important;
   margin-top:0!important;margin-bottom:14px!important;
-  border-radius:18px!important;overflow:hidden!important;
+  border-radius:var(--kp-radius)!important;overflow:hidden!important;
 }
 
 /* Inside the blocks, two leftovers: hero copy sat 22px in from the photo edge
@@ -266,27 +300,20 @@ html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"
 @keyframes kp-skel{0%,100%{opacity:1}50%{opacity:.55}}
 #groupBar.kp-group-switching{opacity:.5!important;pointer-events:none!important}
 
-/* Season Stats / Awards / Rivalry render a placeholder while their query
-   resolves. Only the placeholder carries kp-skel-rows (set in app.js), so the
-   same .empty class still renders real copy - "Not enough settled Gameweeks
-   yet." - as readable text rather than being blanked into a skeleton. */
-.kp-skel-rows{
-  padding:4px 0 2px!important;min-height:96px!important;
-  color:transparent!important;font-size:0!important;line-height:0!important;
-  background:repeating-linear-gradient(to bottom,rgba(21,24,22,.06) 0 30px,transparent 30px 48px)!important;
-  animation:kp-skel 1.5s ease-in-out infinite!important;
-}
+/* Season Stats, Awards and Group Rivalry used to paint a grey gradient block
+   while their query resolved, then swap it for the real grid - which is the
+   full-page skeleton flash and the layout jump on opening History. They now
+   render their real structure with em-dashes from the first paint (see
+   seasonStatsHTML / awardsHTML / rivalryHTML in app.js), so nothing changes
+   size when the numbers arrive; only the values do. The only thing needed
+   here is to mute a pending award tile so a row of dashes does not read as
+   real content. */
+.award-tile.is-pending{opacity:.45!important}
+.award-tile.is-pending .award-icon{background:rgba(21,24,22,.06)!important;border-radius:50%!important}
 #seasonStatsCard .empty,#awardsCard .empty,#rivalryCard .empty{
   padding:28px 12px!important;text-align:center!important;
   font:600 13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
   color:#8a877f!important;background:transparent!important;
-}
-/* The gradient is repeated here on purpose: the `background:transparent` in
-   the rule above is an ID-specificity shorthand, so it resets background-image
-   to none and a plain .kp-skel-rows gradient never lands inside these cards. */
-#seasonStatsCard .empty.kp-skel-rows,#awardsCard .empty.kp-skel-rows,#rivalryCard .empty.kp-skel-rows{
-  padding:4px 0 2px!important;color:transparent!important;font-size:0!important;line-height:0!important;
-  background:repeating-linear-gradient(to bottom,rgba(21,24,22,.06) 0 30px,transparent 30px 48px)!important;
 }
 
 /* Group switcher. Now a single element in the shell (see renderGroupBar in
