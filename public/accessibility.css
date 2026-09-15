@@ -175,8 +175,13 @@ body.kp-native-matchday .kp-native-side{grid-area:home!important}
 body.kp-native-matchday .kp-native-side.away{grid-area:away!important}
 body.kp-native-matchday .kp-native-mid{grid-area:mid!important;width:auto!important;min-width:84px!important}
 body.kp-native-matchday .kp-native-scores{grid-area:scores!important;display:grid!important;grid-template-columns:1fr 8px 1fr!important;gap:6px!important;margin:0!important}
-body.kp-native-matchday .kp-native-score{width:100%!important;max-width:150px!important;height:44px!important;justify-self:center!important}
-body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-native-score b,body.kp-native-matchday .kp-native-score span{height:42px!important;line-height:42px!important}
+/* 46px tall with 44px steps: the touch target stays at the accessible size the
+   earlier fix set, the stepper just stops being full-bleed. */
+body.kp-native-matchday .kp-native-score{
+  width:100%!important;max-width:150px!important;height:46px!important;justify-self:center!important;
+  grid-template-columns:44px minmax(0,1fr) 44px!important;border-radius:24px!important;
+}
+body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-native-score b,body.kp-native-matchday .kp-native-score span{height:44px!important;line-height:44px!important;font-size:16px!important;min-width:0!important}
 /* Live rows come up to meet them: 72px is the concept's row height and it
    gives the table the air the fixtures need for a 44px stepper. */
 .kp-live-trow{min-height:72px!important}
@@ -490,14 +495,9 @@ html[data-kp-theme="dark"] #app>.topbar #kpThemeToggle,html[data-kp-theme="dark"
    lost the end of the line. */
 .group-reference-hero p{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
 
-/* Give every score step its own touch target, without squeezing team names. */
-body.kp-native-matchday .kp-native-match{grid-template-columns:1fr 1fr!important;gap:8px!important;padding:14px 0!important}
-body.kp-native-matchday .kp-native-side{grid-column:1;grid-row:1}
-body.kp-native-matchday .kp-native-side.away{grid-column:2;grid-row:1}
-body.kp-native-matchday .kp-native-mid{grid-column:1 / -1;grid-row:2;width:100%!important}
-body.kp-native-matchday .kp-native-scores{grid-template-columns:112px 8px 112px!important;gap:4px!important}
-body.kp-native-matchday .kp-native-score{width:112px!important;height:46px!important;grid-template-columns:44px 22px 44px!important;border-radius:24px!important}
-body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-native-score b,body.kp-native-matchday .kp-native-score span{height:44px!important;line-height:44px!important;font-size:16px!important;min-width:0!important}
+/* The row geometry that used to live here duplicated - and, being later in the
+   file, silently beat - the compact fixture row above. Only the typography it
+   also set is kept; the grid, padding and stepper sizes have one owner now. */
 body.kp-native-matchday .kp-native-team{font-size:14px!important;line-height:1.2!important}
 body.kp-native-matchday .kp-native-lock,body.kp-native-matchday .kp-native-time{font-size:12px!important;color:#686b66!important}
 /* Placeholder only while the badge is in flight - :not([data-loaded]) so a
