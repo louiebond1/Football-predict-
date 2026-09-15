@@ -62,7 +62,7 @@ input,select,textarea{font-size:16px;max-width:100%}
       header into place afterwards.
 
    Nothing here is screen-scoped. There is no tab-specific header any more. */
-:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px;--kp-radius:18px;--kp-gap:14px;--kp-row-lead:40px;--kp-row-gap:12px}
+:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px;--kp-radius:18px;--kp-gap:14px;--kp-row-lead:40px;--kp-row-gap:12px;--kp-section-gap:24px}
 
 /* ---------------------------------------------------------------------------
    ONE GRID.
@@ -103,6 +103,29 @@ input,select,textarea{font-size:16px;max-width:100%}
    #app's, and those totalled 86/86/90/230px - Group scrolled to 154px of
    dead space under its last row, the other three to none to speak of. */
 #app{padding-bottom:0!important}
+/* ---------------------------------------------------------------------------
+   ONE SECTION SPACING.
+
+   The gap below the hero is shared (--kp-gap). The gap ABOVE a section
+   heading was not, and it was delivered by a different property on each
+   screen, so nothing was coordinating them:
+
+     Matchday   .kp-native-match      padding-top      22px
+     Live       .kp-live-table-head   padding-top      28px
+     Group      .group-reference-mode padding-top      20px
+     History    .kp-hi-weekbar        padding-bottom   31px
+
+   Those compound with everything above them, which is why Live's table sat
+   noticeably lower down the page than Matchday's fixtures even though the
+   hero and the header lined up exactly. One value now, --kp-section-gap,
+   24px - the middle of the 16/24/32 scale and closest to what most of these
+   were already reaching for. */
+.kp-live-table-head{padding-top:var(--kp-section-gap)!important}
+.group-reference-mode{padding-top:var(--kp-section-gap)!important}
+.kp-hi-weekbar{padding-bottom:var(--kp-section-gap)!important}
+.kp-native-date{padding-top:var(--kp-section-gap)!important;margin-top:0!important}
+.kp-native-list>.kp-native-date:first-child{padding-top:0!important}
+
 /* ---------------------------------------------------------------------------
    ONE ROW GRID.
 
