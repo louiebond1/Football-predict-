@@ -1,66 +1,42 @@
 /* KickPot History v3 — final refinement. Visual-only; preserves History data and drill-in logic. */
 body[data-kp-screen="history"] #screen{padding-bottom:22px}
 body[data-kp-screen="history"] #screen>.card{margin-left:0!important;margin-right:0!important}
+/* History is already scoped to the selected group: don't repeat the large group selector here. */
+body[data-kp-screen="history"] #groupBar{display:none!important}
 
 /* Winner: neutral charcoal trophy treatment so History does not become another green screen. */
 body[data-kp-screen="history"] #screen>.winner{
-  position:relative;min-height:184px;margin:6px 0 22px!important;padding:20px 20px!important;
+  position:relative;min-height:164px;margin:6px 0 22px!important;padding:20px 20px!important;
   overflow:hidden;border:1px solid rgba(16,24,20,.11)!important;border-radius:16px!important;
   color:#f8f5ed!important;background:
-    radial-gradient(circle at 83% 42%,rgba(197,163,78,.18),transparent 27%),
-    linear-gradient(112deg,#171c1a 0%,#252a27 58%,#39372f 100%)!important;
+    radial-gradient(circle at 84% 45%,rgba(197,163,78,.15),transparent 30%),
+    linear-gradient(112deg,#171c1a 0%,#252a27 61%,#39372f 100%)!important;
   box-shadow:none!important;
 }
-/* Large trophy silhouette — decorative only, winner data remains untouched. */
+/* CSS-drawn trophy: reliable on iOS/PWA, no emoji/font dependency. */
 body[data-kp-screen="history"] #screen>.winner:before{
-  content:"🏆";position:absolute;z-index:0;right:17px;top:50%;transform:translateY(-50%);
-  font-size:112px;line-height:1;filter:saturate(.72) contrast(.94);opacity:.92;
-  text-shadow:0 12px 32px rgba(0,0,0,.28);pointer-events:none;
+  content:"";position:absolute;z-index:1;right:45px;top:34px;width:72px;height:82px;
+  background:#c5a34e;border-radius:9px 9px 30px 30px;
+  clip-path:polygon(18% 0,82% 0,78% 48%,64% 67%,57% 70%,57% 82%,76% 82%,76% 91%,24% 91%,24% 82%,43% 82%,43% 70%,36% 67%,22% 48%);
+  filter:drop-shadow(0 10px 16px rgba(0,0,0,.28));opacity:.95;pointer-events:none;
 }
-body[data-kp-screen="history"] #screen>.winner:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(18,23,21,.99) 0%,rgba(18,23,21,.92) 48%,rgba(18,23,21,.18) 76%,rgba(18,23,21,.02) 100%);pointer-events:none}
+body[data-kp-screen="history"] #screen>.winner:after{
+  content:"";position:absolute;z-index:0;right:29px;top:43px;width:104px;height:48px;
+  border:7px solid #c5a34e;border-top-width:6px;border-radius:8px 8px 35px 35px;opacity:.9;pointer-events:none;
+}
 body[data-kp-screen="history"] #screen>.winner .trophy{position:relative;z-index:2;width:30px;height:30px;margin:0 0 12px;display:grid;place-items:center;color:#c3a04a;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.13);border-radius:50%}
 body[data-kp-screen="history"] #screen>.winner .trophy svg{width:17px;height:17px}
 body[data-kp-screen="history"] #screen>.winner .eyebrow{position:relative;z-index:2;margin:0 0 5px;color:#d8d4c9!important;font-size:9px!important;font-weight:850!important;letter-spacing:.16em!important;text-transform:uppercase}
-body[data-kp-screen="history"] #screen>.winner h1{position:relative;z-index:2;max-width:64%;margin:0!important;color:#fff!important;font-family:inherit!important;font-size:clamp(28px,8.4vw,35px)!important;font-weight:900!important;line-height:.98!important;letter-spacing:-1.25px!important;overflow-wrap:anywhere}
+body[data-kp-screen="history"] #screen>.winner h1{position:relative;z-index:2;max-width:66%;margin:0!important;color:#fff!important;font-family:inherit!important;font-size:clamp(28px,8.4vw,35px)!important;font-weight:900!important;line-height:.98!important;letter-spacing:-1.25px!important;overflow-wrap:anywhere}
 body[data-kp-screen="history"] #screen>.winner>.muted{position:relative;z-index:2;margin-top:7px!important;color:#d8d4c9!important;font-size:11px!important;font-weight:650!important}
 
-/* The inline history owns the standings; remove legacy card chrome. */
 body[data-kp-screen="history"] #screen>.card:has(#kpHistoryInlineV2){padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 body[data-kp-screen="history"] #screen>.card:has(#kpHistoryInlineV2)>.card-title{display:none!important}
 #kpHistoryInlineV2{margin-top:0!important;display:flex;flex-direction:column}
-
-/* Matchday is the time control, so it precedes the standings title. */
-.kp-hi-weekbar{order:1;display:flex!important;gap:7px!important;padding:0 0 18px!important;overflow-x:auto!important;scroll-snap-type:x proximity;scrollbar-width:none}
-.kp-hi-weekbar::-webkit-scrollbar{display:none}
-.kp-hi-week{scroll-snap-align:start;flex:0 0 auto!important;min-width:0!important;min-height:38px!important;padding:0 14px!important;border:1px solid rgba(16,40,29,.17)!important;border-radius:12px!important;color:#68766d!important;font-size:11px!important;font-weight:800!important;background:transparent!important;white-space:nowrap}
-.kp-hi-week.active{background:#10281d!important;color:#f7f3e9!important;border-color:#10281d!important}
-
-/* One heading only: this replaces the duplicate “Matchday x table” hierarchy. */
-#kpHistoryInlineV2:before{content:"Final standings";order:2;display:block;margin:0 0 5px;color:var(--kp-text,#10281d);font-size:25px;font-weight:900;line-height:1;letter-spacing:-.8px}
-.kp-hi-subhead{order:3;display:block!important;padding:0 0 10px!important;border-bottom:1px solid rgba(16,40,29,.16)!important}
-.kp-hi-subhead strong{display:none!important}
-.kp-hi-subhead small{display:block!important;font-size:9.5px!important;line-height:1.35!important;text-align:left!important;color:#7e887f!important}
-.kp-hi-table{order:4;border:0!important}
-
-/* Dense, scan-first final table. Winner accent is deliberately scarce. */
-.kp-hi-row{min-height:62px!important;grid-template-columns:24px 34px minmax(0,1fr) 45px 11px!important;gap:9px!important;padding:8px 0!important;border-bottom:1px solid rgba(16,40,29,.15)!important;border-radius:0!important;background:transparent!important}
-.kp-hi-row:first-child{margin-top:0;background:transparent!important}
-.kp-hi-rank{font-size:11px!important;font-weight:850!important}.kp-hi-row:first-child .kp-hi-rank,.kp-hi-row:first-child .kp-hi-points strong{color:#9b761c!important}
-.kp-hi-avatar{width:32px!important;height:32px!important;border-color:rgba(16,40,29,.17)!important;font-size:9px!important}
-.kp-hi-name{gap:2px!important}.kp-hi-name strong{font-size:14px!important;font-weight:850!important;letter-spacing:-.18px}.kp-hi-name small{font-size:9.5px!important;line-height:1.25!important;color:#6f7a72!important}
-.kp-hi-points strong{font-size:21px!important;font-weight:900!important;line-height:1!important}.kp-hi-points small{margin-top:3px;font-size:8px!important}.kp-hi-arrow{font-size:18px!important;color:#8a938c!important}
-
-/* Drill-in remains functional, but inherits the same density. */
+.kp-hi-weekbar{order:1;display:flex!important;gap:7px!important;padding:0 0 18px!important;overflow-x:auto!important;scroll-snap-type:x proximity;scrollbar-width:none}.kp-hi-weekbar::-webkit-scrollbar{display:none}
+.kp-hi-week{scroll-snap-align:start;flex:0 0 auto!important;min-width:0!important;min-height:38px!important;padding:0 14px!important;border:1px solid rgba(16,40,29,.17)!important;border-radius:12px!important;color:#68766d!important;font-size:11px!important;font-weight:800!important;background:transparent!important;white-space:nowrap}.kp-hi-week.active{background:#10281d!important;color:#f7f3e9!important;border-color:#10281d!important}
+#kpHistoryInlineV2:before{content:"Final standings";order:2;display:block;margin:0 0 5px;color:var(--kp-text,#10281d);font-size:25px;font-weight:900;line-height:1;letter-spacing:-.8px}.kp-hi-subhead{order:3;display:block!important;padding:0 0 10px!important;border-bottom:1px solid rgba(16,40,29,.16)!important}.kp-hi-subhead strong{display:none!important}.kp-hi-subhead small{display:block!important;font-size:9.5px!important;line-height:1.35!important;text-align:left!important;color:#7e887f!important}.kp-hi-table{order:4;border:0!important}
+.kp-hi-row{min-height:62px!important;grid-template-columns:24px 34px minmax(0,1fr) 45px 11px!important;gap:9px!important;padding:8px 0!important;border-bottom:1px solid rgba(16,40,29,.15)!important;border-radius:0!important;background:transparent!important}.kp-hi-row:first-child{margin-top:0;background:transparent!important}.kp-hi-rank{font-size:11px!important;font-weight:850!important}.kp-hi-row:first-child .kp-hi-rank,.kp-hi-row:first-child .kp-hi-points strong{color:#9b761c!important}.kp-hi-avatar{width:32px!important;height:32px!important;border-color:rgba(16,40,29,.17)!important;font-size:9px!important}.kp-hi-name{gap:2px!important}.kp-hi-name strong{font-size:14px!important;font-weight:850!important;letter-spacing:-.18px}.kp-hi-name small{font-size:9.5px!important;line-height:1.25!important;color:#6f7a72!important}.kp-hi-points strong{font-size:21px!important;font-weight:900!important;line-height:1!important}.kp-hi-points small{margin-top:3px;font-size:8px!important}.kp-hi-arrow{font-size:18px!important;color:#8a938c!important}
 .kp-hi-player-summary{padding-top:9px!important}.kp-hi-fixtures{padding-bottom:86px!important}
-
-/* Secondary history content stays quieter than the final table. */
-body[data-kp-screen="history"] #seasonStatsCard,body[data-kp-screen="history"] #awardsCard{margin-top:18px!important;border:1px solid rgba(16,40,29,.14)!important;border-radius:15px!important;background:rgba(255,255,255,.13)!important;box-shadow:none!important}
-body[data-kp-screen="history"] #seasonStatsCard .card-title,body[data-kp-screen="history"] #awardsCard .card-title{font-size:13px!important;font-weight:850!important}
-
-@media(max-width:380px){
-  body[data-kp-screen="history"] #screen>.winner{min-height:172px;padding:18px!important}
-  body[data-kp-screen="history"] #screen>.winner:before{font-size:96px;right:8px}
-  body[data-kp-screen="history"] #screen>.winner h1{font-size:clamp(27px,8.2vw,32px)!important;max-width:65%}
-  .kp-hi-row{grid-template-columns:22px 32px minmax(0,1fr) 42px 10px!important;gap:7px!important}
-  .kp-hi-week{min-height:36px!important;padding:0 12px!important;font-size:10.5px!important}
-}
+body[data-kp-screen="history"] #seasonStatsCard,body[data-kp-screen="history"] #awardsCard{margin-top:18px!important;border:1px solid rgba(16,40,29,.14)!important;border-radius:15px!important;background:rgba(255,255,255,.13)!important;box-shadow:none!important}body[data-kp-screen="history"] #seasonStatsCard .card-title,body[data-kp-screen="history"] #awardsCard .card-title{font-size:13px!important;font-weight:850!important}
+@media(max-width:380px){body[data-kp-screen="history"] #screen>.winner{min-height:158px;padding:18px!important}body[data-kp-screen="history"] #screen>.winner:before{right:27px;top:33px;width:64px;height:74px}body[data-kp-screen="history"] #screen>.winner:after{right:14px;top:42px;width:90px;height:42px}body[data-kp-screen="history"] #screen>.winner h1{font-size:clamp(27px,8.2vw,32px)!important;max-width:66%}.kp-hi-row{grid-template-columns:22px 32px minmax(0,1fr) 42px 10px!important;gap:7px!important}.kp-hi-week{min-height:36px!important;padding:0 12px!important;font-size:10.5px!important}}
