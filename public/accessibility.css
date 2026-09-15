@@ -177,7 +177,7 @@ input,select,textarea{font-size:16px;max-width:100%}
 /* The two screens' own wrappers must not re-pad what the shared blocks own. */
 /* .kp-live-table-head carries .kp-sechead, so only its old padding/border are
    neutralised - zeroing its margin here would cancel the shared gutter. */
-.kp-live-table-head{padding:0!important;border:0!important;background:none!important}
+.kp-live-table-head{padding:0!important;border-top:0!important;border-left:0!important;border-right:0!important;background:none!important}
 .kp-live-board{margin-top:0!important;border-top:0!important}
 .kp-native-list{padding-top:0!important}
 .kp-native-list>.kp-native-date:first-child{padding-top:var(--kp-row-gap)!important}
@@ -219,9 +219,14 @@ body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-nati
    hero and the header lined up exactly. One value now, --kp-section-gap,
    24px - the middle of the 16/24/32 scale and closest to what most of these
    were already reaching for. */
-.kp-live-table-head{padding-top:var(--kp-section-gap)!important}
+/* Live's heading and History's pill band used to deliver this gap themselves,
+   with padding. .kp-sechead now carries it as a margin, so those two were
+   getting it twice - and because both boxes have a fixed height, the padding
+   ate their content box instead of adding space: Live's heading text was
+   pushed to the bottom of its 48px band (content box 24px), and History's
+   56px pill overflowed 12px above its 56px band (content box 32px). Group and
+   Matchday's date separators have no .kp-sechead, so they still need theirs. */
 .group-reference-mode{padding-top:var(--kp-section-gap)!important}
-.kp-hi-weekbar{padding-bottom:var(--kp-section-gap)!important}
 .kp-native-date{padding-top:var(--kp-section-gap)!important;margin-top:0!important}
 .kp-native-list>.kp-native-date:first-child{padding-top:0!important}
 
@@ -274,6 +279,19 @@ body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-nati
   background:transparent!important;box-shadow:none!important;
 }
 .kp-hi-avatar{display:none!important}
+
+/* Both tables mark first place, but with different devices: Live drew a 3px
+   gold bar hanging off the left edge of its top row, History coloured the
+   rank and the points gold. One treatment now - History's, because the bar
+   sits outside the row's box and so outside the shared grid. */
+.kp-live-trow.top:before{display:none!important}
+.kp-live-trow.top .kp-live-tpos,.kp-live-trow.top .kp-live-tpts strong,
+.kp-hi-row:first-child .kp-hi-rank,.kp-hi-row:first-child .kp-hi-points strong{color:#9b761c!important}
+
+/* The points figure reads the same on both: the number, then its unit. */
+.kp-live-tpts,.kp-hi-points{display:flex!important;flex-direction:column!important;align-items:flex-end!important;justify-content:center!important;gap:0!important}
+.kp-live-tpts strong,.kp-hi-points strong{font:900 21px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;color:inherit!important}
+.kp-live-tpts small,.kp-hi-points small{margin-top:3px!important;font:700 9px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:.06em!important;color:#7b7c77!important}
 .group-reference-menu>button{grid-template-columns:var(--kp-row-lead) minmax(0,1fr) auto!important;gap:var(--kp-row-gap)!important}
 /* Rows carry no horizontal padding of their own - Live had 2-3px and Group a
    couple more, which slid their whole grid off the gutter and put their text

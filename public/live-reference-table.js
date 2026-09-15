@@ -139,7 +139,7 @@
       <div class="kp-live-tpos">${member.rank}</div>
       <div class="kp-live-tplayer"><div class="kp-live-tname">${esc(member.display_name)}${member.isMe ? ' <span class="kp-live-you">(you)</span>' : ''}</div>
       <div class="kp-live-tstatus"><span class="kp-live-dot${status.locked ? ' on' : ''}"></span>${esc(status.text)}</div></div>
-      <div class="kp-live-tpts">${member.points}</div>
+      <div class="kp-live-tpts"><strong>${member.points}</strong><small>PTS</small></div>
     </div>`;
   }
   function heroHTML(roster) {
