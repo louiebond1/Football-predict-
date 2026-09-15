@@ -126,7 +126,7 @@ input,select,textarea{font-size:16px;max-width:100%}
 .kp-actions{
   display:grid!important;grid-template-columns:1fr 1fr!important;
   gap:var(--kp-row-gap)!important;
-  margin:var(--kp-gap) var(--kp-gutter) 0!important;padding:0!important;
+  margin:var(--kp-gap) var(--kp-own-gutter,var(--kp-gutter)) 0!important;padding:0!important;
   border:0!important;background:none!important;
 }
 .kp-action{
@@ -149,11 +149,30 @@ input,select,textarea{font-size:16px;max-width:100%}
 .kp-sechead{
   display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;
   height:var(--kp-sechead-h)!important;min-height:var(--kp-sechead-h)!important;
-  margin:var(--kp-section-gap) var(--kp-gutter) 0!important;padding:0!important;border:0!important;
+  margin:var(--kp-section-gap) var(--kp-own-gutter,var(--kp-gutter)) 0!important;padding:0!important;border:0!important;
 }
 .kp-sechead h1,.kp-sechead h2{margin:0!important;font:800 24px/1 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif!important;letter-spacing:-.03em!important;color:#151816!important}
 .kp-sechead{border-bottom:1px solid rgba(21,24,22,.09)!important}
 .kp-sechead-meta{display:flex!important;align-items:center!important;gap:6px!important;margin:0!important;font:650 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;color:#7b7c77!important;white-space:nowrap!important}
+
+/* History joins the same three bands. Its list sits inside a card that is
+   already on the gutter, so that card declares it owns the inset and the
+   shared blocks inside it add none - no screen name appears in the component
+   rules, and any future inset container just sets this one property. */
+#kpHistoryInlineV2{--kp-own-gutter:0px}
+
+/* The week pills are History's equivalent of the action cards, so they get the
+   action band: 56px tall, pills centred in it. The band was 72px (a 48px pill
+   plus 24px of padding underneath), which is exactly the 30px that pushed the
+   "Final standings" heading below Fixtures and Live table.
+   Pill height was declared four times across two files - 54px base, 48px under
+   390, 38px, then 36px under 380 - so it is set once here. */
+.kp-hi-weekbar{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  min-height:var(--kp-action-h)!important;height:var(--kp-action-h)!important;
+  margin:0!important;padding:0!important;overflow-x:auto!important;
+}
+.kp-hi-week{min-height:var(--kp-action-h)!important;height:var(--kp-action-h)!important;padding:0 22px!important;border-radius:var(--kp-radius)!important;font-size:13px!important}
 
 /* The two screens' own wrappers must not re-pad what the shared blocks own. */
 /* .kp-live-table-head carries .kp-sechead, so only its old padding/border are

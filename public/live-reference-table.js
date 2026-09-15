@@ -169,10 +169,10 @@
   }
   function tableHTML(roster) {
     const locked = roster.filter(member => member.total && member.submitted === member.total).length;
-    return `<div class="kp-live-table-head kp-sechead"><h1>Live Table</h1><div class="kp-live-locked kp-sechead-meta">🔒 ${locked}/${roster.length} locked</div></div><div class="kp-live-board">${roster.length ? roster.map(tableRowHTML).join('') : '<div class="kp-native-loading">No standings yet.</div>'}</div>`;
+    return `<div class="kp-live-table-head kp-sechead"><h1>Live table</h1><div class="kp-live-locked kp-sechead-meta">🔒 ${locked}/${roster.length} locked</div></div><div class="kp-live-board">${roster.length ? roster.map(tableRowHTML).join('') : '<div class="kp-native-loading">No standings yet.</div>'}</div>`;
   }
   function drillHeaderHTML(title) {
-    return `<div class="kp-live-drill-head"><button type="button" class="kp-live-drill-back" data-live-back aria-label="Back to Live Table">‹</button><div><h1>${title}</h1></div></div>`;
+    return `<div class="kp-live-drill-head"><button type="button" class="kp-live-drill-back" data-live-back aria-label="Back to Live table">‹</button><div><h1>${title}</h1></div></div>`;
   }
   function fixtureHTML(fixture) {
     const started = fixture.status?.short !== 'NS';
@@ -214,7 +214,7 @@
     if (!state.loaded) {
       const message = state.error
         ? emptyHTML('Live could not be loaded.', state.error)
-        : '<div class="kp-native-loading">Loading Live Table…</div>';
+        : '<div class="kp-native-loading">Loading Live table…</div>';
       screen.innerHTML = `<div class="kp-live-screen" data-live-view="loading">${message}</div>`;
       return;
     }

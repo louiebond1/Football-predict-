@@ -46,7 +46,7 @@ test('Matchday save/edit, Live reveal, back navigation, and group isolation',asy
  await expect(page.locator('summary')).toHaveCount(1);
  await page.locator('summary').click();await expect(page.locator('.kp-live-group-picks-list')).toContainText('Alex');
  await expect(page.locator('.kp-live-group-picks-list')).toContainText('1–1');
- await page.getByRole('button',{name:'Back to Live Table'}).click();await expect(page.locator('[data-live-view=table]')).toBeVisible();
+ await page.getByRole('button',{name:'Back to Live table'}).click();await expect(page.locator('[data-live-view=table]')).toBeVisible();
  await page.getByRole('button',{name:'My picks'}).click();await expect(page.locator('.kp-live-picks')).toContainText('3-0');
  await page.locator('[data-tab=gw]').click();await page.locator('#groupSwitch').selectOption(g2);
  await expect(page.locator('.kp-native-hero')).toBeVisible();await expect(page.locator('[data-score-value="1,home"]')).toHaveText('1');

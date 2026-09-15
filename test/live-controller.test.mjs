@@ -131,11 +131,11 @@ function createHarness({ fixtureFailure = false, leaderboardFailure = false } = 
 test('Live mounts directly on the table and fixtures/picks are controller-owned drill-ins', async () => {
   const harness = createHarness();
   harness.window.KickPotLive.mount({ reset: true });
-  assert.match(harness.screen.innerHTML, /Loading Live Table/);
+  assert.match(harness.screen.innerHTML, /Loading Live table/);
   assert.doesNotMatch(harness.screen.innerHTML, /Live Matchday|data-live-subtab/);
   await harness.settle();
   assert.match(harness.screen.innerHTML, /data-live-view="table"/);
-  assert.match(harness.screen.innerHTML, /<h1>Live Table<\/h1>/);
+  assert.match(harness.screen.innerHTML, /<h1>Live table<\/h1>/);
 
   harness.fireScreen('click', 'page', 'fixtures');
   assert.match(harness.screen.innerHTML, /data-live-view="fixtures"/);
