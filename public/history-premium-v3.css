@@ -1,0 +1,48 @@
+/* KickPot History v3 — visual-only, aligned to the current light product shell. */
+body[data-kp-screen="history"] #screen{padding-bottom:22px}
+body[data-kp-screen="history"] #screen>.card{margin-left:0!important;margin-right:0!important}
+
+/* Winner mast: same content/data, promoted into one compact result panel. */
+body[data-kp-screen="history"] #screen>.winner{
+  position:relative;min-height:250px;margin:6px 0 18px!important;padding:24px 22px!important;
+  overflow:hidden;border:1px solid rgba(16,40,29,.12)!important;border-radius:18px!important;
+  color:#f7f3e9!important;background:
+    linear-gradient(90deg,rgba(8,35,25,.98) 0%,rgba(8,35,25,.88) 52%,rgba(8,35,25,.42) 100%),
+    url('/kickpot-hero-final.jpg') center/cover no-repeat!important;
+  box-shadow:none!important;
+}
+body[data-kp-screen="history"] #screen>.winner:after{content:"";position:absolute;inset:auto -42px -72px auto;width:210px;height:210px;border:1px solid rgba(212,175,55,.22);border-radius:50%;box-shadow:0 0 0 25px rgba(212,175,55,.035),0 0 0 52px rgba(212,175,55,.02);pointer-events:none}
+body[data-kp-screen="history"] #screen>.winner .trophy{position:relative;z-index:1;width:36px;height:36px;margin:0 0 18px;display:grid;place-items:center;color:#b79335;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:50%}
+body[data-kp-screen="history"] #screen>.winner .eyebrow{position:relative;z-index:1;margin:0 0 7px;color:#c9c7bc!important;font-size:10px!important;font-weight:850!important;letter-spacing:.18em!important;text-transform:uppercase}
+body[data-kp-screen="history"] #screen>.winner h1{position:relative;z-index:1;max-width:88%;margin:0!important;color:#fff!important;font-family:inherit!important;font-size:38px!important;font-weight:900!important;line-height:.98!important;letter-spacing:-1.5px!important}
+body[data-kp-screen="history"] #screen>.winner>.muted{position:relative;z-index:1;margin-top:9px!important;color:#d5d3ca!important;font-size:14px!important}
+body[data-kp-screen="history"] .kp-hi-winner-stats{position:relative;z-index:1;display:flex;gap:0;margin-top:24px;width:min(330px,100%)}
+body[data-kp-screen="history"] .kp-hi-winner-stat{min-width:82px;padding-right:18px;margin-right:18px;border-right:1px solid rgba(255,255,255,.22)}
+body[data-kp-screen="history"] .kp-hi-winner-stat:last-child{border-right:0;margin-right:0;padding-right:0}
+body[data-kp-screen="history"] .kp-hi-winner-stat strong{display:block;color:#fff;font-size:25px;line-height:1;font-weight:900;letter-spacing:-.6px}
+body[data-kp-screen="history"] .kp-hi-winner-stat small{display:block;margin-top:5px;color:#c8c9c2;font-size:9px;line-height:1.25}
+
+/* The inline history owns the standings; remove the old card chrome around it. */
+body[data-kp-screen="history"] #screen>.card:has(#kpHistoryInlineV2){padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+body[data-kp-screen="history"] #screen>.card:has(#kpHistoryInlineV2)>.card-title{display:none!important}
+#kpHistoryInlineV2{margin-top:0!important}
+#kpHistoryInlineV2:before{content:"Final standings";display:block;margin:0 0 12px;color:var(--kp-text,#10281d);font-size:25px;font-weight:900;line-height:1;letter-spacing:-.8px}
+.kp-hi-weekbar{gap:8px!important;padding:0 0 18px!important;overflow-x:auto!important}
+.kp-hi-week{min-width:98px!important;min-height:42px!important;padding:0 16px!important;border-color:rgba(16,40,29,.18)!important;border-radius:999px!important;color:#68766d!important;font-size:12px!important;font-weight:800!important;background:transparent!important}
+.kp-hi-week.active{background:#10281d!important;color:#f7f3e9!important;border-color:#10281d!important}
+.kp-hi-subhead{align-items:center!important;padding:0 0 10px!important;border-bottom:1px solid rgba(16,40,29,.18)!important}
+.kp-hi-subhead strong{font-family:inherit!important;font-size:15px!important;font-weight:850!important;letter-spacing:-.2px}
+.kp-hi-subhead small{font-size:9.5px!important;color:#7e887f!important}
+.kp-hi-table{border:0!important}
+.kp-hi-row{min-height:72px!important;grid-template-columns:28px 40px minmax(0,1fr) 48px 12px!important;gap:10px!important;padding:10px 0!important;border-bottom:1px solid rgba(16,40,29,.16)!important;border-radius:0!important}
+.kp-hi-row:first-child{margin-top:0;background:linear-gradient(90deg,rgba(183,147,53,.10),rgba(183,147,53,.025))!important}
+.kp-hi-row:first-child .kp-hi-rank,.kp-hi-row:first-child .kp-hi-points strong{color:#9b761c!important}
+.kp-hi-avatar{width:38px!important;height:38px!important;border-color:rgba(16,40,29,.18)!important;font-size:10px!important}
+.kp-hi-name{gap:3px!important}.kp-hi-name strong{font-size:14.5px!important;font-weight:850!important;letter-spacing:-.2px}.kp-hi-name small{font-size:9.5px!important}
+.kp-hi-points strong{font-size:23px!important;font-weight:900!important;line-height:1!important}.kp-hi-points small{margin-top:4px;font-size:8.5px!important}.kp-hi-arrow{font-size:20px!important}
+
+/* Secondary history content: keep it quieter than the standings. */
+body[data-kp-screen="history"] #seasonStatsCard,body[data-kp-screen="history"] #awardsCard{margin-top:18px!important;border:1px solid rgba(16,40,29,.14)!important;border-radius:15px!important;background:rgba(255,255,255,.13)!important;box-shadow:none!important}
+body[data-kp-screen="history"] #seasonStatsCard .card-title,body[data-kp-screen="history"] #awardsCard .card-title{font-size:13px!important;font-weight:850!important}
+
+@media(max-width:380px){body[data-kp-screen="history"] #screen>.winner{min-height:228px;padding:21px 18px!important}body[data-kp-screen="history"] #screen>.winner h1{font-size:33px!important}.kp-hi-row{grid-template-columns:24px 36px minmax(0,1fr) 43px 10px!important;gap:8px!important}.kp-hi-week{min-width:90px!important;padding:0 13px!important}.kp-hi-subhead small{max-width:130px}}
