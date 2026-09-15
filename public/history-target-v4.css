@@ -1,0 +1,22 @@
+/* Approved History reference — final visual override only. */
+body[data-kp-screen="history"] #groupBar{display:block!important}
+body[data-kp-screen="history"] .topbar .brand{position:relative;padding-bottom:13px}
+body[data-kp-screen="history"] .topbar .brand:after{content:"PLAY · PREDICT · WIN";position:absolute;left:31px;bottom:-1px;color:#9a998f;font-size:7px;font-weight:600;letter-spacing:.22em;white-space:nowrap}
+body[data-kp-screen="history"] #screen>.winner{min-height:244px!important;margin:12px 14px 26px!important;padding:45px 28px!important;border-radius:17px!important;border:0!important;background-image:linear-gradient(90deg,rgba(10,27,21,.93) 0%,rgba(10,27,21,.79) 44%,rgba(10,27,21,.18) 70%,rgba(10,27,21,.02) 100%),url('https://sangharshpremierleague.com/assets/images/trophy.png')!important;background-size:cover!important;background-position:center 49%!important;box-shadow:none!important}
+body[data-kp-screen="history"] #screen>.winner:before,body[data-kp-screen="history"] #screen>.winner:after{display:none!important}
+body[data-kp-screen="history"] #screen>.winner .trophy{width:22px!important;height:22px!important;margin:0 0 25px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#b88e28!important}
+body[data-kp-screen="history"] #screen>.winner .trophy svg{width:22px!important;height:22px!important}
+body[data-kp-screen="history"] #screen>.winner .eyebrow{margin-bottom:9px!important;color:#f2eee5!important;font-size:9px!important;font-weight:850!important;letter-spacing:.22em!important}
+body[data-kp-screen="history"] #screen>.winner h1{max-width:54%!important;color:#fff!important;font-size:clamp(33px,9vw,45px)!important;font-weight:900!important;line-height:.94!important;letter-spacing:-1.6px!important;text-transform:none!important}
+body[data-kp-screen="history"] #screen>.winner>.muted{margin-top:13px!important;color:#f0ede6!important;font-size:13px!important;font-weight:700!important}
+body[data-kp-screen="history"] #screen>.card:has(#kpHistoryInlineV2){padding:0 22px!important}
+.kp-hi-weekbar{gap:12px!important;padding:0 0 31px!important}
+.kp-hi-week{min-height:54px!important;padding:0 23px!important;border-radius:17px!important;font-size:13px!important}
+#kpHistoryInlineV2:before{margin:0 0 8px!important;font-size:30px!important;letter-spacing:-1px!important}
+.kp-hi-subhead{padding-bottom:15px!important}
+.kp-hi-subhead small{font-size:11px!important;color:#92978f!important}
+.kp-hi-row{min-height:94px!important;grid-template-columns:32px 50px minmax(0,1fr) 50px 12px!important;gap:12px!important;padding:12px 0!important}
+.kp-hi-avatar{width:48px!important;height:48px!important;font-size:11px!important}
+.kp-hi-name strong{font-size:16px!important}.kp-hi-name small{margin-top:5px;font-size:11px!important}
+.kp-hi-points strong{font-size:26px!important}.kp-hi-points small{font-size:9px!important}
+@media(max-width:390px){body[data-kp-screen="history"] #screen>.winner{min-height:218px!important;margin-left:8px!important;margin-right:8px!important;padding:38px 22px!important}.kp-hi-week{min-height:48px!important;padding:0 18px!important}.kp-hi-row{min-height:84px!important;grid-template-columns:27px 44px minmax(0,1fr) 45px 10px!important;gap:9px!important}.kp-hi-avatar{width:42px!important;height:42px!important}}
