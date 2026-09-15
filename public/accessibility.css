@@ -62,7 +62,7 @@ input,select,textarea{font-size:16px;max-width:100%}
       header into place afterwards.
 
    Nothing here is screen-scoped. There is no tab-specific header any more. */
-:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px;--kp-radius:18px;--kp-gap:14px;--kp-row-lead:40px;--kp-row-gap:12px;--kp-section-gap:24px;--kp-action-h:56px;--kp-sechead-h:48px}
+:root{--kp-topbar-h:56px;--kp-shell-top:calc(env(safe-area-inset-top, 0px) + 12px);--kp-gutter:18px;--kp-nav-h:76px;--kp-radius:18px;--kp-gap:14px;--kp-row-lead:40px;--kp-row-gap:12px;--kp-row-h:76px;--kp-row-pts:50px;--kp-section-gap:24px;--kp-action-h:56px;--kp-sechead-h:48px}
 
 /* ---------------------------------------------------------------------------
    ONE GRID.
@@ -201,9 +201,6 @@ body.kp-native-matchday .kp-native-score{
   grid-template-columns:44px minmax(0,1fr) 44px!important;border-radius:24px!important;
 }
 body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-native-score b,body.kp-native-matchday .kp-native-score span{height:44px!important;line-height:44px!important;font-size:16px!important;min-width:0!important}
-/* Live rows come up to meet them: 72px is the concept's row height and it
-   gives the table the air the fixtures need for a 44px stepper. */
-.kp-live-trow{min-height:72px!important}
 
 /* ---------------------------------------------------------------------------
    ONE SECTION SPACING.
@@ -254,17 +251,34 @@ body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-nati
    as two rules, not thirteen. */
 .kp-native-side{grid-template-columns:var(--kp-row-lead) minmax(0,1fr)!important;gap:var(--kp-row-gap)!important}
 .kp-native-side.away{grid-template-columns:minmax(0,1fr) var(--kp-row-lead)!important}
-.kp-live-trow{grid-template-columns:var(--kp-row-lead) minmax(0,1fr) 42px 14px!important;gap:var(--kp-row-gap)!important}
-/* Four columns, not five: the standings avatar is hidden just below, so the
-   rank becomes the lead and this row matches Live's - the two screens are the
-   same thing, a ranked table of players. */
-.kp-hi-row{grid-template-columns:var(--kp-row-lead) minmax(0,1fr) 50px 12px!important;gap:var(--kp-row-gap)!important}
+/* ONE RANKED TABLE ROW. Live's table and History's final standings are the
+   same object - a ranked list of players with a position, a name with a
+   sub-line, and a points figure - so they get one row, not two that happen to
+   look similar. It was declared nine times for Live and eight for History
+   across six files, with row heights of 62/66/68/72/84/94 and points columns
+   of 34/42/45/48/50: on a 430px phone History's rows were 94px against Live's
+   72px, so every row jumped when you switched tabs.
+
+   Four columns, not five: the standings avatar is hidden just below, so the
+   rank is the lead and the two rows are identical. The last column is the
+   drill-in chevron - History has one, Live does not, so Live leaves that cell
+   empty rather than sizing its row differently and pulling its points figure
+   off History's. --kp-row-h is 18px of padding, the gutter value, around a
+   two-line row. */
+.kp-live-trow,.kp-hi-row{
+  display:grid!important;
+  grid-template-columns:var(--kp-row-lead) minmax(0,1fr) var(--kp-row-pts) 12px!important;
+  gap:var(--kp-row-gap)!important;align-items:center!important;
+  min-height:var(--kp-row-h)!important;padding:0!important;margin:0!important;
+  border:0!important;border-bottom:1px solid var(--kp-line)!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+}
 .kp-hi-avatar{display:none!important}
 .group-reference-menu>button{grid-template-columns:var(--kp-row-lead) minmax(0,1fr) auto!important;gap:var(--kp-row-gap)!important}
 /* Rows carry no horizontal padding of their own - Live had 2-3px and Group a
    couple more, which slid their whole grid off the gutter and put their text
    at 73 and 72 against everyone else's 70. The gutter is the row's edge. */
-.kp-live-trow,.kp-hi-row,.group-reference-menu>button,.kp-native-match{padding-left:0!important;padding-right:0!important}
+.group-reference-menu>button,.kp-native-match{padding-left:0!important;padding-right:0!important}
 
 /* ---------------------------------------------------------------------------
    ONE SECTION GRID.

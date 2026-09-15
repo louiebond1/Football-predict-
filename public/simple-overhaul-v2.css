@@ -43,7 +43,7 @@ body.kp-native-matchday #userChip,body.kp-native-live #userChip{width:36px!impor
 .kp-live-table-head h1{font:700 31px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.045em!important}
 .kp-live-locked{font-size:11px!important;color:var(--kp-green)!important}
 .kp-live-board{margin:0 18px!important;border-top:1px solid var(--kp-line)!important}
-.kp-live-trow{grid-template-columns:34px minmax(0,1fr) 34px 14px!important;min-height:68px!important;padding:9px 3px!important;gap:8px!important}
+
 .kp-live-tname{font-size:14px!important;font-weight:650!important}
 .kp-live-tstatus{font-size:10.5px!important}
 .kp-live-tpts{font:700 17px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}

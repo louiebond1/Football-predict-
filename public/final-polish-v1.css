@@ -16,7 +16,7 @@ body:has(#screen.group-reference-screen) .bottom-nav .nav-item.active{color:#267
 /* Live: remove spreadsheet/card-library feel. */
 .kp-live-table-cols{display:none!important}
 .kp-live-board{margin:8px 20px 0!important;border:0!important;border-top:1px solid var(--kp-line)!important;border-bottom:1px solid var(--kp-line)!important;border-radius:0!important;background:transparent!important;overflow:visible!important}
-.kp-live-trow{grid-template-columns:30px minmax(0,1fr) 42px 14px!important;gap:10px!important;padding:16px 2px!important;background:transparent!important;border-bottom:1px solid var(--kp-line)!important;box-shadow:none!important}
+.kp-live-trow{background:transparent!important;box-shadow:none!important}
 .kp-live-trow.top{background:transparent!important;box-shadow:none!important}
 .kp-live-trow.me{box-shadow:none!important}
 .kp-live-trow.top.me{box-shadow:none!important}

@@ -29,8 +29,7 @@ body[data-kp-screen="history"] #screen>.winner>.muted{margin-top:13px!important;
    again indented every standings row to 36px while every other tab's rows
    start at 18px. */
 body[data-kp-screen="history"] #screen>.card:has(#kpHistoryInlineV2){padding:0!important}
-.kp-hi-row{min-height:94px!important;grid-template-columns:32px 50px minmax(0,1fr) 50px 12px!important;gap:12px!important;padding:12px 0!important}
 .kp-hi-avatar{width:48px!important;height:48px!important;font-size:11px!important}
 .kp-hi-name strong{font-size:16px!important}.kp-hi-name small{margin-top:5px;font-size:11px!important}
 .kp-hi-points strong{font-size:26px!important}.kp-hi-points small{font-size:9px!important}
-@media(max-width:390px){body[data-kp-screen="history"] #screen>.winner{padding:18px 20px!important}.kp-hi-row{min-height:84px!important;grid-template-columns:27px 44px minmax(0,1fr) 45px 10px!important;gap:9px!important}.kp-hi-avatar{width:42px!important;height:42px!important}}
+@media(max-width:390px){body[data-kp-screen="history"] #screen>.winner{padding:18px 20px!important}.kp-hi-avatar{width:42px!important;height:42px!important}}
