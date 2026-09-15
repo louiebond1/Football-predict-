@@ -172,7 +172,17 @@ input,select,textarea{font-size:16px;max-width:100%}
   min-height:var(--kp-action-h)!important;height:var(--kp-action-h)!important;
   margin:0!important;padding:0!important;overflow-x:auto!important;
 }
-.kp-hi-week{min-height:var(--kp-action-h)!important;height:var(--kp-action-h)!important;padding:0 22px!important;border-radius:var(--kp-radius)!important;font-size:13px!important}
+/* Same chrome as an action card, so the band weighs the same on both screens.
+   The selected week was a solid #10281d slab - the heaviest block on the
+   page against Live's hairline cards - so selection is now carried by an
+   opaque fill, a stronger border and the ink colour instead of a dark fill. */
+.kp-hi-week{
+  min-height:var(--kp-action-h)!important;height:var(--kp-action-h)!important;
+  padding:0 22px!important;border-radius:var(--kp-radius)!important;
+  background:rgba(255,255,255,.4)!important;border:1px solid rgba(21,24,22,.12)!important;
+  color:#7b7c77!important;font:650 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.01em!important;
+}
+.kp-hi-week.active{background:#fff!important;border-color:rgba(21,24,22,.34)!important;color:#151816!important;font-weight:800!important}
 
 /* The two screens' own wrappers must not re-pad what the shared blocks own. */
 /* .kp-live-table-head carries .kp-sechead, so only its old padding/border are
@@ -279,6 +289,19 @@ body.kp-native-matchday .kp-native-score button,body.kp-native-matchday .kp-nati
   background:transparent!important;box-shadow:none!important;
 }
 .kp-hi-avatar{display:none!important}
+
+/* ONE TYPE SCALE FOR THE ROW. The two tables were set in different faces at
+   different weights: Live at 14px/650 in the system font with a 10.5px
+   #9c9b99 sub-line and a Georgia rank, History at 16px/850 in Avenir Next
+   with a darker #6f7a72 sub-line and an Avenir rank. Side by side History
+   read as the heavier, busier screen. Live's scale is the one that survives;
+   it is declared here for both. */
+.kp-live-tname,.kp-hi-name strong{font:650 14px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.012em!important;color:#151816!important}
+.kp-live-tstatus,.kp-hi-name small{font:400 10.5px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:-.012em!important;color:#9c9b99!important}
+.kp-live-tpos,.kp-hi-rank{font:700 13px/1 Georgia,"Times New Roman",serif!important;letter-spacing:-.012em!important;color:#9c9b99!important;text-align:center!important}
+/* The drill-in chevron is the one mark Live has no counterpart for; kept
+   because the rows really do open, lightened to Live's sub-line grey. */
+.kp-hi-arrow{font:400 15px/1 Georgia,"Times New Roman",serif!important;color:#c3c1bc!important}
 
 /* Both tables mark first place, but with different devices: Live drew a 3px
    gold bar hanging off the left edge of its top row, History coloured the
