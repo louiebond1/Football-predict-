@@ -13,7 +13,8 @@ const icons = {
   points: svg('<path d="M12 3l2.6 5.4 6 .8-4.3 4.1 1 5.9L12 16.5l-5.3 2.7 1-5.9-4.3-4.1 6-.8L12 3z"/>'),
   settings: svg('<circle cx="12" cy="12" r="3"/><path d="M4.9 4.9l2.2 2.2M16.9 16.9l2.2 2.2M19.1 4.9l-2.2 2.2M7.1 16.9l-2.2 2.2M12 2v3M12 19v3M2 12h3M19 12h3"/>'),
   card: svg('<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/>'),
-  copy: svg('<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>', 16)
+  copy: svg('<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>', 16),
+  flask: svg('<path d="M9 3h6M10 3v6.2L4.8 18a1.6 1.6 0 0 0 1.4 2.4h11.6a1.6 1.6 0 0 0 1.4-2.4L14 9.2V3"/><path d="M7.5 15h9"/>')
 };
 
 function esc(value = '') {
@@ -28,16 +29,34 @@ async function getClient() {
   return client;
 }
 
-async function loadAdminData() {
+/* The one authoritative "is this user an admin" check in KickPot: they must
+ * be signed in AND be the treasurer of the currently active group, verified
+ * against a live, RLS-protected read of `groups` (never a cached client
+ * flag). Betting Mode Lab reuses this exact function rather than growing a
+ * second admin concept — see isCurrentUserGroupAdmin() below. */
+async function resolveGroupAdmin() {
   const sb = await getClient();
-  if (!sb) return null;
+  if (!sb) return { sb: null, session: null, group: null, groups: [], isAdmin: false };
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) return null;
+  if (!session) return { sb, session: null, group: null, groups: [], isAdmin: false };
   const { data: groups, error: groupsError } = await sb.from('groups').select('*').order('created_at');
   if (groupsError) throw groupsError;
   const selected = window.KickPotApp?.context().activeGroupId;
   const group = (groups || []).find(g => g.id === selected) || (groups || [])[0];
-  if (!group || group.treasurer_id !== session.user.id) return { sb, session, group, isAdmin: false };
+  const isAdmin = !!group && group.treasurer_id === session.user.id;
+  return { sb, session, group, groups: groups || [], isAdmin };
+}
+
+/* Lean version for gates that only need the boolean (e.g. Betting Mode Lab's
+ * hash-route guard) — same check, no extra members/payments/history reads. */
+async function isCurrentUserGroupAdmin() {
+  try { return (await resolveGroupAdmin()).isAdmin; } catch { return false; }
+}
+
+async function loadAdminData() {
+  const { sb, session, group, isAdmin } = await resolveGroupAdmin();
+  if (!sb || !session) return null;
+  if (!isAdmin) return { sb, session, group, isAdmin: false };
 
   const gameweekId=window.KickPotApp.context().gameweekId;
   const { data: members, error: membersError } = await sb.from('group_members').select('user_id,role,joined_at').eq('group_id', group.id).order('joined_at');
@@ -166,8 +185,10 @@ async function renderAdmin(view, root, overview, startPage = 'menu') {
   membersNav.addEventListener('click', () => goAdmin('members'));
   const groupNav = adminNavRow('Group & invite', 'Name, stake, invite code, bank details', 'settings');
   groupNav.addEventListener('click', () => goAdmin('group'));
+  const bettingLabNav = adminNavRow('Betting Mode Lab', 'Experimental · fake-money prototype', 'flask');
+  bettingLabNav.addEventListener('click', () => { window.location.hash = 'betting-lab'; });
   const menuList = document.createElement('div'); menuList.className = 'kp3-group-menu kp-admin-menu';
-  menuList.append(paymentsNav, scoringNav, membersNav, groupNav);
+  menuList.append(paymentsNav, scoringNav, membersNav, groupNav, bettingLabNav);
   menuPage.append(menuList);
 
   paymentsPage.append(adminSubHeader('Payment control', () => goAdmin('menu')));
@@ -317,4 +338,4 @@ async function enhanceAdmin() {
 }
 
 
-export {enhanceAdmin};
+export {enhanceAdmin, isCurrentUserGroupAdmin};

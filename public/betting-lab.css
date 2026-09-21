@@ -1,0 +1,127 @@
+/* Betting Mode Lab — isolated stylesheet. Every color comes from the --kp-*
+   tokens kickpot-studio.css already defines globally, so this inherits
+   KickPot's real light theme instead of inventing a second palette. Nothing
+   here touches a selector outside .kp-betting-lab. */
+.kp-betting-lab{position:fixed;inset:0;z-index:500;background:var(--kp-bg);color:var(--kp-text);display:flex;flex-direction:column;height:100dvh;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums}
+.kp-betting-lab *{box-sizing:border-box}
+.kp-betting-lab button{font:inherit;cursor:pointer;background:none;border:0;color:inherit;-webkit-tap-highlight-color:transparent}
+
+.kbl-top{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;border-bottom:1px solid var(--kp-line)}
+.kbl-top-title{font-size:17px;font-weight:800;letter-spacing:-0.2px}
+.kbl-icon-btn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--kp-muted)}
+.kbl-icon-btn:active{background:var(--kp-surface)}
+.kbl-reset{font-size:12px;font-weight:700;color:var(--kp-muted);padding:8px 4px}
+.kbl-prototype-tag{flex:0 0 auto;padding:6px 14px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--kp-muted);background:var(--kp-surface);border-bottom:1px solid var(--kp-line)}
+
+.kbl-content{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
+
+.kbl-bankroll-eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--kp-muted)}
+.kbl-bankroll-amount{font-size:40px;font-weight:850;letter-spacing:-.03em;margin-top:4px;line-height:1}
+.kbl-bankroll-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--kp-line)}
+.kbl-bankroll-stats div{display:flex;flex-direction:column-reverse;gap:2px}
+.kbl-bankroll-stats strong{font-size:16px;font-weight:800}
+.kbl-bankroll-stats small{font-size:11px;color:var(--kp-muted)}
+.kbl-bankroll-stats .is-up strong{color:var(--kp-green)}
+.kbl-bankroll-stats .is-down strong{color:var(--kp-red)}
+
+.kbl-section-head{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--kp-muted);margin:22px 0 4px}
+.kbl-fixture{padding:14px 0;border-bottom:1px solid var(--kp-line);display:block;width:100%;text-align:left}
+.kbl-fixture-teams{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:750}
+.kbl-fixture-vs{color:var(--kp-muted);font-weight:500;font-size:12px}
+.kbl-fixture-kickoff{margin-top:2px;font-size:12px;color:var(--kp-muted)}
+.kbl-odds-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.kbl-odds-cell{min-height:52px;border:1px solid var(--kp-line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px}
+.kbl-odds-label{font-size:11px;color:var(--kp-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kbl-odds-value{font-size:16px;font-weight:800}
+.kbl-odds-cell.is-selected{border-color:var(--kp-accent);background:color-mix(in srgb,var(--kp-accent) 10%,transparent)}
+.kbl-odds-cell.is-selected .kbl-odds-value,.kbl-odds-cell.is-selected .kbl-odds-label{color:var(--kp-accent)}
+.kbl-more{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;margin-top:10px;padding:8px;font-size:12px;font-weight:700;color:var(--kp-muted)}
+
+.kbl-back{display:flex;align-items:center;gap:4px;padding:6px 0;margin-bottom:6px;color:var(--kp-muted);font-size:13px;font-weight:700}
+.kbl-drill-head{padding-bottom:12px;border-bottom:1px solid var(--kp-line)}
+.kbl-drill-teams{font-size:20px;font-weight:850;letter-spacing:-.02em}
+.kbl-drill-teams span{color:var(--kp-muted);font-weight:500;font-size:13px;margin:0 4px}
+.kbl-drill-kickoff{margin-top:4px;font-size:12px;color:var(--kp-muted)}
+.kbl-cats{display:flex;gap:6px;overflow-x:auto;padding:12px 0;margin-bottom:4px}
+.kbl-cat{flex:0 0 auto;padding:7px 14px;border-radius:999px;font-size:12px;font-weight:700;color:var(--kp-muted);background:var(--kp-surface)}
+.kbl-cat.is-active{background:var(--kp-text);color:var(--kp-bg)}
+.kbl-market{padding:14px 0;border-bottom:1px solid var(--kp-line)}
+.kbl-market-name{font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--kp-muted);margin-bottom:8px}
+.kbl-selections{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.kbl-selection{display:flex;flex-direction:column;gap:4px;align-items:flex-start;min-height:52px;justify-content:center;padding:8px 10px;border:1px solid var(--kp-line);border-radius:10px}
+.kbl-selection span{font-size:12px;color:var(--kp-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.kbl-selection b{font-size:15px;font-weight:800}
+.kbl-selection.is-selected{border-color:var(--kp-accent);background:color-mix(in srgb,var(--kp-accent) 10%,transparent)}
+.kbl-selection.is-selected span,.kbl-selection.is-selected b{color:var(--kp-accent)}
+
+.kbl-subtabs{display:flex;gap:8px;margin-bottom:14px}
+.kbl-subtab{padding:7px 14px;border-radius:999px;font-size:12px;font-weight:700;color:var(--kp-muted);background:var(--kp-surface)}
+.kbl-subtab.is-active{background:var(--kp-text);color:var(--kp-bg)}
+.kbl-empty{padding:40px 12px;text-align:center;color:var(--kp-muted);font-size:13px}
+.kbl-bet-card{padding:14px 0;border-bottom:1px solid var(--kp-line)}
+.kbl-bet-type{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--kp-muted);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.kbl-bet-sel{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:4px 0;font-size:13px}
+.kbl-bet-sel small{color:var(--kp-muted);font-size:11px}
+.kbl-bet-sel b{font-weight:700;flex:0 0 auto}
+.kbl-bet-figures{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.kbl-bet-figures div{display:flex;flex-direction:column-reverse}
+.kbl-bet-figures small{font-size:10px;color:var(--kp-muted)}
+.kbl-bet-figures b{font-size:14px;font-weight:800}
+.kbl-result-badge{font-size:10px;font-weight:800;padding:3px 7px;border-radius:5px}
+.kbl-result-badge.is-won{background:color-mix(in srgb,var(--kp-green) 16%,transparent);color:var(--kp-green)}
+.kbl-result-badge.is-lost{background:color-mix(in srgb,var(--kp-red) 14%,transparent);color:var(--kp-red)}
+.kbl-settle-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px dashed var(--kp-line)}
+.kbl-demo-tag{font-size:9px;font-weight:800;letter-spacing:.07em;color:var(--kp-muted)}
+.kbl-settle{padding:8px 12px;border-radius:8px;font-size:12px;font-weight:800;margin-left:6px}
+.kbl-settle-won{background:color-mix(in srgb,var(--kp-green) 14%,transparent);color:var(--kp-green)}
+.kbl-settle-lost{background:color-mix(in srgb,var(--kp-red) 12%,transparent);color:var(--kp-red)}
+.is-up{color:var(--kp-green)}
+.is-down{color:var(--kp-red)}
+
+.kbl-table-row{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--kp-line);font-size:14px}
+.kbl-rank{color:var(--kp-muted);font-weight:700}
+.kbl-name{font-weight:700}
+.kbl-balance{font-weight:800;font-size:15px}
+.kbl-table-row.is-you{background:color-mix(in srgb,var(--kp-accent) 6%,transparent);margin:0 -16px;padding:12px 16px;border-radius:8px}
+.kbl-table-row.is-you .kbl-name{color:var(--kp-accent)}
+
+.kbl-nav{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--kp-line);background:var(--kp-nav);padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+.kbl-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--kp-muted)}
+.kbl-nav-item.is-active{color:var(--kp-text)}
+.kbl-nav-item small{font-size:10px;font-weight:700}
+
+.kbl-slipbar{flex:0 0 auto;background:var(--kp-bg);border-top:1px solid var(--kp-line);box-shadow:0 -8px 24px rgba(0,0,0,.05)}
+.kbl-slip-collapsed{width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;font-size:13px;font-weight:700}
+.kbl-slip-chevron{transform:rotate(-90deg);color:var(--kp-muted)}
+.kbl-slip{padding:14px 16px calc(10px + env(safe-area-inset-bottom));max-height:70dvh;overflow-y:auto}
+.kbl-slip-head{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;margin-bottom:10px}
+.kbl-slip-items{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.kbl-slip-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--kp-line);border-radius:10px}
+.kbl-slip-item div{flex:1;min-width:0}
+.kbl-slip-item b{display:block;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kbl-slip-item small{color:var(--kp-muted);font-size:11px}
+.kbl-slip-item>span{font-weight:800;font-size:14px}
+.kbl-slip-remove{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--kp-muted);flex:0 0 auto}
+.kbl-stake-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.kbl-stake-label{font-size:13px;font-weight:700;color:var(--kp-muted)}
+.kbl-stake-input-wrap{display:flex;align-items:center;gap:2px;border:1px solid var(--kp-line);border-radius:10px;padding:8px 12px}
+.kbl-stake-input-wrap span{color:var(--kp-muted);font-weight:700}
+.kbl-stake-input{border:0;outline:0;width:90px;font-size:18px;font-weight:800;text-align:right;background:transparent;color:var(--kp-text)}
+.kbl-quick-stakes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+.kbl-quick{padding:8px 0;border:1px solid var(--kp-line);border-radius:8px;font-size:12px;font-weight:700;text-align:center}
+.kbl-quick:active{background:var(--kp-surface)}
+.kbl-slip-figures{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-top:1px solid var(--kp-line);margin-bottom:8px}
+.kbl-slip-figures div{display:flex;justify-content:space-between;font-size:13px}
+.kbl-slip-figures span{color:var(--kp-muted)}
+.kbl-slip-figures b{font-weight:800}
+.kbl-balance-row{display:grid;grid-template-columns:auto auto 1fr auto;gap:6px;align-items:baseline;font-size:12px;color:var(--kp-muted);margin-bottom:10px}
+.kbl-balance-row b{color:var(--kp-text);font-weight:800;margin-right:12px}
+.kbl-slip-warning{font-size:12px;color:var(--kp-red);margin-bottom:10px}
+.kbl-place{width:100%;padding:15px;border-radius:12px;background:var(--kp-text);color:var(--kp-bg);font-weight:800;font-size:14px;letter-spacing:.01em}
+.kbl-place[disabled]{opacity:.35;pointer-events:none}
+
+.kbl-toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--kp-text);color:var(--kp-bg);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;z-index:520;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+
+.kp-betting-lab-checking{position:fixed;inset:0;z-index:499;background:var(--kp-bg);color:var(--kp-muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+
+@media(min-width:600px){.kp-betting-lab{width:100%;max-width:480px;right:auto;left:50%;transform:translateX(-50%);border-left:1px solid var(--kp-line);border-right:1px solid var(--kp-line)}}
