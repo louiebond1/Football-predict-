@@ -49,16 +49,16 @@ export function mount({ onClose }) {
   root.innerHTML = `
     <header class="kbl-top kbl-brand-top">
       <div class="kbl-brand"><strong>KICKPOT</strong><small>FOOTBALL. FRIENDS. MORE.</small></div>
-      <div class="kbl-header-balance" data-header-balance>£100.00</div>
-      <button type="button" class="kbl-icon-btn kbl-close" data-close aria-label="Close Betting Mode Lab">${icons.close}</button>
+      <div class="kbl-header-balance-wrap"><div class="kbl-header-balance" data-header-balance>£100.00</div><button type="button" class="kbl-balance-plus" aria-label="Balance">+</button></div>
     </header>
     <main class="kbl-content" data-content></main>
     <div class="kbl-slipbar" data-slipbar hidden></div>
     <nav class="kbl-nav" aria-label="Betting Mode navigation">
-      <button type="button" class="kbl-nav-item" data-close>${icons.close}<small>Home</small></button>
+      <button type="button" class="kbl-nav-item" data-close>${svg('<path d="M3 11l9-8 9 8v9H6v-9"/><path d="M9 20v-6h6v6"/>',19)}<small>Home</small></button>
       <button type="button" class="kbl-nav-item" data-tab="bet">${icons.bet}<small>Betting</small></button>
       <button type="button" class="kbl-nav-item" data-tab="mybets">${icons.tickets}<small>My Bets</small></button>
       <button type="button" class="kbl-nav-item" data-tab="table">${icons.trophy}<small>Leaderboard</small></button>
+      <button type="button" class="kbl-nav-item">${svg('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',19)}<small>More</small></button>
     </nav>
     <div class="kbl-toast" data-toast hidden></div>
   `;
@@ -116,10 +116,10 @@ export function mount({ onClose }) {
     const st = getState();
     return `
       <section class="kbl-mode-tabs" aria-label="Betting sections">
-        <button class="is-active" type="button">Football</button>
-        <button type="button" data-open-fixture="${gameweek.fixtures[0].id}">Bet Builder</button>
-        <button type="button" data-tab="mybets">My Bets</button>
-        <button type="button" data-tab="table">Results</button>
+        <button class="is-active" type="button">${icons.bet}<span>Football</span></button>
+        <button type="button" data-open-fixture="${gameweek.fixtures[0].id}">${icons.tickets}<span>Bet Builder</span></button>
+        <button type="button" data-tab="mybets">${icons.tickets}<span>My Bets</span></button>
+        <button type="button" data-tab="table">${icons.trophy}<span>Results</span></button>
       </section>
       <section class="kbl-leagues" aria-label="Competitions">
         <button class="is-active" type="button">Premier League</button><button type="button">Championship</button><button type="button">La Liga</button><button type="button">Serie A</button>
@@ -128,10 +128,7 @@ export function mount({ onClose }) {
         <div class="kbl-fixtures-head"><div><strong>Premier League</strong><span>Gameweek 6⌄</span></div><div class="kbl-odds-head"><span></span><span>1</span><span>X</span><span>2</span></div></div>
         <div class="kbl-date-label">Saturday 20 September</div>
         ${gameweek.fixtures.map(renderFixtureCard).join('')}
-      </section>
-      <button type="button" class="kbl-builder-promo" data-open-fixture="${gameweek.fixtures[0].id}">
-        <span><small>BET BUILDER</small><strong>Combine markets from the same match</strong><em>Build bigger picks. Bigger moments.</em></span><b>›</b>
-      </button>`;
+      </section>`;
   }
 
   function renderMarketsDrilldown(fixture) {
