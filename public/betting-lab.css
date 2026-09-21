@@ -233,3 +233,34 @@
  .kbl-team b{font-size:12px}
  .kbl-team-mark{width:23px;height:23px;flex-basis:23px}
 }
+
+
+/* Screenshot QA pass: restore obvious controls, fix header collision, tighten hierarchy */
+.kp-betting-lab .kbl-demo-badge{position:static;background:#eef0ed;padding:3px 7px;border-radius:5px;font-size:10px;font-weight:700;color:var(--kp-muted);margin-left:auto;margin-right:10px;order:2}
+.kp-betting-lab .kbl-top-title{position:absolute;left:50%;transform:translateX(-50%)}
+.kp-betting-lab .kbl-reset{order:3}
+.kp-betting-lab .kbl-icon-btn{order:1}
+.kp-betting-lab .kbl-odds-cell{background:#f2f4f2;border:1px solid #e2e5e2;border-radius:7px;min-height:42px}
+.kp-betting-lab .kbl-odds-cell:active{background:#e8ebe8}
+.kp-betting-lab .kbl-odds-cell.is-selected{background:color-mix(in srgb,var(--kp-green) 12%,white);border-color:var(--kp-green)}
+.kp-betting-lab .kbl-selection{background:#f4f5f4;border:1px solid #e2e5e2;border-radius:7px;min-height:48px}
+.kp-betting-lab .kbl-selection:active{background:#e8ebe8}
+.kp-betting-lab .kbl-selection.is-selected{background:color-mix(in srgb,var(--kp-green) 12%,white);border-color:var(--kp-green)}
+.kp-betting-lab .kbl-more{font-size:11px;color:var(--kp-muted);padding-left:7px}
+.kp-betting-lab .kbl-team-mark{display:none}
+.kp-betting-lab .kbl-team{gap:0}
+.kp-betting-lab .kbl-fixture{padding:12px 0}
+.kp-betting-lab .kbl-matchline{grid-template-columns:minmax(0,1fr) 62px minmax(0,1fr)}
+.kp-betting-lab .kbl-match-meta small{font-size:10px}
+.kp-betting-lab .kbl-bankroll{padding-bottom:12px}
+.kp-betting-lab .kbl-fixtures-head{padding-top:13px}
+.kp-betting-lab .kbl-drill-head{padding-top:0;padding-bottom:12px}
+.kp-betting-lab .kbl-drill-teams{font-size:19px}
+.kp-betting-lab .kbl-cats{gap:26px}
+.kp-betting-lab .kbl-market{padding:15px 0}
+.kp-betting-lab .kbl-market-name{font-size:13px;margin-bottom:8px}
+.kp-betting-lab .kbl-selections{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.kp-betting-lab .kbl-selection span{white-space:normal;line-height:1.15;text-align:center}
+@media(max-width:380px){
+ .kp-betting-lab .kbl-selections{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
