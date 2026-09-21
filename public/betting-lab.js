@@ -20,6 +20,11 @@ const icons = {
 };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 const kickoffLabel = iso => new Intl.DateTimeFormat('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+const teamMark = name => {
+  const words = String(name).split(/\s+/).filter(Boolean);
+  const initials = words.length > 1 ? words.map(w => w[0]).slice(0, 2).join('') : String(name).slice(0, 2);
+  return `<span class="kbl-team-mark" aria-hidden="true">${esc(initials.toUpperCase())}</span>`;
+};
 const round2 = n => Math.round(n * 100) / 100;
 
 export function mount({ onClose }) {
@@ -47,7 +52,7 @@ export function mount({ onClose }) {
       <div class="kbl-top-title">Betting</div>
       <button type="button" class="kbl-reset" data-reset>Reset demo</button>
     </header>
-    <div class="kbl-prototype-tag">PROTOTYPE · admin-only · ${esc(MOCK_DISCLAIMER)}</div>
+    <div class="kbl-demo-badge">Demo</div>
     <main class="kbl-content" data-content></main>
     <div class="kbl-slipbar" data-slipbar hidden></div>
     <nav class="kbl-nav" aria-label="Betting Mode navigation">
@@ -98,13 +103,18 @@ export function mount({ onClose }) {
   function renderFixtureCard(fixture) {
     const mr = fixtureMatchResult(fixture);
     const [home, draw, away] = mr.selections;
-    const sel = ui.slip.get(fixture.id);
-    const cell = s => `<button type="button" class="kbl-odds-cell${sel?.selectionId === s.id ? ' is-selected' : ''}" data-odds data-fixture="${fixture.id}" data-market="${mr.id}" data-selection="${s.id}"><span class="kbl-odds-label">${esc(s.name === 'Home' ? fixture.home : s.name === 'Away' ? fixture.away : 'Draw')}</span><span class="kbl-odds-value">${s.odds.toFixed(2)}</span></button>`;
-    return `<article class="kbl-fixture" data-open-fixture="${fixture.id}">
-      <div class="kbl-fixture-teams"><span>${esc(fixture.home)}</span><span class="kbl-fixture-vs">v</span><span>${esc(fixture.away)}</span></div>
-      <div class="kbl-fixture-kickoff">${kickoffLabel(fixture.kickoff)}</div>
-      <div class="kbl-odds-row">${cell(home)}${cell(draw)}${cell(away)}</div>
-      <button type="button" class="kbl-more" data-open-fixture="${fixture.id}">More markets ${icons.chevron}</button>
+    const selected = ui.slip.get(fixture.id);
+    const cell = (s, code) => `<button type="button" class="kbl-odds-cell${selected?.selectionId === s.id ? ' is-selected' : ''}" data-odds data-fixture="${fixture.id}" data-market="${mr.id}" data-selection="${s.id}"><span class="kbl-odds-label">${code}</span><span class="kbl-odds-value">${s.odds.toFixed(2)}</span></button>`;
+    return `<article class="kbl-fixture">
+      <button type="button" class="kbl-matchline" data-open-fixture="${fixture.id}">
+        <span class="kbl-team kbl-team-home">${teamMark(fixture.home)}<b>${esc(fixture.home)}</b></span>
+        <span class="kbl-match-meta"><small>${kickoffLabel(fixture.kickoff)}</small><span>v</span></span>
+        <span class="kbl-team kbl-team-away"><b>${esc(fixture.away)}</b>${teamMark(fixture.away)}</span>
+      </button>
+      <div class="kbl-fixture-actions">
+        <div class="kbl-odds-row">${cell(home, '1')}${cell(draw, 'X')}${cell(away, '2')}</div>
+        <button type="button" class="kbl-more" data-open-fixture="${fixture.id}" aria-label="More markets for ${esc(fixture.home)} versus ${esc(fixture.away)}">More ${icons.chevron}</button>
+      </div>
     </article>`;
   }
 
@@ -121,7 +131,7 @@ export function mount({ onClose }) {
         </div>
       </section>
       <section class="kbl-fixtures">
-        <div class="kbl-section-head">Demo gameweek</div>
+        <div class="kbl-fixtures-head"><div><strong>Premier League</strong><span>Gameweek 6</span></div></div>
         ${gameweek.fixtures.map(renderFixtureCard).join('')}
       </section>`;
   }
