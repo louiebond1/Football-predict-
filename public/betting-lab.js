@@ -100,14 +100,14 @@ export function mount({ onClose }) {
     const mr = fixtureMatchResult(fixture);
     const [home, draw, away] = mr.selections;
     const selectedKeys = new Set([...ui.slip.keys()]);
-    const cell = (s, code) => `<button type="button" class="kbl-odds-cell${selectedKeys.has(slipKey(mr.id, s.id)) ? ' is-selected' : ''}" data-odds data-fixture="${fixture.id}" data-market="${mr.id}" data-selection="${s.id}" aria-label="${code} ${s.odds.toFixed(2)}"><span class="kbl-odds-label">${code}</span><span class="kbl-odds-value">${s.odds.toFixed(2)}</span></button>`;
+    const cell = (s, code) => `<button type="button" class="kbl-odds-cell${selectedKeys.has(slipKey(mr.id, s.id)) ? ' is-selected' : ''}" data-odds data-fixture="${fixture.id}" data-market="${mr.id}" data-selection="${s.id}" aria-label="${code} ${s.odds.toFixed(2)}"><span class="kbl-odds-value">${s.odds.toFixed(2)}</span></button>`;
     return `<article class="kbl-fixture kbl-fixture-table">
-      <div class="kbl-fixture-time">${kickoffLabel(fixture.kickoff)}</div>
-      <button type="button" class="kbl-fixture-names" data-open-fixture="${fixture.id}">
-        <strong>${esc(fixture.home)}</strong><strong>${esc(fixture.away)}</strong>
+      <button type="button" class="kbl-fixture-main" data-open-fixture="${fixture.id}" aria-label="Open ${esc(fixture.home)} v ${esc(fixture.away)} markets">
+        <span class="kbl-fixture-time">${kickoffLabel(fixture.kickoff)}</span>
+        <span class="kbl-fixture-names"><strong>${esc(fixture.home)}</strong><strong>${esc(fixture.away)}</strong></span>
+        <span class="kbl-market-link">All markets ${icons.chevron}</span>
       </button>
       <div class="kbl-odds-row">${cell(home, '1')}${cell(draw, 'X')}${cell(away, '2')}</div>
-      <button type="button" class="kbl-more" data-open-fixture="${fixture.id}">Markets ${icons.chevron}</button>
     </article>`;
   }
 
