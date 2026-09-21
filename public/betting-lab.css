@@ -264,3 +264,7 @@
 @media(max-width:380px){
  .kp-betting-lab .kbl-selections{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+.kp-betting-lab .kbl-top-actions{margin-left:auto;display:flex;align-items:center;gap:8px;order:3}
+.kp-betting-lab .kbl-top-actions .kbl-demo-badge{position:static;order:initial;margin:0}
+.kp-betting-lab .kbl-top-actions .kbl-reset{order:initial}
