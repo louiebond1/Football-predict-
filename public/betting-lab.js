@@ -84,11 +84,23 @@ export function mount({ onClose }) {
   function slipKey(marketId, selectionId) { return `${marketId}|${selectionId}`; }
   function toggleSelection(fixture, market, selection) {
     const key = slipKey(market.id, selection.id);
-    if (ui.slip.has(key)) ui.slip.delete(key);
-    else ui.slip.set(key, {
-      fixtureId: fixture.id, fixtureLabel: `${fixture.home} v ${fixture.away}`,
-      marketId: market.id, marketName: market.name, selectionId: selection.id, selectionName: selection.name, odds: selection.odds
-    });
+    if (ui.slip.has(key)) {
+      ui.slip.delete(key);
+    } else {
+      // Mutually-exclusive markets: only one outcome from the same market can
+      // exist in a Bet Builder. Choosing another replaces the previous pick.
+      const exclusiveMarketKeys = new Set(['result','dc','dnb','btts','ou05','ou15','ou25','ou25b','ou35','homegoals','awaygoals','firstscore','fh','htft','ah','fgs']);
+      const marketKey = market.id.split(':').pop();
+      if (exclusiveMarketKeys.has(marketKey)) {
+        for (const [existingKey, existing] of ui.slip) {
+          if (existing.fixtureId === fixture.id && existing.marketId === market.id) ui.slip.delete(existingKey);
+        }
+      }
+      ui.slip.set(key, {
+        fixtureId: fixture.id, fixtureLabel: `${fixture.home} v ${fixture.away}`,
+        marketId: market.id, marketName: market.name, selectionId: selection.id, selectionName: selection.name, odds: selection.odds
+      });
+    }
     ui.slipExpanded = false;
     renderAll();
   }
