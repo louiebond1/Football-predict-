@@ -47,17 +47,18 @@ export function mount({ onClose }) {
   };
 
   root.innerHTML = `
-    <header class="kbl-top">
-      <button type="button" class="kbl-icon-btn" data-close aria-label="Close Betting Mode Lab">${icons.close}</button>
-      <div class="kbl-top-title">Betting</div>
-      <button type="button" class="kbl-reset" data-reset>Reset</button>
+    <header class="kbl-top kbl-brand-top">
+      <div class="kbl-brand"><strong>KICKPOT</strong><small>FOOTBALL. FRIENDS. MORE.</small></div>
+      <div class="kbl-header-balance" data-header-balance>£100.00</div>
+      <button type="button" class="kbl-icon-btn kbl-close" data-close aria-label="Close Betting Mode Lab">${icons.close}</button>
     </header>
     <main class="kbl-content" data-content></main>
     <div class="kbl-slipbar" data-slipbar hidden></div>
     <nav class="kbl-nav" aria-label="Betting Mode navigation">
-      <button type="button" class="kbl-nav-item" data-tab="bet">${icons.bet}<small>Bet</small></button>
+      <button type="button" class="kbl-nav-item" data-close>${icons.close}<small>Home</small></button>
+      <button type="button" class="kbl-nav-item" data-tab="bet">${icons.bet}<small>Betting</small></button>
       <button type="button" class="kbl-nav-item" data-tab="mybets">${icons.tickets}<small>My Bets</small></button>
-      <button type="button" class="kbl-nav-item" data-tab="table">${icons.trophy}<small>Table</small></button>
+      <button type="button" class="kbl-nav-item" data-tab="table">${icons.trophy}<small>Leaderboard</small></button>
     </nav>
     <div class="kbl-toast" data-toast hidden></div>
   `;
@@ -114,19 +115,23 @@ export function mount({ onClose }) {
   function renderBetTab() {
     const st = getState();
     return `
-      <section class="kbl-bankroll">
-        <div class="kbl-bankroll-eyebrow">Available this gameweek</div>
-        <div class="kbl-bankroll-amount">${formatGBP(st.balance)}</div>
-        <div class="kbl-bankroll-stats">
-          <div><strong>${st.openBets.length}</strong><small>Open bets</small></div>
-          <div><strong>${formatGBP(openStake())}</strong><small>Open stake</small></div>
-          <div class="${gwProfit() > 0 ? 'is-up' : gwProfit() < 0 ? 'is-down' : ''}"><strong>${gwProfit() >= 0 ? '+' : ''}${formatGBP(gwProfit())}</strong><small>Profit</small></div>
-        </div>
+      <section class="kbl-mode-tabs" aria-label="Betting sections">
+        <button class="is-active" type="button">Football</button>
+        <button type="button" data-open-fixture="${gameweek.fixtures[0].id}">Bet Builder</button>
+        <button type="button" data-tab="mybets">My Bets</button>
+        <button type="button" data-tab="table">Results</button>
+      </section>
+      <section class="kbl-leagues" aria-label="Competitions">
+        <button class="is-active" type="button">Premier League</button><button type="button">Championship</button><button type="button">La Liga</button><button type="button">Serie A</button>
       </section>
       <section class="kbl-fixtures">
-        <div class="kbl-fixtures-head"><div><strong>Premier League</strong><span>GW 6</span></div><div class="kbl-odds-head"><span></span><span>1</span><span>X</span><span>2</span></div></div>
+        <div class="kbl-fixtures-head"><div><strong>Premier League</strong><span>Gameweek 6⌄</span></div><div class="kbl-odds-head"><span></span><span>1</span><span>X</span><span>2</span></div></div>
+        <div class="kbl-date-label">Saturday 20 September</div>
         ${gameweek.fixtures.map(renderFixtureCard).join('')}
-      </section>`;
+      </section>
+      <button type="button" class="kbl-builder-promo" data-open-fixture="${gameweek.fixtures[0].id}">
+        <span><small>BET BUILDER</small><strong>Combine markets from the same match</strong><em>Build bigger picks. Bigger moments.</em></span><b>›</b>
+      </button>`;
   }
 
   function renderMarketsDrilldown(fixture) {
@@ -275,6 +280,7 @@ export function mount({ onClose }) {
       contentEl.innerHTML = renderTable();
     }
     root.querySelectorAll('.kbl-nav-item').forEach(b => b.classList.toggle('is-active', b.dataset.tab === ui.tab));
+    const hb = root.querySelector('[data-header-balance]'); if (hb) hb.textContent = formatGBP(st.balance);
     renderSlip();
   }
 
