@@ -41,7 +41,7 @@ export function mount({ onClose }) {
     tab: 'bet',
     openFixtureId: null,
     category: 'popular',
-    slip: new Map(), // fixtureId -> { fixtureId, fixtureLabel, marketId, marketName, selectionId, selectionName, odds }
+    slip: new Map(), // marketId|selectionId -> selection; supports same-game Bet Builders
     slipExpanded: false,
     stakeInput: '10.00'
   };
@@ -80,19 +80,15 @@ export function mount({ onClose }) {
     if (!Number.isFinite(n) || n <= 0) return 0;
     return Math.round(n * 100);
   }
+  function slipKey(marketId, selectionId) { return `${marketId}|${selectionId}`; }
   function toggleSelection(fixture, market, selection) {
-    const existing = ui.slip.get(fixture.id);
-    if (existing && existing.selectionId === selection.id) {
-      ui.slip.delete(fixture.id);
-    } else {
-      if (existing) toast(`Replaced ${fixture.home} v ${fixture.away} pick`);
-      ui.slip.set(fixture.id, {
-        fixtureId: fixture.id, fixtureLabel: `${fixture.home} v ${fixture.away}`,
-        marketId: market.id, marketName: market.name, selectionId: selection.id, selectionName: selection.name, odds: selection.odds
-      });
-      /* Keep the slip compact while building picks. Opening it is an explicit action. */
-      ui.slipExpanded = false;
-    }
+    const key = slipKey(market.id, selection.id);
+    if (ui.slip.has(key)) ui.slip.delete(key);
+    else ui.slip.set(key, {
+      fixtureId: fixture.id, fixtureLabel: `${fixture.home} v ${fixture.away}`,
+      marketId: market.id, marketName: market.name, selectionId: selection.id, selectionName: selection.name, odds: selection.odds
+    });
+    ui.slipExpanded = false;
     renderAll();
   }
 
@@ -103,8 +99,8 @@ export function mount({ onClose }) {
   function renderFixtureCard(fixture) {
     const mr = fixtureMatchResult(fixture);
     const [home, draw, away] = mr.selections;
-    const selected = ui.slip.get(fixture.id);
-    const cell = (s, code) => `<button type="button" class="kbl-odds-cell${selected?.selectionId === s.id ? ' is-selected' : ''}" data-odds data-fixture="${fixture.id}" data-market="${mr.id}" data-selection="${s.id}" aria-label="${code} ${s.odds.toFixed(2)}"><span class="kbl-odds-label">${code}</span><span class="kbl-odds-value">${s.odds.toFixed(2)}</span></button>`;
+    const selectedKeys = new Set([...ui.slip.keys()]);
+    const cell = (s, code) => `<button type="button" class="kbl-odds-cell${selectedKeys.has(slipKey(mr.id, s.id)) ? ' is-selected' : ''}" data-odds data-fixture="${fixture.id}" data-market="${mr.id}" data-selection="${s.id}" aria-label="${code} ${s.odds.toFixed(2)}"><span class="kbl-odds-label">${code}</span><span class="kbl-odds-value">${s.odds.toFixed(2)}</span></button>`;
     return `<article class="kbl-fixture kbl-fixture-table">
       <div class="kbl-fixture-time">${kickoffLabel(fixture.kickoff)}</div>
       <button type="button" class="kbl-fixture-names" data-open-fixture="${fixture.id}">
@@ -142,16 +138,16 @@ export function mount({ onClose }) {
         <button type="button" class="kbl-back" data-back-fixture>${svg('<path d="M15 6l-6 6 6 6"/>', 18)}<span>All fixtures</span></button>
         <div class="kbl-drill-head">
           <div class="kbl-drill-teams">${esc(fixture.home)} <span>v</span> ${esc(fixture.away)}</div>
-          <div class="kbl-drill-kickoff">${kickoffLabel(fixture.kickoff)}</div>
+          <div class="kbl-drill-kickoff">${kickoffLabel(fixture.kickoff)} · Pick multiple markets to build your bet</div>
         </div>
-        <div class="kbl-cats">
+        <div class="kbl-builder-banner"><span>BET BUILDER</span><strong>Combine match + player picks</strong><small>Selections from this game can now be added together.</small></div><div class="kbl-cats">
           ${MARKET_CATEGORIES.map(c => `<button type="button" class="kbl-cat${c.key === cat ? ' is-active' : ''}" data-category="${c.key}">${esc(c.label)}</button>`).join('')}
         </div>
         ${markets.map(market => `
           <div class="kbl-market">
             <div class="kbl-market-name">${esc(market.name)}</div>
             <div class="kbl-selections">
-              ${market.selections.map(s => `<button type="button" class="kbl-selection${sel?.selectionId === s.id ? ' is-selected' : ''}" data-odds data-fixture="${fixture.id}" data-market="${market.id}" data-selection="${s.id}"><span>${esc(s.name)}</span><b>${s.odds.toFixed(2)}</b></button>`).join('')}
+              ${market.selections.map(s => `<button type="button" class="kbl-selection${selectedKeys.has(slipKey(market.id, s.id)) ? ' is-selected' : ''}" data-odds data-fixture="${fixture.id}" data-market="${market.id}" data-selection="${s.id}"><span>${esc(s.name)}</span><b>${s.odds.toFixed(2)}</b></button>`).join('')}
             </div>
           </div>`).join('')}
       </section>`;
@@ -159,7 +155,7 @@ export function mount({ onClose }) {
 
   function betRowHTML(bet, { settleable }) {
     const lines = bet.selections.map(s => `<div class="kbl-bet-sel"><span>${esc(s.fixtureLabel)}</span><small>${esc(s.selectionName)} · ${esc(s.marketName)}</small><b>${s.oddsAtPlacement.toFixed(2)}</b></div>`).join('');
-    const header = bet.type === 'acca' ? `Accumulator · ${bet.selections.length} selections` : 'Single';
+    const header = bet.type === 'bet-builder' ? `Bet Builder · ${bet.selections.length} legs` : bet.type === 'acca' ? `Accumulator · ${bet.selections.length} selections` : 'Single';
     if (settleable) {
       return `<article class="kbl-bet-card" data-bet="${bet.id}">
         <div class="kbl-bet-type">${header}</div>
@@ -226,7 +222,7 @@ export function mount({ onClose }) {
       <div class="kbl-slip">
         <div class="kbl-slip-head"><span>${items.length > 1 ? `Accumulator · ${items.length} selections` : 'Bet slip'}</span><button type="button" class="kbl-icon-btn" data-collapse-slip aria-label="Minimise slip">${svg('<path d="M6 15l6-6 6 6"/>', 16)}</button></div>
         <div class="kbl-slip-items">
-          ${items.map(s => `<div class="kbl-slip-item"><div><b>${esc(s.selectionName)}</b><small>${esc(s.fixtureLabel)} · ${esc(s.marketName)}</small></div><span>${s.odds.toFixed(2)}</span><button type="button" class="kbl-slip-remove" data-remove-slip="${s.fixtureId}" aria-label="Remove selection">${icons.x}</button></div>`).join('')}
+          ${items.map(s => `<div class="kbl-slip-item"><div><b>${esc(s.selectionName)}</b><small>${esc(s.fixtureLabel)} · ${esc(s.marketName)}</small></div><span>${s.odds.toFixed(2)}</span><button type="button" class="kbl-slip-remove" data-remove-slip="${slipKey(s.marketId, s.selectionId)}" aria-label="Remove selection">${icons.x}</button></div>`).join('')}
         </div>
         <div class="kbl-stake-row">
           <span class="kbl-stake-label">Stake</span>
