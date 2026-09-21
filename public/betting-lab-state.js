@@ -61,15 +61,13 @@ export function resetDemo() {
 export function openStake() { return state.openBets.reduce((sum, b) => sum + b.stake, 0); }
 export function gwProfit() { return state.balance + openStake() - state.startingBalance; }
 
-/* selections: [{ fixtureId, marketId, selectionId }], deduplicated to at most
- * one per fixture (accumulator v0 rule — enforced defensively here too, even
- * though the bet-slip UI is the primary place this is kept true). */
+/* selections can include multiple independent markets from one fixture (demo Bet Builder). */
 export function placeBet({ selections, stakePence }) {
   if (!Array.isArray(selections) || !selections.length) return { ok: false, error: 'No selection.' };
-  const byFixture = new Map();
-  for (const s of selections) byFixture.set(s.fixtureId, s); // last one per fixture wins
+  const unique = new Map();
+  for (const sel of selections) unique.set(`${sel.marketId}|${sel.selectionId}`, sel);
   const resolved = [];
-  for (const s of byFixture.values()) {
+  for (const s of unique.values()) {
     const hit = findSelection(s.fixtureId, s.marketId, s.selectionId);
     if (!hit) return { ok: false, error: 'A selected price is no longer available.' };
     resolved.push({
@@ -86,7 +84,7 @@ export function placeBet({ selections, stakePence }) {
   const potentialReturn = Math.round(stakePence * combinedOdds);
   const bet = {
     id: `bet-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    type: resolved.length > 1 ? 'acca' : 'single',
+    type: resolved.length > 1 ? (new Set(resolved.map(x => x.fixtureId)).size === 1 ? 'bet-builder' : 'acca') : 'single',
     selections: resolved,
     stake: stakePence,
     combinedOdds,
