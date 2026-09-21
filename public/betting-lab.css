@@ -192,3 +192,44 @@
 .kbl-quick{border:0;border-radius:7px;background:#f4f5f4}
 .kbl-place{border-radius:8px;background:var(--kp-green);color:white;text-transform:none;letter-spacing:0;font-size:15px}
 .kbl-toast{border-radius:7px;font-size:12px;bottom:92px}
+
+
+/* Compact fixture composition — markup redesign */
+.kbl-demo-badge{position:absolute;top:calc(env(safe-area-inset-top) + 18px);right:78px;font-size:10px;font-weight:700;color:var(--kp-muted);background:#eef0ed;padding:3px 7px;border-radius:5px;z-index:2}
+.kbl-content{padding-top:14px}
+.kbl-bankroll{display:grid;grid-template-columns:1fr auto;grid-template-areas:"label stats" "amount stats";align-items:center;padding:0 0 14px}
+.kbl-bankroll-eyebrow{grid-area:label;font-size:11px;color:var(--kp-muted)}
+.kbl-bankroll-amount{grid-area:amount;font-size:31px}
+.kbl-bankroll-stats{grid-area:stats;margin:0;display:flex;gap:13px}
+.kbl-bankroll-stats div{min-width:46px;padding-left:10px}
+.kbl-bankroll-stats strong{font-size:13px}
+.kbl-bankroll-stats small{font-size:9px;white-space:nowrap}
+.kbl-fixtures-head{padding:15px 0 4px}
+.kbl-fixtures-head>div{display:flex;align-items:baseline;justify-content:space-between}
+.kbl-fixtures-head strong{font-size:16px;letter-spacing:-.01em}
+.kbl-fixtures-head span{font-size:11px;color:var(--kp-muted);font-weight:600}
+.kbl-fixture{padding:11px 0 12px}
+.kbl-matchline{display:grid!important;grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);align-items:center;width:100%;padding:0!important;text-align:left}
+.kbl-team{display:flex;align-items:center;gap:7px;min-width:0}
+.kbl-team b{font-size:13px;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kbl-team-away{justify-content:flex-end;text-align:right}
+.kbl-team-mark{width:26px;height:26px;flex:0 0 26px;border-radius:50%;display:grid;place-items:center;background:#eef0ed;border:1px solid #e1e4e0;font-size:8px;font-weight:800;color:var(--kp-text)}
+.kbl-match-meta{display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--kp-muted)}
+.kbl-match-meta small{font-size:9px;white-space:nowrap}
+.kbl-match-meta span{font-size:10px}
+.kbl-fixture-actions{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:8px}
+.kbl-odds-row{margin:0;gap:6px}
+.kbl-odds-cell{min-height:40px;border:1px solid #e8eae7;background:#f7f8f7;border-radius:6px;display:grid;grid-template-columns:auto auto;gap:5px;align-content:center;justify-content:center}
+.kbl-odds-label{font-size:9px;font-weight:700;color:var(--kp-muted)}
+.kbl-odds-value{font-size:13px;line-height:1}
+.kbl-more{width:auto;margin:0;padding:9px 0 9px 4px;white-space:nowrap;font-size:10px}
+.kbl-more svg{width:12px;height:12px}
+.kbl-nav-item small{font-size:9px}
+@media(max-width:380px){
+ .kbl-content{padding-left:14px;padding-right:14px}
+ .kbl-bankroll{display:block}
+ .kbl-bankroll-stats{margin-top:10px}
+ .kbl-matchline{grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr)}
+ .kbl-team b{font-size:12px}
+ .kbl-team-mark{width:23px;height:23px;flex-basis:23px}
+}
