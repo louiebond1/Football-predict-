@@ -132,7 +132,7 @@ export function mount({ onClose }) {
   function renderMarketsDrilldown(fixture) {
     const cat = MARKET_CATEGORIES.find(c => c.key === ui.category) ? ui.category : 'popular';
     const markets = fixture.markets[cat] || [];
-    const sel = ui.slip.get(fixture.id);
+    const selectedKeys = new Set([...ui.slip.keys()]);
     return `
       <section class="kbl-drill">
         <button type="button" class="kbl-back" data-back-fixture>${svg('<path d="M15 6l-6 6 6 6"/>', 18)}<span>All fixtures</span></button>
