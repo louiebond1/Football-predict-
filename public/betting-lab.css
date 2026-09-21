@@ -268,3 +268,66 @@
 .kp-betting-lab .kbl-top-actions{margin-left:auto;display:flex;align-items:center;gap:8px;order:3}
 .kp-betting-lab .kbl-top-actions .kbl-demo-badge{position:static;order:initial;margin:0}
 .kp-betting-lab .kbl-top-actions .kbl-reset{order:initial}
+
+
+/* Final visual finish — denser, calmer, unmistakably interactive */
+.kp-betting-lab{--kbl-control:#f1f3f1;--kbl-control-border:#e0e3df}
+.kp-betting-lab .kbl-top{min-height:54px;padding:calc(env(safe-area-inset-top) + 5px) 18px 5px}
+.kp-betting-lab .kbl-top-title{font-size:16px}
+.kp-betting-lab .kbl-reset{font-size:11px;font-weight:600;color:var(--kp-muted)}
+.kp-betting-lab .kbl-content{padding:12px 18px calc(18px + env(safe-area-inset-bottom))}
+.kp-betting-lab .kbl-bankroll{grid-template-columns:1fr auto;grid-template-areas:"label stats" "amount stats";padding:1px 0 11px}
+.kp-betting-lab .kbl-bankroll-eyebrow{font-size:10px}
+.kp-betting-lab .kbl-bankroll-amount{font-size:29px;line-height:1.05;margin-top:2px}
+.kp-betting-lab .kbl-bankroll-stats{gap:10px}
+.kp-betting-lab .kbl-bankroll-stats div{min-width:44px;padding-left:9px}
+.kp-betting-lab .kbl-bankroll-stats strong{font-size:12px}
+.kp-betting-lab .kbl-bankroll-stats small{font-size:8.5px}
+.kp-betting-lab .kbl-fixtures-head{padding:12px 0 2px}
+.kp-betting-lab .kbl-fixtures-head strong{font-size:15px}
+.kp-betting-lab .kbl-fixtures-head span{font-size:10px}
+.kp-betting-lab .kbl-fixture{padding:9px 0 10px}
+.kp-betting-lab .kbl-matchline{grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr)}
+.kp-betting-lab .kbl-team b{font-size:12.5px}
+.kp-betting-lab .kbl-match-meta{gap:0}
+.kp-betting-lab .kbl-match-meta small{font-size:9.5px}
+.kp-betting-lab .kbl-match-meta span{font-size:9px}
+.kp-betting-lab .kbl-fixture-actions{grid-template-columns:minmax(0,1fr) 48px;gap:7px;margin-top:6px}
+.kp-betting-lab .kbl-odds-row{gap:5px}
+.kp-betting-lab .kbl-odds-cell{min-height:36px;border-radius:6px;background:var(--kbl-control);border-color:var(--kbl-control-border);grid-template-columns:auto auto;gap:5px;padding:4px 6px}
+.kp-betting-lab .kbl-odds-label{font-size:8.5px}
+.kp-betting-lab .kbl-odds-value{font-size:12.5px}
+.kp-betting-lab .kbl-more{font-size:10px;padding:7px 0;justify-content:flex-end}
+.kp-betting-lab .kbl-nav{padding:3px 0 max(4px,env(safe-area-inset-bottom))}
+.kp-betting-lab .kbl-nav-item{gap:2px;padding:4px 0}
+.kp-betting-lab .kbl-nav-item svg{width:18px;height:18px}
+.kp-betting-lab .kbl-nav-item small{font-size:9px}
+.kp-betting-lab .kbl-back{margin:0 0 5px;padding:4px 0;font-size:11px}
+.kp-betting-lab .kbl-drill-head{text-align:left;padding:3px 0 10px}
+.kp-betting-lab .kbl-drill-teams{font-size:18px}
+.kp-betting-lab .kbl-drill-kickoff{font-size:10px}
+.kp-betting-lab .kbl-cats{gap:23px;padding:7px 0 7px}
+.kp-betting-lab .kbl-cat{font-size:11px;padding:7px 0}
+.kp-betting-lab .kbl-cat.is-active:after{bottom:-8px}
+.kp-betting-lab .kbl-market{padding:12px 0}
+.kp-betting-lab .kbl-market-name{font-size:12px;margin-bottom:7px}
+.kp-betting-lab .kbl-selections{gap:6px}
+.kp-betting-lab .kbl-selection{min-height:44px;background:var(--kbl-control);border-color:var(--kbl-control-border);padding:6px;border-radius:6px}
+.kp-betting-lab .kbl-selection span{font-size:10px}
+.kp-betting-lab .kbl-selection b{font-size:13px}
+.kp-betting-lab .kbl-slip-collapsed{padding:9px 18px;font-size:11px}
+.kp-betting-lab .kbl-slip{padding:11px 18px calc(10px + env(safe-area-inset-bottom))}
+.kp-betting-lab .kbl-slip-head{font-size:16px;margin-bottom:9px}
+.kp-betting-lab .kbl-slip-item{padding:9px 0}
+.kp-betting-lab .kbl-place{min-height:44px;padding:11px;font-size:13px}
+.kp-betting-lab .kbl-table-row{padding:10px 2px;font-size:13px}
+.kp-betting-lab .kbl-balance{font-size:14px}
+.kp-betting-lab .kbl-bet-card{padding:12px 0}
+.kp-betting-lab .kbl-demo-badge{display:none!important}
+@media(max-width:380px){
+ .kp-betting-lab .kbl-content{padding-left:13px;padding-right:13px}
+ .kp-betting-lab .kbl-bankroll{display:grid}
+ .kp-betting-lab .kbl-bankroll-stats{margin:0;gap:6px}
+ .kp-betting-lab .kbl-bankroll-stats div{min-width:39px;padding-left:6px}
+ .kp-betting-lab .kbl-fixture-actions{grid-template-columns:minmax(0,1fr) 43px}
+}
