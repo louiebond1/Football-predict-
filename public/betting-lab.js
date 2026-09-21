@@ -90,7 +90,8 @@ export function mount({ onClose }) {
         fixtureId: fixture.id, fixtureLabel: `${fixture.home} v ${fixture.away}`,
         marketId: market.id, marketName: market.name, selectionId: selection.id, selectionName: selection.name, odds: selection.odds
       });
-      ui.slipExpanded = true;
+      /* Keep the slip compact while building picks. Opening it is an explicit action. */
+      ui.slipExpanded = false;
     }
     renderAll();
   }
