@@ -115,12 +115,6 @@ export function mount({ onClose }) {
   function renderBetTab() {
     const st = getState();
     return `
-      <section class="kbl-mode-tabs" aria-label="Betting sections">
-        <button class="is-active" type="button">${icons.bet}<span>Football</span></button>
-        <button type="button" data-open-fixture="${gameweek.fixtures[0].id}">${icons.tickets}<span>Bet Builder</span></button>
-        <button type="button" data-tab="mybets">${icons.tickets}<span>My Bets</span></button>
-        <button type="button" data-tab="table">${icons.trophy}<span>Results</span></button>
-      </section>
       <section class="kbl-leagues" aria-label="Competitions">
         <button class="is-active" type="button">Premier League</button><button type="button">Championship</button><button type="button">La Liga</button><button type="button">Serie A</button>
       </section>
