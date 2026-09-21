@@ -50,9 +50,8 @@ export function mount({ onClose }) {
     <header class="kbl-top">
       <button type="button" class="kbl-icon-btn" data-close aria-label="Close Betting Mode Lab">${icons.close}</button>
       <div class="kbl-top-title">Betting</div>
-      <button type="button" class="kbl-reset" data-reset>Reset demo</button>
+      <div class="kbl-top-actions"><span class="kbl-demo-badge">Demo</span><button type="button" class="kbl-reset" data-reset>Reset</button></div>
     </header>
-    <div class="kbl-demo-badge">Demo</div>
     <main class="kbl-content" data-content></main>
     <div class="kbl-slipbar" data-slipbar hidden></div>
     <nav class="kbl-nav" aria-label="Betting Mode navigation">
