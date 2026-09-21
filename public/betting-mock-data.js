@@ -146,6 +146,7 @@ function buildMarkets(fixtureId, home, away, rand) {
   const allPlayers = [...homePlayers.map(p => ({ p, s: hs })), ...awayPlayers.map(p => ({ p, s: as }))];
   const players = [
     market('atgs', 'Anytime Goalscorer', 'players', allPlayers.map(({ p, s }) => sel(p, 2.0 + (1 - s) * 3 + rand() * 0.6))),
+    market('fgs', 'First Goalscorer', 'players', [...allPlayers.map(({ p, s }) => sel(p, 4.2 + (1 - s) * 5 + rand())), sel('No Goalscorer', 11 + rand() * 3)]),
     market('shots', 'Player Shots (Over 1.5)', 'players', allPlayers.slice(0, 3).map(({ p, s }) => sel(p, 1.9 + (1 - s) * 1.1 + rand() * 0.3))),
     market('sot', 'Player Shots On Target (Over 0.5)', 'players', allPlayers.slice(0, 3).map(({ p, s }) => sel(p, 1.6 + (1 - s) * 0.9 + rand() * 0.25))),
     market('booked', 'Player To Be Booked', 'players', allPlayers.slice(0, 4).map(({ p }) => sel(p, 3.8 + rand() * 2.5))),
