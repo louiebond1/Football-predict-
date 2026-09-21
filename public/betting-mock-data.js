@@ -95,8 +95,11 @@ function buildMarkets(fixtureId, home, away, rand) {
   const hs = TEAM_STRENGTH[home] ?? 0.5, as = TEAM_STRENGTH[away] ?? 0.5;
   const mr = matchResultOdds(rand, hs, as);
   const expGoals = 2.0 + (hs + as - 1) * 1.4; // mock expected total goals, drives Over/Under lines
-  const sel = (name, odds) => ({ id: `${fixtureId}:${name}`.replace(/\s+/g, '_'), name, odds: clampOdds(odds) });
-  const market = (key, name, category, selections) => ({ id: `${fixtureId}:${key}`, name, category, selections });
+  const sel = (name, odds) => ({ id: name.replace(/\s+/g, '_'), name, odds: clampOdds(odds) });
+  const market = (key, name, category, selections) => ({
+    id: `${fixtureId}:${key}`, name, category,
+    selections: selections.map(s => ({ ...s, id: `${fixtureId}:${key}:${s.id}` }))
+  });
 
   const overUnder = (line, weightOver) => [
     sel(`Over ${line}`, 1 / (weightOver * (0.92 + rand() * 0.06))),
