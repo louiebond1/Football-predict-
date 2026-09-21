@@ -50,7 +50,7 @@ export function mount({ onClose }) {
     <header class="kbl-top">
       <button type="button" class="kbl-icon-btn" data-close aria-label="Close Betting Mode Lab">${icons.close}</button>
       <div class="kbl-top-title">Betting</div>
-      <div class="kbl-top-actions"><span class="kbl-demo-badge">Demo</span><button type="button" class="kbl-reset" data-reset>Reset</button></div>
+      <button type="button" class="kbl-reset" data-reset>Reset</button>
     </header>
     <main class="kbl-content" data-content></main>
     <div class="kbl-slipbar" data-slipbar hidden></div>
@@ -121,7 +121,7 @@ export function mount({ onClose }) {
     const st = getState();
     return `
       <section class="kbl-bankroll">
-        <div class="kbl-bankroll-eyebrow">Gameweek bankroll</div>
+        <div class="kbl-bankroll-eyebrow">Available this gameweek</div>
         <div class="kbl-bankroll-amount">${formatGBP(st.balance)}</div>
         <div class="kbl-bankroll-stats">
           <div><strong>${st.openBets.length}</strong><small>Open bets</small></div>
@@ -130,7 +130,7 @@ export function mount({ onClose }) {
         </div>
       </section>
       <section class="kbl-fixtures">
-        <div class="kbl-fixtures-head"><div><strong>Premier League</strong><span>Gameweek 6</span></div></div>
+        <div class="kbl-fixtures-head"><div><strong>Premier League</strong><span>GW 6 · Match result</span></div></div>
         ${gameweek.fixtures.map(renderFixtureCard).join('')}
       </section>`;
   }
