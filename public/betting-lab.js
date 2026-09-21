@@ -214,7 +214,14 @@ export function mount({ onClose }) {
     const insufficient = stake > 0 && stake > st.balance;
     const canPlace = items.length && stake > 0 && !insufficient;
     if (!ui.slipExpanded) {
-      slipbarEl.innerHTML = `<button type="button" class="kbl-slip-collapsed" data-expand-slip><span>${items.length} selection${items.length > 1 ? 's' : ''}</span><span>Total odds ${odds.toFixed(2)}</span><span class="kbl-slip-chevron">${icons.chevron}</span></button>`;
+      slipbarEl.innerHTML = `
+        <div class="kbl-slip-summary">
+          <button type="button" class="kbl-slip-summary-main" data-expand-slip aria-label="Open bet slip">
+            <span class="kbl-slip-summary-count">${items.length} selection${items.length > 1 ? 's' : ''}</span>
+            <small>${formatGBP(stake)} stake · Est. return ${formatGBP(potentialReturn)}</small>
+          </button>
+          <button type="button" class="kbl-slip-summary-open" data-expand-slip>View slip <span>→</span></button>
+        </div>`;
       return;
     }
     slipbarEl.innerHTML = `
