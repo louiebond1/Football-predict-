@@ -250,7 +250,7 @@ export function mount({ onClose }) {
     }
     slipbarEl.innerHTML = `
       <div class="kbl-slip">
-        <div class="kbl-slip-head"><span>${items.length > 1 ? `Accumulator · ${items.length} selections` : 'Bet slip'}</span><button type="button" class="kbl-icon-btn" data-collapse-slip aria-label="Minimise slip">${svg('<path d="M6 15l6-6 6 6"/>', 16)}</button></div>
+        <div class="kbl-slip-head"><span>${items.length > 1 ? (new Set(items.map(item => item.fixtureId)).size === 1 ? `Bet Builder · ${items.length} selections` : `Accumulator · ${items.length} selections`) : 'Bet slip'}</span><button type="button" class="kbl-icon-btn" data-collapse-slip aria-label="Minimise slip">${svg('<path d="M6 15l6-6 6 6"/>', 16)}</button></div>
         <div class="kbl-slip-items">
           ${items.map(s => `<div class="kbl-slip-item"><div><b>${esc(s.selectionName)}</b><small>${esc(s.fixtureLabel)} · ${esc(s.marketName)}</small></div><span>${s.odds.toFixed(2)}</span><button type="button" class="kbl-slip-remove" data-remove-slip="${slipKey(s.marketId, s.selectionId)}" aria-label="Remove selection">${icons.x}</button></div>`).join('')}
         </div>
