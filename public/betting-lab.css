@@ -364,3 +364,49 @@
  .kp-betting-lab .kbl-fixture-table .kbl-odds-row{grid-template-columns:repeat(3,45px)!important;gap:4px!important}
  .kp-betting-lab .kbl-fixture-table .kbl-odds-cell{width:45px!important}
 }
+
+
+/* Approved 22 Sep premium betting screen — visual lock to reference */
+.kp-betting-lab{--kbl-bg:#fbfaf6;--kbl-ink:#10261d;--kbl-muted:#747b76;--kbl-line:#e7e8e2;--kbl-soft:#f3f3ef;--kbl-green:#075b42;background:#fbfaf6}
+.kp-betting-lab .kbl-brand-top{min-height:106px;padding:calc(env(safe-area-inset-top) + 18px) 22px 13px;border:0;background:#fbfaf6;align-items:center}
+.kp-betting-lab .kbl-brand{display:flex;flex-direction:column;line-height:1}
+.kp-betting-lab .kbl-brand strong{font-family:Georgia,"Times New Roman",serif;font-size:36px;letter-spacing:-.045em;color:#073f30}
+.kp-betting-lab .kbl-brand small{margin-top:8px;font-size:7px;font-weight:700;letter-spacing:.31em;color:#5f6963}
+.kp-betting-lab .kbl-header-balance-wrap{margin-left:auto;display:flex;align-items:center;height:55px;border-radius:30px;background:#edf2ed;overflow:hidden}
+.kp-betting-lab .kbl-header-balance{padding:0 15px 0 20px;font-size:20px;font-weight:850;letter-spacing:-.02em;color:#073f30}
+.kp-betting-lab .kbl-balance-plus{width:55px;height:55px!important;border-radius:50%!important;background:#075b42!important;color:#fff!important;font-size:34px!important;font-weight:300!important;line-height:1!important}
+.kp-betting-lab .kbl-content{padding:0 18px 108px}
+.kp-betting-lab .kbl-leagues{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:7px 0 14px}
+.kp-betting-lab .kbl-leagues::-webkit-scrollbar{display:none}
+.kp-betting-lab .kbl-leagues button{flex:0 0 auto;height:48px;padding:0 21px;border-radius:26px!important;background:#f0efeb!important;color:#7a7d79!important;font-size:12px!important;font-weight:500!important}
+.kp-betting-lab .kbl-leagues button.is-active{background:#0b4b37!important;color:#fff!important;font-weight:750!important}
+.kp-betting-lab .kbl-hero{position:relative;height:148px;margin:0 0 21px;border-radius:13px;overflow:hidden;background:radial-gradient(circle at 75% 18%,rgba(255,255,255,.22),transparent 17%),linear-gradient(112deg,#071b1c 0%,#0a3330 54%,#123e38 100%);box-shadow:inset 0 -35px 55px rgba(0,0,0,.22);color:#fff}
+.kp-betting-lab .kbl-hero:before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:100% 28px;opacity:.35}
+.kp-betting-lab .kbl-hero-copy{position:absolute;left:20px;top:35px;z-index:2;display:flex;flex-direction:column}
+.kp-betting-lab .kbl-hero-copy strong{font-family:Georgia,"Times New Roman",serif;font-size:28px;line-height:.98;font-weight:500;letter-spacing:-.035em}
+.kp-betting-lab .kbl-hero-copy span{margin-top:12px;font-size:7px;font-weight:750;letter-spacing:.3em}
+.kp-betting-lab .kbl-hero-player{position:absolute;left:56%;bottom:-16px;width:93px;height:134px;border-radius:46% 46% 12% 12%;background:linear-gradient(90deg,#e6e8e5,#fff 48%,#d9ddda);transform:translateX(-50%) rotate(2deg);color:#1a3854;text-align:center;padding-top:40px;box-shadow:0 0 28px rgba(255,255,255,.1)}
+.kp-betting-lab .kbl-hero-player:before{content:"";position:absolute;left:30px;top:-25px;width:37px;height:45px;border-radius:48%;background:#2a211d}
+.kp-betting-lab .kbl-hero-player span{font-size:9px;font-weight:850}.kp-betting-lab .kbl-hero-player b{display:block;font-size:43px;line-height:1;font-weight:700}
+.kp-betting-lab .kbl-hero-steps{position:absolute;right:18px;top:64px;z-index:2;text-align:right;font-size:7px;line-height:1.7;font-weight:800;letter-spacing:.16em}
+.kp-betting-lab .kbl-fixtures-head{padding:0;border:0}
+.kp-betting-lab .kbl-fixtures-head>div:first-child{align-items:center;margin-bottom:12px}
+.kp-betting-lab .kbl-fixtures-head strong{font-family:Georgia,"Times New Roman",serif;font-size:29px;font-weight:600;letter-spacing:-.035em}
+.kp-betting-lab .kbl-fixtures-head>div:first-child span{padding:10px 13px;border-radius:22px;background:#f0f2ee;color:#173b2e;font-size:10px;font-weight:700}
+.kp-betting-lab .kbl-date-tabs{display:grid!important;grid-template-columns:1fr 1fr 1fr 1.25fr;gap:7px;margin-bottom:10px}
+.kp-betting-lab .kbl-date-tabs button{height:37px;border-radius:19px!important;background:#f2f2ef!important;color:#747b76!important;font-size:9px!important;white-space:nowrap}
+.kp-betting-lab .kbl-date-tabs button.is-active{background:#075b42!important;color:#fff!important;font-weight:750!important}
+.kp-betting-lab .kbl-odds-head{display:none!important}
+.kp-betting-lab .kbl-date-label{margin:14px 3px 7px;font-size:10px;color:#777d78}
+.kp-betting-lab .kbl-fixture-table{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 176px;grid-template-areas:"teams odds";gap:10px;min-height:78px;margin:0 0 7px;padding:10px 11px;border:1px solid #e2e4de;border-radius:12px;background:#fff;box-shadow:0 3px 12px rgba(17,43,32,.035)}
+.kp-betting-lab .kbl-fixture-main{grid-area:teams;min-width:0;display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;text-align:left!important;padding:0!important}
+.kp-betting-lab .kbl-fixture-time{order:2;margin-top:5px;font-size:9px;color:#7b807c}
+.kp-betting-lab .kbl-fixture-names{order:1;display:flex!important;flex-direction:column!important;gap:2px!important}
+.kp-betting-lab .kbl-fixture-names strong{font-size:12px;line-height:1.15;font-weight:780;white-space:normal}
+.kp-betting-lab .kbl-market-link{display:none}
+.kp-betting-lab .kbl-fixture-table .kbl-odds-row{grid-area:odds;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-self:center}
+.kp-betting-lab .kbl-odds-cell{width:auto!important;min-width:0!important;height:50px!important;min-height:50px!important;border:1px solid #e0e2dc!important;border-radius:9px!important;background:#f3f3ef!important;box-shadow:0 1px 2px rgba(15,40,29,.06)!important}
+.kp-betting-lab .kbl-odds-value{font-size:13px;font-weight:850;color:#075b42}
+.kp-betting-lab .kbl-nav{grid-template-columns:repeat(5,1fr);min-height:68px;border-top:1px solid #e0e2dc;background:rgba(251,250,246,.97);padding:6px 0 max(8px,env(safe-area-inset-bottom))}
+.kp-betting-lab .kbl-nav-item{gap:3px;color:#6c7871}.kp-betting-lab .kbl-nav-item small{font-size:9px}.kp-betting-lab .kbl-nav-item.is-active{color:#087d4e}
+@media(max-width:390px){.kp-betting-lab .kbl-brand strong{font-size:32px}.kp-betting-lab .kbl-header-balance{font-size:18px;padding-left:15px}.kp-betting-lab .kbl-header-balance-wrap,.kp-betting-lab .kbl-balance-plus{height:50px}.kp-betting-lab .kbl-balance-plus{width:50px}.kp-betting-lab .kbl-fixture-table{grid-template-columns:minmax(0,1fr) 162px}.kp-betting-lab .kbl-content{padding-left:13px;padding-right:13px}.kp-betting-lab .kbl-hero-copy strong{font-size:25px}.kp-betting-lab .kbl-fixtures-head strong{font-size:26px}}
