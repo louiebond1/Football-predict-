@@ -421,3 +421,81 @@
 .kp-betting-lab section.kbl-hero .kbl-hero-steps{display:block!important;position:absolute!important;right:18px!important;top:64px!important;color:#fff!important}
 .kp-betting-lab .kbl-date-tabs{display:grid!important}
 .kp-betting-lab .kbl-date-tabs button{display:block!important}
+
+
+/* 22 Sep fixture layout correction.
+   kbl-fixture-main is the grid item; its descendants must never participate
+   in the article grid. This explicitly owns the mobile fixture geometry. */
+.kp-betting-lab article.kbl-fixture-table{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 176px!important;
+  grid-template-rows:auto!important;
+  grid-template-areas:"main odds"!important;
+  align-items:center!important;
+  column-gap:10px!important;
+  row-gap:0!important;
+  min-height:78px!important;
+  height:auto!important;
+  padding:10px 11px!important;
+}
+.kp-betting-lab article.kbl-fixture-table > .kbl-fixture-main{
+  grid-area:main!important;
+  position:static!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:56px!important;
+  margin:0!important;
+  padding:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  text-align:left!important;
+  transform:none!important;
+}
+.kp-betting-lab article.kbl-fixture-table > .kbl-odds-row{
+  grid-area:odds!important;
+  position:static!important;
+  width:176px!important;
+  height:auto!important;
+  margin:0!important;
+  padding:0!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,1fr)!important;
+  gap:6px!important;
+  align-items:center!important;
+  transform:none!important;
+}
+.kp-betting-lab article.kbl-fixture-table .kbl-fixture-main > .kbl-fixture-names{
+  display:flex!important;
+  position:static!important;
+  width:100%!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  gap:2px!important;
+  order:1!important;
+  margin:0!important;
+  transform:none!important;
+}
+.kp-betting-lab article.kbl-fixture-table .kbl-fixture-main > .kbl-fixture-time{
+  display:block!important;
+  position:static!important;
+  order:2!important;
+  margin:5px 0 0!important;
+  transform:none!important;
+}
+.kp-betting-lab article.kbl-fixture-table .kbl-fixture-main > .kbl-market-link{display:none!important}
+.kp-betting-lab article.kbl-fixture-table .kbl-odds-cell{
+  position:static!important;
+  width:100%!important;
+  min-width:0!important;
+  height:50px!important;
+  min-height:50px!important;
+  margin:0!important;
+  padding:4px 2px!important;
+  transform:none;
+}
+@media(max-width:390px){
+  .kp-betting-lab article.kbl-fixture-table{grid-template-columns:minmax(0,1fr) 162px!important}
+  .kp-betting-lab article.kbl-fixture-table > .kbl-odds-row{width:162px!important;gap:5px!important}
+}
