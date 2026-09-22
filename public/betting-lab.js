@@ -28,16 +28,27 @@ const teamMark = name => {
 };
 const leagueMark = label => `<span class="kbl-league-mark" aria-hidden="true">${label === 'Premier League' ? '♛' : label === 'Championship' ? '◌' : label === 'La Liga' ? 'L' : 'A'}</span>`;
 const round2 = n => Math.round(n * 100) / 100;
-const crestSlug = name => ({
-  'Arsenal':'arsenal','Leeds United':'leeds-united','Aston Villa':'aston-villa','Brentford':'brentford',
-  'Chelsea':'chelsea','AFC Bournemouth':'afc-bournemouth','Ipswich Town':'ipswich-town','Fulham':'fulham',
-  'Sunderland':'sunderland','Brighton & Hove Albion':'brighton','Manchester United':'manchester-united',
-  'Tottenham Hotspur':'tottenham-hotspur','Crystal Palace':'crystal-palace','Nottingham Forest':'nottingham-forest',
-  'Hull City':'hull-city'
+const crestUrl = name => ({
+  'Arsenal':'https://crests.football-data.org/57.png',
+  'Leeds United':'https://crests.football-data.org/341.png',
+  'Aston Villa':'https://crests.football-data.org/58.png',
+  'Brentford':'https://crests.football-data.org/402.png',
+  'Chelsea':'https://crests.football-data.org/61.png',
+  'AFC Bournemouth':'https://crests.football-data.org/1044.png',
+  'Ipswich Town':'https://crests.football-data.org/349.png',
+  'Fulham':'https://crests.football-data.org/63.png',
+  'Sunderland':'https://crests.football-data.org/71.png',
+  'Brighton & Hove Albion':'https://crests.football-data.org/397.png',
+  'Manchester United':'https://crests.football-data.org/66.png',
+  'Tottenham Hotspur':'https://crests.football-data.org/73.png',
+  'Crystal Palace':'https://crests.football-data.org/354.png',
+  'Nottingham Forest':'https://crests.football-data.org/351.png',
+  'Hull City':'https://crests.football-data.org/322.png'
 }[name] || '');
 const teamCrest = name => {
-  const slug = crestSlug(name);
-  return slug ? `<img class="kbl-team-crest" src="/assets/crests/${slug}.png" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="kbl-team-mark" hidden aria-hidden="true">${esc(String(name).split(/\\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase())}</span>` : teamMark(name);
+  const url = crestUrl(name);
+  const fallback = teamMark(name);
+  return url ? `<img class="kbl-team-crest" src="${url}" alt="" loading="eager" decoding="async" onerror="this.outerHTML=\'${fallback.replace(/'/g, '&#39;')}\'">` : fallback;
 };
 
 export function mount({ onClose }) {
