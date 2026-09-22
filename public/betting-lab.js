@@ -154,8 +154,13 @@ export function mount({ onClose }) {
       </section>
       <section class="kbl-fixtures">
         <div class="kbl-fixtures-head"><div><strong>Premier League</strong><span>Gameweek 6⌄</span></div><div class="kbl-odds-head"><span></span><span>1</span><span>X</span><span>2</span></div></div>
-        <div class="kbl-date-label">Saturday 20 September</div>
-        ${gameweek.fixtures.map(renderFixtureCard).join('')}
+        ${gameweek.fixtures.map((fixture, index) => {
+          const previous = gameweek.fixtures[index - 1];
+          const dateKey = new Date(fixture.kickoff).toDateString();
+          const previousKey = previous ? new Date(previous.kickoff).toDateString() : null;
+          const dateLabel = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/London' }).format(new Date(fixture.kickoff));
+          return (dateKey !== previousKey ? `<div class="kbl-date-label">${dateLabel}</div>` : '') + renderFixtureCard(fixture);
+        }).join('')}
       </section>`;
   }
 
