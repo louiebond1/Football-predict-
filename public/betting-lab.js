@@ -28,6 +28,17 @@ const teamMark = name => {
 };
 const leagueMark = label => `<span class="kbl-league-mark" aria-hidden="true">${label === 'Premier League' ? '♛' : label === 'Championship' ? '◌' : label === 'La Liga' ? 'L' : 'A'}</span>`;
 const round2 = n => Math.round(n * 100) / 100;
+const crestSlug = name => ({
+  'Arsenal':'arsenal','Leeds United':'leeds-united','Aston Villa':'aston-villa','Brentford':'brentford',
+  'Chelsea':'chelsea','AFC Bournemouth':'afc-bournemouth','Ipswich Town':'ipswich-town','Fulham':'fulham',
+  'Sunderland':'sunderland','Brighton & Hove Albion':'brighton','Manchester United':'manchester-united',
+  'Tottenham Hotspur':'tottenham-hotspur','Crystal Palace':'crystal-palace','Nottingham Forest':'nottingham-forest',
+  'Hull City':'hull-city'
+}[name] || '');
+const teamCrest = name => {
+  const slug = crestSlug(name);
+  return slug ? `<img class="kbl-team-crest" src="/assets/crests/${slug}.png" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="kbl-team-mark" hidden aria-hidden="true">${esc(String(name).split(/\\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase())}</span>` : teamMark(name);
+};
 
 export function mount({ onClose }) {
   const gameweek = buildDemoGameweek();
@@ -139,7 +150,7 @@ export function mount({ onClose }) {
     const cell = (s, code) => `<div class="kbl-price"><span>${code}</span><button type="button" class="kbl-odds-cell${selectedKeys.has(slipKey(mr.id, s.id)) ? ' is-selected' : ''}" data-odds data-fixture="${fixture.id}" data-market="${mr.id}" data-selection="${s.id}" aria-label="${code} ${s.odds.toFixed(2)}"><span class="kbl-odds-value">${s.odds.toFixed(2)}</span></button></div>`;
     return `<article class="kbl-fixture kbl-fixture-table">
       <button type="button" class="kbl-fixture-main" data-open-fixture="${fixture.id}" aria-label="Open ${esc(fixture.home)} v ${esc(fixture.away)} markets">
-        <span class="kbl-fixture-names"><span class="kbl-team-line">${teamMark(fixture.home)}<strong>${esc(fixture.home)}</strong></span><span class="kbl-team-line">${teamMark(fixture.away)}<strong>${esc(fixture.away)}</strong></span></span>
+        <span class="kbl-fixture-names"><span class="kbl-team-line">${teamCrest(fixture.home)}<strong>${esc(fixture.home)}</strong></span><span class="kbl-team-line">${teamCrest(fixture.away)}<strong>${esc(fixture.away)}</strong></span></span>
         <span class="kbl-fixture-time">${kickoffLabel(fixture.kickoff)}</span>
       </button>
       <div class="kbl-odds-row">${cell(home, '1')}${cell(draw, 'X')}${cell(away, '2')}</div>
