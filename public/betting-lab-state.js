@@ -5,6 +5,7 @@
  * convention KickPot already uses for stake_pence/amount_pence.
  */
 import { findSelection } from './betting-mock-data.js';
+import { toBuilderLeg, validateBuilderSelections } from './betting-builder-compat.js';
 
 const STORAGE_KEY = 'kickpot-betting-lab-v1';
 const STARTING_BALANCE_PENCE = 10000; // £100.00
@@ -66,10 +67,12 @@ export function placeBet({ selections, stakePence }) {
   if (!Array.isArray(selections) || !selections.length) return { ok: false, error: 'No selection.' };
   const unique = new Map();
   for (const sel of selections) unique.set(`${sel.marketId}|${sel.selectionId}`, sel);
+  const hits = [];
   const resolved = [];
   for (const s of unique.values()) {
     const hit = findSelection(s.fixtureId, s.marketId, s.selectionId);
     if (!hit) return { ok: false, error: 'A selected price is no longer available.' };
+    hits.push(hit);
     resolved.push({
       fixtureId: hit.fixture.id, fixtureLabel: `${hit.fixture.home} v ${hit.fixture.away}`,
       marketId: hit.market.id, marketName: hit.market.name,
@@ -77,17 +80,12 @@ export function placeBet({ selections, stakePence }) {
       oddsAtPlacement: hit.selection.odds
     });
   }
-  // Defence in depth: reject impossible/nested same-player scorer combinations
-  // even if a stale UI or direct state call bypasses the click guard.
-  const scorerByFixturePlayer = new Map();
-  for (const x of resolved) {
-    const marketKey = x.marketId.split(':').pop();
-    if (marketKey !== 'fgs' && marketKey !== 'atgs') continue;
-    const k = `${x.fixtureId}|${x.selectionName}`;
-    const seen = scorerByFixturePlayer.get(k);
-    if (seen && seen !== marketKey) return { ok: false, error: `${x.selectionName}: First + Anytime Goalscorer can't be combined.` };
-    scorerByFixturePlayer.set(k, marketKey);
-  }
+
+  // The exact same compatibility engine used by the UI runs again here.
+  // This prevents stale clients/direct calls from ever placing an invalid
+  // same-game combination.
+  const compatibility = validateBuilderSelections(hits.map(toBuilderLeg));
+  if (!compatibility.ok) return { ok: false, error: compatibility.error };
 
   if (!Number.isFinite(stakePence) || stakePence <= 0) return { ok: false, error: 'Enter a stake.' };
   if (stakePence > state.balance) return { ok: false, error: 'You don’t have enough virtual balance for this stake.' };
