@@ -95,7 +95,7 @@ function buildMarkets(fixtureId, home, away, rand) {
   const hs = TEAM_STRENGTH[home] ?? 0.5, as = TEAM_STRENGTH[away] ?? 0.5;
   const mr = matchResultOdds(rand, hs, as);
   const expGoals = 2.0 + (hs + as - 1) * 1.4; // mock expected total goals, drives Over/Under lines
-  const sel = (name, odds) => ({ id: name.replace(/\s+/g, '_'), name, odds: clampOdds(odds) });
+  const sel = (name, odds, meta = {}) => ({ id: name.replace(/\s+/g, '_'), name, odds: clampOdds(odds), ...meta });
   const market = (key, name, category, selections) => ({
     id: `${fixtureId}:${key}`, name, category,
     selections: selections.map(s => ({ ...s, id: `${fixtureId}:${key}:${s.id}` }))
@@ -143,14 +143,14 @@ function buildMarkets(fixtureId, home, away, rand) {
   ];
 
   const homePlayers = PLAYER_POOL[home] || [], awayPlayers = PLAYER_POOL[away] || [];
-  const allPlayers = [...homePlayers.map(p => ({ p, s: hs })), ...awayPlayers.map(p => ({ p, s: as }))];
+  const allPlayers = [...homePlayers.map(p => ({ p, s: hs, team: 'Home' })), ...awayPlayers.map(p => ({ p, s: as, team: 'Away' }))];
   const players = [
-    market('atgs', 'Anytime Goalscorer', 'players', allPlayers.map(({ p, s }) => sel(p, 2.0 + (1 - s) * 3 + rand() * 0.6))),
-    market('fgs', 'First Goalscorer', 'players', [...allPlayers.map(({ p, s }) => sel(p, 4.2 + (1 - s) * 5 + rand())), sel('No Goalscorer', 11 + rand() * 3)]),
-    market('shots', 'Player Shots (Over 1.5)', 'players', allPlayers.slice(0, 3).map(({ p, s }) => sel(p, 1.9 + (1 - s) * 1.1 + rand() * 0.3))),
-    market('sot', 'Player Shots On Target (Over 0.5)', 'players', allPlayers.slice(0, 3).map(({ p, s }) => sel(p, 1.6 + (1 - s) * 0.9 + rand() * 0.25))),
-    market('booked', 'Player To Be Booked', 'players', allPlayers.slice(0, 4).map(({ p }) => sel(p, 3.8 + rand() * 2.5))),
-    market('assists', 'Player Assists (Anytime)', 'players', allPlayers.map(({ p, s }) => sel(p, 3.6 + (1 - s) * 3 + rand() * 0.6)))
+    market('atgs', 'Anytime Goalscorer', 'players', allPlayers.map(({ p, s, team }) => sel(p, 2.0 + (1 - s) * 3 + rand() * 0.6, { team }))),
+    market('fgs', 'First Goalscorer', 'players', [...allPlayers.map(({ p, s, team }) => sel(p, 4.2 + (1 - s) * 5 + rand(), { team })), sel('No Goalscorer', 11 + rand() * 3)]),
+    market('shots', 'Player Shots (Over 1.5)', 'players', allPlayers.slice(0, 3).map(({ p, s, team }) => sel(p, 1.9 + (1 - s) * 1.1 + rand() * 0.3, { team }))),
+    market('sot', 'Player Shots On Target (Over 0.5)', 'players', allPlayers.slice(0, 3).map(({ p, s, team }) => sel(p, 1.6 + (1 - s) * 0.9 + rand() * 0.25, { team }))),
+    market('booked', 'Player To Be Booked', 'players', allPlayers.slice(0, 4).map(({ p, team }) => sel(p, 3.8 + rand() * 2.5, { team }))),
+    market('assists', 'Player Assists (Anytime)', 'players', allPlayers.map(({ p, s, team }) => sel(p, 3.6 + (1 - s) * 3 + rand() * 0.6, { team })))
   ];
 
   return { popular, goals, match: matchMarkets, players };
