@@ -8,6 +8,7 @@
  */
 import { buildDemoGameweek, findFixture, MARKET_CATEGORIES, MOCK_DISCLAIMER } from './betting-mock-data.js';
 import { getState, subscribe, placeBet, settleBet, resetDemo, openStake, gwProfit, formatGBP } from './betting-lab-state.js';
+import { isSingleChoiceMarket, toBuilderLeg, validateBuilderSelections } from './betting-builder-compat.js';
 
 const svg = (body, size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
 const icons = {
