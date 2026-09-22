@@ -77,6 +77,18 @@ export function placeBet({ selections, stakePence }) {
       oddsAtPlacement: hit.selection.odds
     });
   }
+  // Defence in depth: reject impossible/nested same-player scorer combinations
+  // even if a stale UI or direct state call bypasses the click guard.
+  const scorerByFixturePlayer = new Map();
+  for (const x of resolved) {
+    const marketKey = x.marketId.split(':').pop();
+    if (marketKey !== 'fgs' && marketKey !== 'atgs') continue;
+    const k = `${x.fixtureId}|${x.selectionName}`;
+    const seen = scorerByFixturePlayer.get(k);
+    if (seen && seen !== marketKey) return { ok: false, error: `${x.selectionName}: First + Anytime Goalscorer can't be combined.` };
+    scorerByFixturePlayer.set(k, marketKey);
+  }
+
   if (!Number.isFinite(stakePence) || stakePence <= 0) return { ok: false, error: 'Enter a stake.' };
   if (stakePence > state.balance) return { ok: false, error: 'You don’t have enough virtual balance for this stake.' };
 
