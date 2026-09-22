@@ -410,3 +410,14 @@
 .kp-betting-lab .kbl-nav{grid-template-columns:repeat(5,1fr);min-height:68px;border-top:1px solid #e0e2dc;background:rgba(251,250,246,.97);padding:6px 0 max(8px,env(safe-area-inset-bottom))}
 .kp-betting-lab .kbl-nav-item{gap:3px;color:#6c7871}.kp-betting-lab .kbl-nav-item small{font-size:9px}.kp-betting-lab .kbl-nav-item.is-active{color:#087d4e}
 @media(max-width:390px){.kp-betting-lab .kbl-brand strong{font-size:32px}.kp-betting-lab .kbl-header-balance{font-size:18px;padding-left:15px}.kp-betting-lab .kbl-header-balance-wrap,.kp-betting-lab .kbl-balance-plus{height:50px}.kp-betting-lab .kbl-balance-plus{width:50px}.kp-betting-lab .kbl-fixture-table{grid-template-columns:minmax(0,1fr) 162px}.kp-betting-lab .kbl-content{padding-left:13px;padding-right:13px}.kp-betting-lab .kbl-hero-copy strong{font-size:25px}.kp-betting-lab .kbl-fixtures-head strong{font-size:26px}}
+
+
+/* Hero hardening: preserve layout even when older cascade rules target section descendants. */
+.kp-betting-lab section.kbl-hero{display:block!important;position:relative!important;height:148px!important;min-height:148px!important;margin:0 0 21px!important;padding:0!important;border-radius:13px!important;overflow:hidden!important;background:radial-gradient(circle at 75% 18%,rgba(255,255,255,.22),transparent 17%),linear-gradient(112deg,#071b1c 0%,#0a3330 54%,#123e38 100%)!important;color:#fff!important}
+.kp-betting-lab section.kbl-hero .kbl-hero-copy{display:flex!important;position:absolute!important;left:20px!important;top:35px!important;z-index:2!important;flex-direction:column!important;width:auto!important}
+.kp-betting-lab section.kbl-hero .kbl-hero-copy strong{display:block!important;color:#fff!important}
+.kp-betting-lab section.kbl-hero .kbl-hero-copy span{display:block!important;color:#fff!important}
+.kp-betting-lab section.kbl-hero .kbl-hero-player{display:block!important;position:absolute!important;left:56%!important;bottom:-16px!important}
+.kp-betting-lab section.kbl-hero .kbl-hero-steps{display:block!important;position:absolute!important;right:18px!important;top:64px!important;color:#fff!important}
+.kp-betting-lab .kbl-date-tabs{display:grid!important}
+.kp-betting-lab .kbl-date-tabs button{display:block!important}
