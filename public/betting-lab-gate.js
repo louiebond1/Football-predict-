@@ -21,8 +21,30 @@ const ROUTE_HASH = '#betting-lab';
 let activeLab = null; // { unmount }
 let checking = false;
 let checkingOverlay = null;
+let hostShell = null;
+
+function concealHostShell() {
+  if (hostShell) return;
+  hostShell = document.querySelector('#app');
+  if (hostShell) {
+    hostShell.setAttribute('aria-hidden', 'true');
+    hostShell.style.visibility = 'hidden';
+    hostShell.style.pointerEvents = 'none';
+  }
+  document.documentElement.classList.add('kp-betting-route');
+}
+function revealHostShell() {
+  document.documentElement.classList.remove('kp-betting-route');
+  if (hostShell) {
+    hostShell.style.visibility = '';
+    hostShell.style.pointerEvents = '';
+    hostShell.removeAttribute('aria-hidden');
+    hostShell = null;
+  }
+}
 
 function showChecking() {
+  concealHostShell();
   if (checkingOverlay) return;
   checkingOverlay = document.createElement('div');
   checkingOverlay.className = 'kp-betting-lab-checking';
@@ -34,14 +56,20 @@ function hideChecking() { checkingOverlay?.remove(); checkingOverlay = null; }
 
 function stripHash() {
   history.replaceState(null, '', window.location.pathname + window.location.search);
+  revealHostShell();
 }
 
 async function evaluate() {
   if (window.location.hash !== ROUTE_HASH) {
     if (activeLab) { activeLab.unmount(); activeLab = null; }
     hideChecking();
+    revealHostShell();
     return;
   }
+  // The underlying KickPot shell defaults to Matchday. Hide it synchronously
+  // for the entire betting-route lifecycle so async access/import work can
+  // never expose a Matchday frame.
+  concealHostShell();
   if (activeLab || checking) return;
   checking = true;
   showChecking();
