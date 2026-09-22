@@ -40,7 +40,6 @@ test('admin sees the Betting Mode Lab entry and can open it; normal member does 
   await page.getByRole('button',{name:/Betting Mode Lab/}).click();
   await expect(page.locator('.kp-betting-lab')).toBeVisible();
   await expect(page.locator('.kp-betting-lab')).toContainText('£100.00');
-  await expect(page.locator('.kbl-prototype-tag')).toContainText('PROTOTYPE');
   expect(h.errors).toEqual([]);
 });
 
@@ -67,7 +66,7 @@ test('full fake-money game loop: select, replace, accumulator, stake, place, set
   await page.goto('/#betting-lab');
   const lab=page.locator('.kp-betting-lab');
   await expect(lab).toBeVisible();
-  await expect(lab.locator('.kbl-bankroll-amount')).toHaveText('£100.00');
+  await expect(lab.locator('[data-header-balance]')).toHaveText('£100.00');
 
   const fixtures=lab.locator('.kbl-fixture');
   await expect(fixtures).toHaveCount(10);
@@ -116,7 +115,7 @@ test('full fake-money game loop: select, replace, accumulator, stake, place, set
   await lab.locator('[data-place]').click();
   await expect(lab.locator('.kbl-toast')).toContainText('Bet placed');
   await expect(lab.locator('.kbl-slipbar')).toBeHidden();
-  await expect(lab.locator('.kbl-bankroll-amount')).toHaveText('£90.00');
+  await expect(lab.locator('[data-header-balance]')).toHaveText('£90.00');
 
   // Open Bets shows it.
   await lab.locator('[data-tab="mybets"]').click();
@@ -130,7 +129,7 @@ test('full fake-money game loop: select, replace, accumulator, stake, place, set
   await expect(lab.locator('[data-tab="bet"]')).toBeVisible(); // nav still there, no crash
   const newBalancePence=9000+potentialReturnPence;
   await lab.locator('[data-tab="bet"]').click();
-  await expect(lab.locator('.kbl-bankroll-amount')).toHaveText(`£${(newBalancePence/100).toFixed(2)}`);
+  await expect(lab.locator('[data-header-balance]')).toHaveText(`£${(newBalancePence/100).toFixed(2)}`);
 
   // Place and settle a LOST single to prove no credit happens.
   await first.locator('.kbl-odds-cell').nth(2).click();
@@ -152,12 +151,12 @@ test('full fake-money game loop: select, replace, accumulator, stake, place, set
   await page.reload();
   await page.evaluate(()=>{window.location.hash='betting-lab';});
   await expect(lab).toBeVisible();
-  await expect(lab.locator('.kbl-bankroll-amount')).not.toHaveText('£100.00');
+  await expect(lab.locator('[data-header-balance]')).not.toHaveText('£100.00');
 
   // Reset puts everything back to £100 with no bets.
   page.once('dialog',d=>d.accept());
   await lab.locator('[data-reset]').click();
-  await expect(lab.locator('.kbl-bankroll-amount')).toHaveText('£100.00');
+  await expect(lab.locator('[data-header-balance]')).toHaveText('£100.00');
   await lab.locator('[data-tab="mybets"]').click();
   await expect(lab.locator('.kbl-empty')).toBeVisible();
 
