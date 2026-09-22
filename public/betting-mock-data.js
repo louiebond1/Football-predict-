@@ -28,55 +28,52 @@ const clampOdds = n => Math.max(1.05, round2(n));
 const combine = (...odds) => clampOdds(1 / odds.reduce((sum, o) => sum + 1 / o, 0));
 
 const TEAM_STRENGTH = {
-  Arsenal: 0.82, 'Leeds United': 0.42, Liverpool: 0.86, Chelsea: 0.68,
-  'Manchester City': 0.88, 'Tottenham Hotspur': 0.66, 'Newcastle United': 0.7, 'Aston Villa': 0.6,
-  'Manchester United': 0.64, 'Brighton & Hove Albion': 0.58, 'West Ham United': 0.5, Everton: 0.46,
-  'Wolverhampton Wanderers': 0.44, 'Crystal Palace': 0.55, Brentford: 0.52, Fulham: 0.53,
-  'Nottingham Forest': 0.56, Bournemouth: 0.48, Burnley: 0.38, Sunderland: 0.36
+  Arsenal: 0.88, 'Leeds United': 0.43, 'Aston Villa': 0.62, Brentford: 0.51,
+  Chelsea: 0.72, 'AFC Bournemouth': 0.50, 'Ipswich Town': 0.40, Fulham: 0.52,
+  Sunderland: 0.42, 'Brighton & Hove Albion': 0.58, 'Manchester United': 0.66,
+  'Tottenham Hotspur': 0.69, 'Crystal Palace': 0.57, 'Nottingham Forest': 0.56,
+  'Hull City': 0.39, Everton: 0.50, Liverpool: 0.87, 'Manchester City': 0.90,
+  'Coventry City': 0.40, 'Newcastle United': 0.70
 };
 
+/* 2026/27 senior attacking/player-market pool, refreshed from the Premier
+ * League's post-window squad lists. This is demo data: inclusion here does
+ * not imply a player will start a particular match. */
 const PLAYER_POOL = {
-  Arsenal: ['Bukayo Saka', 'Gabriel Martinelli', 'Kai Havertz'],
-  'Leeds United': ['Joel Piroe', 'Wilfried Gnonto'],
-  Liverpool: ['Mohamed Salah', 'Darwin Núñez', 'Luis Díaz'],
-  Chelsea: ['Cole Palmer', 'Nicolas Jackson'],
-  'Manchester City': ['Erling Haaland', 'Phil Foden'],
-  'Tottenham Hotspur': ['Son Heung-min', 'Dominic Solanke'],
-  'Newcastle United': ['Alexander Isak', 'Anthony Gordon'],
-  'Aston Villa': ['Ollie Watkins', 'Morgan Rogers'],
-  'Manchester United': ['Bruno Fernandes', 'Rasmus Højlund'],
-  'Brighton & Hove Albion': ['Danny Welbeck', 'Kaoru Mitoma'],
-  'West Ham United': ['Jarrod Bowen', 'Niclas Füllkrug'],
-  Everton: ['Dominic Calvert-Lewin', 'Iliman Ndiaye'],
-  'Wolverhampton Wanderers': ['Matheus Cunha', 'Pedro Neto'],
-  'Crystal Palace': ['Jean-Philippe Mateta', 'Eberechi Eze'],
-  Brentford: ['Bryan Mbeumo', 'Yoane Wissa'],
-  Fulham: ['Raúl Jiménez', 'Andreas Pereira'],
-  'Nottingham Forest': ['Chris Wood', 'Anthony Elanga'],
-  Bournemouth: ['Dominic Solanke-Mitchell', 'Antoine Semenyo'],
-  Burnley: ['Jaidon Anthony', 'Zian Flemming'],
-  Sunderland: ['Wilson Isidor', 'Eliezer Mayenda']
+  Arsenal: ['Bukayo Saka','Viktor Gyokeres','Kai Havertz','Eberechi Eze','Noni Madueke','Martin Odegaard','Declan Rice','Bruno Guimaraes'],
+  'Leeds United': ['Dominic Calvert-Lewin','Noah Okafor','Harry Wilson','Daniel James','Brenden Aaronson','Lukas Nmecha','Mateo Joseph','Ao Tanaka'],
+  'Aston Villa': ['Nicolas Jackson','Alejandro Garnacho','Tammy Abraham','Emiliano Buendia','John McGinn','Leon Goretzka','Amadou Onana','Joao Gomes'],
+  Brentford: ['Igor Thiago','Dango Ouattara','Kevin Schade','Keane Lewis-Potter','Fabio Carvalho','Mathias Jensen','Mikkel Damsgaard','Callum Wilson'],
+  Chelsea: ['Cole Palmer','Morgan Rogers','Joao Pedro','Emmanuel Emegha','Pedro Neto','Jamie Gittens','Danny Welbeck','Estevao'],
+  'AFC Bournemouth': ['Evanilson','Justin Kluivert','Amine Adli','David Brooks','Marcus Tavernier','Alex Scott','Eli Junior Kroupi','Ben Doak'],
+  'Ipswich Town': ['Daizen Maeda','Chuba Akpom','Julio Enciso','Abdul Fatawu','Jack Clarke','Jaden Philogene','Anis Mehmeti','Zian Flemming'],
+  Fulham: ['Rodrigo Muniz','Alex Iwobi','Oscar Bobb','Emile Smith Rowe','Kevin','Gonzalo Garcia','Cesar Palacios','Tom Cairney'],
+  Sunderland: ['Brian Brobbey','Wilson Isidor','Romaine Mundle','Habib Diarra','Enzo Le Fee','Nilson Angulo','Abdoullah Ba','Granit Xhaka'],
+  'Brighton & Hove Albion': ['Joao Pedro','Kaoru Mitoma','Yankuba Minteh','Georginio Rutter','Evan Ferguson','Stefanos Tzimas','Ibrahim Osman','Matt O’Riley'],
+  'Manchester United': ['Benjamin Sesko','Bryan Mbeumo','Matheus Cunha','Bruno Fernandes','Amad Diallo','Marcus Rashford','Joshua Zirkzee','Mason Mount'],
+  'Tottenham Hotspur': ['Dominic Solanke','Omar Marmoush','Mohammed Kudus','Xavi Simons','Savio','Dejan Kulusevski','Mykhailo Mudryk','James Maddison'],
+  'Crystal Palace': ['Jean-Philippe Mateta','Eddie Nketiah','Ismaila Sarr','Yeremy Pino','Evann Guessand','Dwight McNeil','Daichi Kamada','Matheus Franca'],
+  'Nottingham Forest': ['Chris Wood','Liam Delap','Arnaud Kalimuendo','Igor Jesus','Morgan Gibbs-White','Callum Hudson-Odoi','Dan Ndoye','James McAtee'],
+  'Hull City': ['Oliver McBurnie','Joe Gelhardt','Mohamed-Ali Cho','Mohamed Belloumi','Abdulkadir Omur','Sorba Thomas','Ilyas Ansah','Matt Crooks'],
+  Everton: ['Thierno Barry','Jack Grealish','Brennan Johnson','Kiernan Dewsbury-Hall','Carlos Alcaraz','Hayden Hackney','James Garner','Merlin Rohl'],
+  Liverpool: ['Alexander Isak','Hugo Ekitike','Cody Gakpo','Bradley Barcola','Florian Wirtz','Federico Chiesa','Dominik Szoboszlai','Alexis Mac Allister'],
+  'Manchester City': ['Erling Haaland','Phil Foden','Antoine Semenyo','Jeremy Doku','Rayan Cherki','Iliman Ndiaye','Elliot Anderson','Enzo Fernandez'],
+  'Coventry City': ['Haji Wright','Taiwo Awoniyi','Ellis Simms','Brandon Thomas-Asante','Tatsuhiro Sakamoto','Loum Tchaouna','Jack Rudoni','Gustavo Hamer'],
+  'Newcastle United': ['Yoane Wissa','Anthony Elanga','Harvey Barnes','William Osula','Jacob Ramsey','Jacob Murphy','Joelinton','Nicolas Gonzalez']
 };
 
-const FIXTURE_PAIRS = [
-  ['Arsenal', 'Leeds United'], ['Liverpool', 'Chelsea'], ['Manchester City', 'Tottenham Hotspur'],
-  ['Newcastle United', 'Aston Villa'], ['Manchester United', 'Brighton & Hove Albion'],
-  ['West Ham United', 'Everton'], ['Wolverhampton Wanderers', 'Crystal Palace'],
-  ['Brentford', 'Fulham'], ['Nottingham Forest', 'Bournemouth'], ['Burnley', 'Sunderland']
+const FIXTURES = [
+  ['2026-10-10T11:30:00Z','Arsenal','Leeds United'],
+  ['2026-10-10T14:00:00Z','Aston Villa','Brentford'],
+  ['2026-10-10T14:00:00Z','Chelsea','AFC Bournemouth'],
+  ['2026-10-10T14:00:00Z','Ipswich Town','Fulham'],
+  ['2026-10-10T14:00:00Z','Sunderland','Brighton & Hove Albion'],
+  ['2026-10-10T16:30:00Z','Manchester United','Tottenham Hotspur'],
+  ['2026-10-11T13:00:00Z','Crystal Palace','Nottingham Forest'],
+  ['2026-10-11T13:00:00Z','Hull City','Everton'],
+  ['2026-10-11T15:30:00Z','Liverpool','Manchester City'],
+  ['2026-10-12T19:00:00Z','Coventry City','Newcastle United']
 ];
-
-/* Spreads the demo gameweek's kickoffs across the next Fri/Sat/Sun/Mon
- * relative to whenever the lab is opened, so it always reads as "upcoming". */
-function demoKickoff(index) {
-  const base = new Date();
-  base.setHours(0, 0, 0, 0);
-  const daysAhead = [5, 6, 6, 6, 7, 7, 7, 8, 8, 9][index] ?? 6;
-  const hour = [20, 12.5, 15, 17.5, 14, 14, 16.5, 19, 14, 20][index] ?? 15;
-  const d = new Date(base.getTime() + daysAhead * 86400000);
-  d.setHours(Math.floor(hour), (hour % 1) * 60, 0, 0);
-  while (d.getTime() < Date.now()) d.setDate(d.getDate() + 7);
-  return d.toISOString();
-}
 
 function matchResultOdds(rand, homeStrength, awayStrength) {
   const homeEdge = 0.12; // generic home advantage bump, mock only
@@ -159,10 +156,10 @@ function buildMarkets(fixtureId, home, away, rand) {
 let cachedGameweek = null;
 export function buildDemoGameweek() {
   if (cachedGameweek) return cachedGameweek;
-  const fixtures = FIXTURE_PAIRS.map(([home, away], i) => {
-    const id = `demo-fx-${i + 1}`;
+  const fixtures = FIXTURES.map(([kickoff, home, away], i) => {
+    const id = `demo-2026-gw6-fx-${i + 1}`;
     const rand = seedFrom(id);
-    return { id, home, away, kickoff: demoKickoff(i), markets: buildMarkets(id, home, away, rand) };
+    return { id, home, away, kickoff, markets: buildMarkets(id, home, away, rand) };
   });
   cachedGameweek = { disclaimer: MOCK_DISCLAIMER, fixtures };
   return cachedGameweek;
