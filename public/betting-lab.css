@@ -410,3 +410,16 @@
 .kp-betting-lab .kbl-nav{grid-template-columns:repeat(5,1fr);min-height:68px;border-top:1px solid #e0e2dc;background:rgba(251,250,246,.97);padding:6px 0 max(8px,env(safe-area-inset-bottom))}
 .kp-betting-lab .kbl-nav-item{gap:3px;color:#6c7871}.kp-betting-lab .kbl-nav-item small{font-size:9px}.kp-betting-lab .kbl-nav-item.is-active{color:#087d4e}
 @media(max-width:390px){.kp-betting-lab .kbl-content{padding-left:13px;padding-right:13px}.kp-betting-lab .kbl-brand strong{font-size:32px}.kp-betting-lab .kbl-header-balance{font-size:18px;padding-left:15px}.kp-betting-lab .kbl-header-balance-wrap,.kp-betting-lab .kbl-balance-plus{height:50px}.kp-betting-lab .kbl-balance-plus{width:50px}.kp-betting-lab article.kbl-fixture-table>.kbl-odds-row{flex-basis:162px!important;width:162px!important;gap:5px!important}.kp-betting-lab .kbl-hero-copy strong{font-size:25px}.kp-betting-lab .kbl-fixtures-head strong{font-size:26px}}
+
+/* Hero artwork correction — no fake footballer illustration. */
+.kp-betting-lab .kbl-hero{background:radial-gradient(circle at 83% 28%,rgba(74,139,111,.38),transparent 25%),linear-gradient(118deg,#061d1c 0%,#073a32 62%,#0b5641 100%)!important}
+.kp-betting-lab .kbl-hero-copy{left:21px!important;top:25px!important}
+.kp-betting-lab .kbl-hero-copy>span{order:0;margin:0 0 9px!important;font-size:6.5px!important;letter-spacing:.27em!important;opacity:.72}
+.kp-betting-lab .kbl-hero-copy>strong{order:1;font-size:27px!important;line-height:1.01!important}
+.kp-betting-lab .kbl-hero-copy>small{order:2;margin-top:10px;font-size:8px;letter-spacing:.02em;color:rgba(255,255,255,.72)}
+.kp-betting-lab .kbl-hero-card{position:absolute;right:17px;top:28px;width:112px;height:91px;padding:20px 12px 12px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.055));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 15px 35px rgba(0,0,0,.12);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);color:#fff}
+.kp-betting-lab .kbl-hero-card:before{content:"K";position:absolute;right:10px;top:5px;font-family:Georgia,"Times New Roman",serif;font-size:14px;color:rgba(255,255,255,.28)}
+.kp-betting-lab .kbl-hero-card b{display:block;font-family:Georgia,"Times New Roman",serif;font-size:27px;line-height:1;font-weight:600;letter-spacing:-.04em}
+.kp-betting-lab .kbl-hero-card span{display:block;margin-top:8px;font-size:5.5px;font-weight:800;letter-spacing:.18em;color:rgba(255,255,255,.66)}
+.kp-betting-lab .kbl-hero-player,.kp-betting-lab .kbl-hero-steps{display:none!important}
+@media(max-width:390px){.kp-betting-lab .kbl-hero-card{right:13px;width:105px}.kp-betting-lab .kbl-hero-copy>strong{font-size:24px!important}}
