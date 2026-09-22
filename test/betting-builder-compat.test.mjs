@@ -111,7 +111,7 @@ test('global validation catches impossible combinations that only fail with thre
 test('keeps genuinely compatible builder combinations available', () => {
   expectAllowed(
     pick('fgs', 'Bukayo Saka'),
-    pick('atgs', 'Wilfried Gnonto')
+    pick('atgs', 'Dominic Calvert-Lewin')
   );
 
   expectAllowed(
@@ -143,7 +143,7 @@ test('keeps genuinely compatible builder combinations available', () => {
 test('exact-score and player requirements are checked against the whole match state', () => {
   expectBlocked(
     pick('score', '2-0'),
-    pick('atgs', 'Wilfried Gnonto')
+    pick('atgs', 'Dominic Calvert-Lewin')
   );
 
   expectBlocked(
