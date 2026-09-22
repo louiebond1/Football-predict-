@@ -87,15 +87,27 @@ export function mount({ onClose }) {
     if (ui.slip.has(key)) {
       ui.slip.delete(key);
     } else {
-      // Mutually-exclusive markets: only one outcome from the same market can
-      // exist in a Bet Builder. Choosing another replaces the previous pick.
-      const exclusiveMarketKeys = new Set(['result','dc','dnb','btts','ou05','ou15','ou25','ou25b','ou35','homegoals','awaygoals','firstscore','fh','htft','ah','fgs']);
       const marketKey = market.id.split(':').pop();
+      const exclusiveMarketKeys = new Set(['result','dc','dnb','btts','ou05','ou15','ou25','ou25b','ou35','homegoals','awaygoals','firstscore','fh','htft','ah','fgs']);
       if (exclusiveMarketKeys.has(marketKey)) {
         for (const [existingKey, existing] of ui.slip) {
           if (existing.fixtureId === fixture.id && existing.marketId === market.id) ui.slip.delete(existingKey);
         }
       }
+
+      // Same-player First Goalscorer + Anytime Goalscorer is a nested outcome,
+      // so it must never be multiplied as two independent legs.
+      if (marketKey === 'fgs' || marketKey === 'atgs') {
+        const counterpart = marketKey === 'fgs' ? 'atgs' : 'fgs';
+        for (const existing of ui.slip.values()) {
+          const existingKey = existing.marketId.split(':').pop();
+          if (existing.fixtureId === fixture.id && existingKey === counterpart && existing.selectionName === selection.name) {
+            toast(`${selection.name}: First + Anytime Goalscorer can't be combined`);
+            return;
+          }
+        }
+      }
+
       ui.slip.set(key, {
         fixtureId: fixture.id, fixtureLabel: `${fixture.home} v ${fixture.away}`,
         marketId: market.id, marketName: market.name, selectionId: selection.id, selectionName: selection.name, odds: selection.odds
