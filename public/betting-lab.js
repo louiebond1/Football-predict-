@@ -152,7 +152,7 @@ export function mount({ onClose }) {
       <section class="kbl-leagues" aria-label="Competitions">
         <button class="is-active" type="button">Premier League</button><button type="button">Championship</button><button type="button">La Liga</button><button type="button">Serie A</button>
       </section>
-      <section class="kbl-hero" aria-label="KickPot betting"><div class="kbl-hero-copy"><span>THIS GAMEWEEK</span><strong>Back your<br>football brain.</strong><small>Fake money. Real bragging rights.</small></div><div class="kbl-hero-card" aria-hidden="true"><b>£100</b><span>STARTING BANKROLL</span></div></section>
+      <section class="kbl-hero" aria-label="Football"><div class="kbl-hero-photo" aria-hidden="true"></div></section>
       <section class="kbl-fixtures">
         <div class="kbl-fixtures-head"><div><strong>Premier League</strong><span>Gameweek 6⌄</span></div><div class="kbl-date-tabs"><button class="is-active">Sat 10 Oct</button><button>Sun 11 Oct</button><button>Mon 12 Oct</button><button>▣&nbsp;&nbsp;All Fixtures</button></div><div class="kbl-odds-head"><span></span><span>1</span><span>X</span><span>2</span></div></div>
         ${gameweek.fixtures.map((fixture, index) => {
