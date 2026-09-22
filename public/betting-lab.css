@@ -533,3 +533,10 @@ linear-gradient(155deg,#0b2d27 0%,#17634e 52%,#0a3c32 100%);}
 .kp-betting-lab .kbl-team-line>strong{display:block!important;position:static!important;transform:none!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 .kp-betting-lab article.kbl-fixture-table .kbl-fixture-names{display:flex!important;flex-direction:column!important;position:static!important;width:100%!important;overflow:hidden!important}
 .kp-betting-lab article.kbl-fixture-table .kbl-fixture-time{display:block!important;position:static!important;transform:none!important}
+
+/* Crest fallback correction: never render initials underneath a successful badge */
+.kp-betting-lab .kbl-crest-fallback{display:none!important}
+.kp-betting-lab .kbl-crest-fallback.is-visible{display:grid!important}
+.kp-betting-lab .kbl-crest-wrap .kbl-team-crest[style*="display: none"] + .kbl-crest-fallback{display:grid!important}
+.kp-betting-lab .kbl-team-line{overflow:visible!important}
+.kp-betting-lab .kbl-crest-wrap{overflow:visible!important}
