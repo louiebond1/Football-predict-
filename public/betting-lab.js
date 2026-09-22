@@ -55,8 +55,9 @@ const crestUrl = name => ({
 }[name] || '');
 const teamCrest = name => {
   const url = crestUrl(name);
-  const fallback = teamMark(name);
-  return url ? `<img class="kbl-team-crest" src="${url}" alt="" loading="eager" decoding="async" onerror="this.outerHTML=\'${fallback.replace(/'/g, '&#39;')}\'">` : fallback;
+  return url
+    ? `<span class="kbl-crest-wrap"><img class="kbl-team-crest" src="${url}" alt="" loading="eager" decoding="async"><span class="kbl-crest-fallback" aria-hidden="true">${esc(String(name).split(/\\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase())}</span></span>`
+    : `<span class="kbl-crest-wrap"><span class="kbl-crest-fallback is-visible" aria-hidden="true">${esc(String(name).split(/\\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase())}</span></span>`;
 };
 
 export function mount({ onClose }) {
