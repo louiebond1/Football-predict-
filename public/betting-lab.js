@@ -83,38 +83,47 @@ export function mount({ onClose }) {
     return Math.round(n * 100);
   }
   function slipKey(marketId, selectionId) { return `${marketId}|${selectionId}`; }
+  function selectionItem(fixture, market, selection) {
+    return {
+      ...toBuilderLeg({ fixture, market, selection }),
+      fixtureLabel: `${fixture.home} v ${fixture.away}`,
+      odds: selection.odds
+    };
+  }
+
   function toggleSelection(fixture, market, selection) {
     const key = slipKey(market.id, selection.id);
+
     if (ui.slip.has(key)) {
       ui.slip.delete(key);
-    } else {
-      const marketKey = market.id.split(':').pop();
-      const exclusiveMarketKeys = new Set(['result','dc','dnb','btts','ou05','ou15','ou25','ou25b','ou35','homegoals','awaygoals','firstscore','fh','htft','ah','fgs']);
-      if (exclusiveMarketKeys.has(marketKey)) {
-        for (const [existingKey, existing] of ui.slip) {
-          if (existing.fixtureId === fixture.id && existing.marketId === market.id) ui.slip.delete(existingKey);
-        }
-      }
-
-      // Same-player First Goalscorer + Anytime Goalscorer is a nested outcome,
-      // so it must never be multiplied as two independent legs.
-      if (marketKey === 'fgs' || marketKey === 'atgs') {
-        const counterpart = marketKey === 'fgs' ? 'atgs' : 'fgs';
-        for (const existing of ui.slip.values()) {
-          const existingKey = existing.marketId.split(':').pop();
-          if (existing.fixtureId === fixture.id && existingKey === counterpart && existing.selectionName === selection.name) {
-            toast(`${selection.name}: First + Anytime Goalscorer can't be combined`);
-            return;
-          }
-        }
-      }
-
-      ui.slip.set(key, {
-        fixtureId: fixture.id, fixtureLabel: `${fixture.home} v ${fixture.away}`,
-        marketId: market.id, marketName: market.name, selectionId: selection.id, selectionName: selection.name, odds: selection.odds
-      });
+      ui.slipExpanded = false;
+      renderAll();
+      return;
     }
+
+    const nextSlip = new Map(ui.slip);
+    let replaced = false;
+
+    if (isSingleChoiceMarket(market.id)) {
+      for (const [existingKey, existing] of nextSlip) {
+        if (existing.fixtureId === fixture.id && existing.marketId === market.id) {
+          nextSlip.delete(existingKey);
+          replaced = true;
+        }
+      }
+    }
+
+    nextSlip.set(key, selectionItem(fixture, market, selection));
+
+    const compatibility = validateBuilderSelections([...nextSlip.values()]);
+    if (!compatibility.ok) {
+      toast(compatibility.error);
+      return;
+    }
+
+    ui.slip = nextSlip;
     ui.slipExpanded = false;
+    if (replaced) toast('Replaced selection');
     renderAll();
   }
 
