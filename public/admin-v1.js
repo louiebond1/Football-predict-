@@ -186,7 +186,7 @@ async function renderAdmin(view, root, overview, startPage = 'menu') {
   const groupNav = adminNavRow('Group & invite', 'Name, stake, invite code, bank details', 'settings');
   groupNav.addEventListener('click', () => goAdmin('group'));
   const bettingLabNav = adminNavRow('Betting Mode Lab', 'Experimental · fake-money prototype', 'flask');
-  bettingLabNav.addEventListener('click', () => { window.location.hash = 'betting-lab'; });
+  bettingLabNav.addEventListener('click', () => { document.documentElement.classList.add('kp-betting-route'); window.location.hash = 'betting-lab'; });
   const menuList = document.createElement('div'); menuList.className = 'kp3-group-menu kp-admin-menu';
   menuList.append(paymentsNav, scoringNav, membersNav, groupNav, bettingLabNav);
   menuPage.append(menuList);
