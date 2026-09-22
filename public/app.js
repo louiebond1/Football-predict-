@@ -661,7 +661,7 @@ nav.forEach(btn => btn.addEventListener('click', () => {
   window.scrollTo({top:0,behavior:'auto'});
 }));
 history.replaceState({kpTab:state.tab},'');
-window.addEventListener('popstate',event=>{const tab=event.state?.kpTab||'gw';if(['gw','live','history','group'].includes(tab)){state.tab=tab;render().catch(showError);}});
+window.addEventListener('popstate',event=>{if(window.location.hash==='#betting-lab')return;const tab=event.state?.kpTab||'gw';if(['gw','live','history','group'].includes(tab)){state.tab=tab;render().catch(showError);}});
 userChip?.addEventListener('click',()=>openAccountSettings().catch(showError));
 /* Delegated, so it survives the bar's <select> being rebuilt when the group
    list or selection changes - the element is no longer thrown away by every
