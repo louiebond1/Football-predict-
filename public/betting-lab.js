@@ -26,7 +26,15 @@ const teamMark = name => {
   const initials = words.length > 1 ? words.map(w => w[0]).slice(0, 2).join('') : String(name).slice(0, 2);
   return `<span class="kbl-team-mark" aria-hidden="true">${esc(initials.toUpperCase())}</span>`;
 };
-const leagueMark = label => `<span class="kbl-league-mark" aria-hidden="true">${label === 'Premier League' ? '♛' : label === 'Championship' ? '◌' : label === 'La Liga' ? 'L' : 'A'}</span>`;
+const leagueMark = label => {
+  const marks = {
+    'Premier League': '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9.3 11.4c1.5-3.7 4.2-6 7.9-6.9l-1.3-2.1 3.8 1.2 2.7-2.1-.3 3.5c2.2 1.2 3.8 3.1 4.6 5.7-2.3-.9-4.5-.9-6.5-.1 2.4 1.3 3.8 3.5 4.1 6.5.4 4.8-3.1 9.2-8 9.8-5.4.7-10.2-3.4-10.2-8.8 0-2.6 1.1-4.9 3.2-6.7Zm6.9 1.1c-3.1 0-5.6 2.5-5.6 5.6s2.5 5.6 5.6 5.6 5.6-2.5 5.6-5.6-2.5-5.6-5.6-5.6Z" fill="currentColor"/></svg>',
+    'Championship': '<span class="kbl-dotmark" aria-hidden="true">⠿</span>',
+    'La Liga': '<span class="kbl-ligature" aria-hidden="true">L</span>',
+    'Serie A': '<span class="kbl-serie" aria-hidden="true">A</span>'
+  };
+  return `<span class="kbl-league-mark">${marks[label] || ''}</span>`;
+};
 const round2 = n => Math.round(n * 100) / 100;
 const crestUrl = name => ({
   'Arsenal':'https://crests.football-data.org/57.png',
