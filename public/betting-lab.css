@@ -423,3 +423,14 @@
 .kp-betting-lab .kbl-hero-card span{display:block;margin-top:8px;font-size:5.5px;font-weight:800;letter-spacing:.18em;color:rgba(255,255,255,.66)}
 .kp-betting-lab .kbl-hero-player,.kp-betting-lab .kbl-hero-steps{display:none!important}
 @media(max-width:390px){.kp-betting-lab .kbl-hero-card{right:13px;width:105px}.kp-betting-lab .kbl-hero-copy>strong{font-size:24px!important}}
+
+/* Clean hero: image-only, intentionally no slogan/card/copy. */
+.kp-betting-lab .kbl-hero{height:132px!important;min-height:132px!important;background:#0a352d!important}
+.kp-betting-lab .kbl-hero-photo{position:absolute;inset:0;background:
+linear-gradient(90deg,rgba(3,30,25,.58),rgba(3,30,25,.08) 48%,rgba(3,30,25,.32)),
+radial-gradient(ellipse at 50% 115%,rgba(246,244,231,.22) 0 1%,transparent 1.5%),
+repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 44px,rgba(0,0,0,.018) 44px 88px),
+linear-gradient(155deg,#0b2d27 0%,#17634e 52%,#0a3c32 100%);}
+.kp-betting-lab .kbl-hero-photo:before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.16)}
+.kp-betting-lab .kbl-hero-photo:after{content:"";position:absolute;left:50%;top:50%;width:64px;height:64px;border:1px solid rgba(255,255,255,.16);border-radius:50%;transform:translate(-50%,-50%)}
+.kp-betting-lab .kbl-hero-copy,.kp-betting-lab .kbl-hero-card,.kp-betting-lab .kbl-hero-player,.kp-betting-lab .kbl-hero-steps{display:none!important}
