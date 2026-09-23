@@ -42,7 +42,12 @@ const crestUrl = name => ({
   'Tottenham Hotspur':'https://crests.football-data.org/73.png',
   'Crystal Palace':'https://crests.football-data.org/354.png',
   'Nottingham Forest':'https://crests.football-data.org/351.png',
-  'Hull City':'https://crests.football-data.org/322.png'
+  'Hull City':'https://crests.football-data.org/322.png',
+  'Everton':'https://crests.football-data.org/62.png',
+  'Liverpool':'https://crests.football-data.org/64.png',
+  'Manchester City':'https://crests.football-data.org/65.png',
+  'Newcastle United':'https://crests.football-data.org/67.png',
+  'Coventry City':'https://crests.football-data.org/1076.png'
 }[name] || '');
 const teamCrest = name => {
   const url = crestUrl(name);
