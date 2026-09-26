@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "start": "node start.mjs",
-    "check": "node --check server.mjs && node --check start.mjs"
+    "check": "node --check server.mjs && node --check start.mjs && node --check public/mind-reader/app.js && node --check public/mind-reader/cards.js",
+    "test": "node --test tests/mind-reader.test.mjs",
+    "test:e2e": "node tests/mind-reader.e2e.mjs"
   },
-  "engines": {"node": ">=20"}
+  "engines": {
+    "node": ">=20"
+  }
 }

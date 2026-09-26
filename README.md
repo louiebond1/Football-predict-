@@ -43,3 +43,33 @@ The API key stays server-side. Current round is cached for 6 hours, fixtures for
 ## Security
 Never commit `FOOTBALL_API_KEY` or `SUPABASE_SECRET_KEY`.
 The Supabase publishable key is intended for browser use and is protected by RLS.
+
+## Mind Reader (`/mind-reader`)
+
+A standalone Spurs-themed magic trick served by the same server at
+`/mind-reader/`. The spectator thinks of a number from 1–63, says YES or NO to
+six player cards, and the app reveals their number. It can be added to an
+iPhone home screen and runs full screen.
+
+- `public/mind-reader/cards.js`: the six players, their exact number lists and
+  `readMind()`, which turns the answers into the number
+- `public/mind-reader/app.js`: screens, transitions and the reveal sequence
+- `public/mind-reader/styles.css`: all styling (Inter Tight is self-hosted, OFL)
+
+**Player photos:** none are bundled. Each card uses a typographic treatment
+with faint pitch markings instead. To add a photo, drop the image in
+`public/mind-reader/players/` and set that player's `photo` in `cards.js` (for
+example `photo: '/mind-reader/players/lloris.jpg'`). Portrait cut-outs work
+best. If an image fails to load, the card falls back to the typographic
+design.
+
+**Tests**
+
+- `npm test`: checks every card list against the rule it must follow, checks
+  that all 63 numbers resolve correctly, and checks that all 64 YES/NO
+  combinations are distinct
+- `npm run test:e2e`: plays the trick in Chromium at iPhone size for every
+  number 1–63 by reading the rendered cards. It also covers the all-NO
+  recovery screen, the back button and Play again. It needs Playwright; point
+  `PLAYWRIGHT_MODULE` at a global install if it isn't a local dependency.
+- Add `?speed=0` to the URL to skip the suspense timings when testing by hand.

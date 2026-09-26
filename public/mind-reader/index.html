@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1638" />
+  <meta name="color-scheme" content="light" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mind Reader" />
+  <meta name="description" content="Think of a number from 1 to 63. Six Spurs players. I'll tell you what it is." />
+  <link rel="manifest" href="/mind-reader/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/mind-reader/icons/icon-180.png" />
+  <link rel="icon" type="image/png" href="/mind-reader/icons/icon-192.png" />
+  <link rel="preload" href="/mind-reader/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/mind-reader/styles.css" />
+  <title>Mind Reader</title>
+</head>
+<body>
+  <div class="app" id="app" data-screen="intro">
+
+    <!-- Intro -->
+    <section class="screen screen--intro" data-screen="intro" aria-labelledby="intro-title">
+      <svg class="intro-pitch" viewBox="0 0 400 400" aria-hidden="true">
+        <circle cx="200" cy="200" r="150" />
+        <circle cx="200" cy="200" r="4" class="fill" />
+        <line x1="-400" y1="200" x2="800" y2="200" />
+      </svg>
+      <header class="intro-top">
+        <span class="eyebrow">Tottenham Hotspur</span>
+      </header>
+      <div class="intro-body">
+        <h1 class="intro-title" id="intro-title">I can read<br />your mind.</h1>
+        <p class="intro-lead">Think of any number from 1–63.</p>
+        <p class="intro-lead intro-lead--quiet">Keep it completely to yourself.</p>
+        <p class="intro-copy">I’m going to show you six Spurs players. All you have to tell me is whether you can see your number.</p>
+      </div>
+      <footer class="intro-actions">
+        <button class="btn btn--light" type="button" data-action="start">I’ve got my number</button>
+      </footer>
+    </section>
+
+    <!-- Player card -->
+    <section class="screen screen--card" data-screen="card" aria-live="polite">
+      <div class="hero" id="hero">
+        <svg class="hero-motif" id="hero-motif" viewBox="0 30 400 200" preserveAspectRatio="xMaxYMid slice" aria-hidden="true"></svg>
+        <div class="hero-bar">
+          <button class="back" type="button" data-action="back" aria-label="Previous player">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+          </button>
+          <ol class="dots" id="dots" aria-label="Progress"></ol>
+        </div>
+        <div class="hero-stage" id="hero-stage">
+          <img class="hero-photo" id="hero-photo" alt="" hidden />
+          <div class="hero-name">
+            <span class="hero-first" id="hero-first"></span>
+            <h2 class="hero-last" id="hero-last"></h2>
+            <span class="hero-meta" id="hero-meta"></span>
+          </div>
+        </div>
+      </div>
+      <div class="sheet" id="sheet">
+        <p class="question">Can you see your number?</p>
+        <ul class="grid" id="grid" aria-label="Numbers"></ul>
+      </div>
+      <footer class="answers">
+        <button class="btn btn--no" type="button" data-action="answer" data-answer="no">No</button>
+        <button class="btn btn--yes" type="button" data-action="answer" data-answer="yes">Yes</button>
+      </footer>
+    </section>
+
+    <!-- Suspense + reveal -->
+    <section class="screen screen--reveal" data-screen="reveal">
+      <div class="stage" id="stage" aria-live="assertive">
+        <p class="line line--hero" data-line="hush">Don’t say it.</p>
+        <p class="line" data-line="hold">Keep your number in your head.</p>
+        <div class="line" data-line="reading">
+          <span>Reading your choices…</span>
+          <span class="meter" aria-hidden="true"><span class="meter-fill"></span></span>
+        </div>
+        <p class="line line--hero" data-line="gotit">Got it.</p>
+
+        <div class="result" data-line="result">
+          <p class="eyebrow result-label">You were thinking of</p>
+          <div class="result-figure">
+            <svg class="result-ring" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="96" pathLength="1" /></svg>
+            <span class="result-number" id="result-number"></span>
+          </div>
+        </div>
+
+        <div class="result result--miss" data-line="miss">
+          <p class="eyebrow result-label">Hmm.</p>
+          <p class="miss-title">I think you missed your number on one of the cards.</p>
+          <p class="miss-copy">Keep the same number, take your time with each player, and let’s go again.</p>
+        </div>
+      </div>
+      <footer class="reveal-actions" id="reveal-actions">
+        <button class="btn btn--light" type="button" data-action="restart">Play again</button>
+      </footer>
+    </section>
+
+  </div>
+  <script type="module" src="/mind-reader/app.js"></script>
+</body>
+</html>
