@@ -10,11 +10,11 @@ A 32-second, 1920×1080, 30 fps trailer with an original synthesised soundtrack.
 |---|---|---|
 | 0.0–3.4 | What it is | **PREDICT THE SCORE. BEAT YOUR MATES.** slams in word by word on the beat, and your mates’ names pop up around it as stickers. A terrace-chant hook starts. |
 | 3.4–7.7 | 1 · Pick the score | The Matchday card rises in: Arsenal v Chelsea, starting at the app’s default 1–1. One tap makes it **2–1**. “Lock in my picks” → “✓ Picks saved”. |
-| 7.7–11.0 | Your mate | The card shrinks into **YOUR PICK 2–1**, and **JACK’S PICK 1–1** slides in beside it. *“‘2–1? You’re having a laugh.’ — Jack”* |
+| 7.7–11.0 | Your mate | The card shrinks into **YOUR PICK 2–1**, and **JOSH’S PICK 1–1** slides in beside it. *“‘2–1? You’re having a laugh.’ — Josh”* |
 | 11.0–14.4 | 2 · Locked at kick-off | A green wipe and a whistle. Both padlocks close: **KICK-OFF. PICKS LOCKED.** Then the rules: **EXACT SCORE +3 POINTS**, **RIGHT RESULT +1 POINT**. |
-| 14.4–18.2 | 3 · Follow it live | Push into the stadium: **live 1–1, 89th minute**, beside your 2–1. The group table shows *if it ends 1–1*: Jack top on 19 (his dashed **+3**), you second on 15. |
+| 14.4–18.2 | 3 · Follow it live | Push into the stadium: **live 1–1, 89th minute**, beside your 2–1. The group table shows *if it ends 1–1*: Josh top on 19 (his dashed **+3**), you second on 15. |
 | 18.2–20.2 | Tension | The music drops out and the clock ticks faster against a heartbeat. The camera tightens on 1–1 v 2–1. |
-| 20.2–26.4 | 4 · Top the table | **GOAL!** Sunburst and confetti cannons. 1–1 flips to 2–1. The live score slides onto your pick: **+3 EXACT SCORE**. Full-time whistle. Jack’s +3 falls away (16), your +3 lands (18), you go top and the crown moves to you in a shower of confetti. *“Still laughing, Jack?”* |
+| 20.2–26.4 | 4 · Top the table | **GOAL!** Sunburst and confetti cannons. 1–1 flips to 2–1. The live score slides onto your pick: **+3 EXACT SCORE**. Full-time whistle. Josh’s +3 falls away (16), your +3 lands (18), you go top and the crown moves to you in a shower of confetti. *“Still laughing, Josh?”* |
 | 26.4–32.0 | Punchline | Your row, crowned. *“You’ll be* **UNBEARABLE.**” The crown flies to centre and becomes the KickPot logo: *“Predict the score. Beat your mates.”* Then the call to action: **START A GROUP WITH YOUR MATES**. |
 
 ### Scoring continuity (staged demo data)
@@ -23,7 +23,7 @@ Rules from the repo: exact score **+3**, correct result **+1**, otherwise 0. The
 
 | Player | Pick | Before | If it ends 1–1 | Full time 2–1 |
 |---|---|---|---|---|
-| Jack | 1–1 | 16 | +3 → **19** (1st) | 0 → **16** (2nd) |
+| Josh | 1–1 | 16 | +3 → **19** (1st) | 0 → **16** (2nd) |
 | You | 2–1 | 15 | 0 → 15 (2nd) | +3 → **18** (1st) |
 
 During the match, points that depend on the final score are shown as a dashed chip under an “IF IT ENDS 1–1” header. Awarded points are solid chips under “FULL TIME”. There are no ties at any point. The data lives in `src/timeline.js`, and `film.js` calculates every number from it.
@@ -47,7 +47,7 @@ Open `index.html` in Chrome. Some browsers block fonts loaded from `file://`. If
 
 - **Retime anything:** edit `src/timeline.js`. Picture and sound both read from it, so they stay in sync.
 - **Change copy:** search `src/film.js` for the line, e.g. `UNBEARABLE.` or `PREDICT THE SCORE.`
-- **Change names, picks or points:** edit `PLAYERS` in `src/timeline.js`. Rankings, chips and the crown follow the numbers. Check the order still tells the story.
+- **Change names, picks or points:** edit `PLAYERS` (the rival’s name drives his pick card, quote credit and the “Still laughing” line) and `MATES` (opening stickers) in `src/timeline.js`. Rankings, chips and the crown follow the numbers. Check the order still tells the story.
 - **Change the music:** `src/audio.js` → *ARRANGEMENT*. `LEVEL` in `renderSoundtrack()` sets overall loudness.
 
 ## Render

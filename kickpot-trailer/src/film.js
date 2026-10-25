@@ -42,6 +42,8 @@
   const ORDER_LIVE = [...PL].sort((a, b) => b.live - a.live).map(p => p.id);
   const ORDER_FT = [...PL].sort((a, b) => b.fin - a.fin).map(p => p.id);
   const LEADER_LIVE = ORDER_LIVE[0];
+  // the mate who laughs at your pick, e.g. 'JOSH' and 'Josh'
+  const RIVAL = byId.rival.name, Rival = RIVAL[0] + RIVAL.slice(1).toLowerCase();
   const chipFor = d => (d === 3 ? '+3 EXACT' : d === 1 ? '+1 RESULT' : '');
 
   // ---------- assets ----------
@@ -407,7 +409,7 @@
       ctx.save(); ctx.translate(x0 + w1 / 2, 290); ctx.scale(a1, a1); text(ctx, p1, 0, 0, { size, font: F.serif, color: C.ink }); ctx.restore();
       if (t >= T.q2) text(ctx, p2, x0 + w1, 290 + (1 - eOut(P(t, T.q2, T.q2 + 0.2))) * 24, { size, font: F.serif, color: C.ink, align: 'left', alpha: eOut(P(t, T.q2, T.q2 + 0.2)) });
       const ja = eOut(P(t, T.q2 + 0.3, T.q2 + 0.55));
-      if (ja > 0) text(ctx, '— JACK', 960, 380, { size: 46, font: F.bold, color: C.muted, ls: 8, alpha: ja });
+      if (ja > 0) text(ctx, '— ' + RIVAL, 960, 380, { size: 46, font: F.bold, color: C.muted, ls: 8, alpha: ja });
       ctx.restore();
     }
     // the two picks
@@ -420,7 +422,7 @@
     if (jin > 0) {
       const laugh = t >= T.q2 ? 0.06 * Math.sin((t - T.q2) * 32) * Math.exp(-(t - T.q2) * 3) : 0;
       const jx = lerp(lerp(2400, 1300, jin), 1320, up), jy = lerp(640, 330, up);
-      drawPickCard(ctx, jx, jy, ys, { label: 'JACK’S PICK', fill: '#1d2621', num: [1, 1], lockQ: t < T.ko - 0.1 ? 0 : lockQ, rot: laugh });
+      drawPickCard(ctx, jx, jy, ys, { label: RIVAL + '’S PICK', fill: '#1d2621', num: [1, 1], lockQ: t < T.ko - 0.1 ? 0 : lockQ, rot: laugh });
     }
     // kick-off: picks locked, how points work
     if (t >= T.ko) {
@@ -491,7 +493,7 @@
       else pill(ctx, TB.x + TB.w + off, TB.y0 - 60, 'FULL TIME', { size: 36, align: 'right', bg: C.gold, color: C.ink });
       const rects = {};
       for (const p of PL) rects[p.id] = slotRect(rowSlot(p.id, t), off);
-      for (const id of ['jack', 'you']) {
+      for (const id of ['rival', 'you']) {
         const r = rects[id], p = byId[id], k = r.h / 176;
         const charge = id === 'you' ? Math.sin(Math.PI * P(t, T.swap, T.swap + 0.5)) : 0;
         drawRow(ctx, r, p, rowPoints(p, t), Math.round(rowSlot(id, t)) + 1, { scale: 1 + charge * 0.04 });
@@ -566,9 +568,9 @@
     }
     ctx.restore(); // objA
 
-    // callback to Jack's line
+    // callback to your mate's line
     const jl = eOut(P(t, T.jackLine, T.jackLine + 0.25));
-    if (jl > 0) text(ctx, 'Still laughing, Jack?', 960, 990 + (1 - jl) * 24, { size: 96, font: F.serif, color: C.cream, alpha: jl });
+    if (jl > 0) text(ctx, `Still laughing, ${Rival}?`, 960, 990 + (1 - jl) * 24, { size: 96, font: F.serif, color: C.cream, alpha: jl });
 
     // celebrations: confetti cannons for the goal, a shower when the crown lands
     confetti(ctx, t, T.goal, 120, 1150, { angle: -1.15, spread: 1.0, speed: 2600, n: 120, seed: 3, life: 2.6 });
@@ -598,11 +600,11 @@
     ctx.save(); camera(ctx, t, 1 + P(t, T.punch, T.wipe) * 0.03 + P(t, T.logo, T.end) * 0.04, 960, 540);
     nightBg(ctx, t, { zoom: 1.12 });
     const q = eExpo(P(t, T.punch, T.punch + 0.5)), tEnd = T.punch - 0.01;
-    // Jack's row and the score card leave
+    // your mate's row and the score card leave
     const a = 1 - P(t, T.punch, T.punch + 0.3);
     if (a > 0) {
-      const r0 = slotRect(rowSlot('jack', tEnd));
-      drawRow(ctx, { ...r0, y: r0.y + q * 500 }, byId.jack, byId.jack.fin, 2, { alpha: a });
+      const r0 = slotRect(rowSlot('rival', tEnd));
+      drawRow(ctx, { ...r0, y: r0.y + q * 500 }, byId.rival, byId.rival.fin, 2, { alpha: a });
       ctx.save(); ctx.globalAlpha = a; ctx.translate(-q * 600, 0);
       const pk = pickState(tEnd); drawPickCard(ctx, pk.x, pk.y, pk.s, { gold: 1, num: [2, 1] });
       ctx.restore();

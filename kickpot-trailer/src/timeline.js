@@ -23,7 +23,7 @@
     save: 5.76,        // "Lock in my picks" → "✓ Picks saved"
     // 3. Your mate
     toRival: 7.20,     // Matchday card shrinks into your pick card
-    rival: 7.68,       // Jack's pick slides in beside yours
+    rival: 7.68,       // your mate's pick slides in beside yours
     q1: 8.64,          // "‘2–1?"
     q2: 9.36,          // "You're having a laugh.’"
     // 4. Kick-off: picks lock, how points work
@@ -34,7 +34,7 @@
     toLive: 14.16,     // push through to the stadium
     // 5. Live
     live: 14.40,       // 1–1, 89th minute, beside your 2–1
-    table: 15.36,      // group table: Jack top (if it ends 1–1), you second
+    table: 15.36,      // group table: your mate top (if it ends 1–1), you second
     // 6. Tension
     tension: 18.24,    // music drops, clock ticks, camera tightens
     // 7. Goal and payoff
@@ -45,9 +45,9 @@
     ft: 22.08,         // full-time whistle, table returns
     award: 22.56,      // points awarded
     swap: 23.04,       // you go top
-    crownLift: 23.28,  // crown leaves Jack
+    crownLift: 23.28,  // crown leaves your mate
     crownLand: 24.00,  // crown lands on you — confetti
-    jackLine: 24.48,   // "Still laughing, Jack?"
+    jackLine: 24.48,   // "Still laughing, Josh?"
     // 8. Punchline and logo
     punch: 26.40,      // your row, big
     unbear1: 26.64,    // "You'll be"
@@ -69,14 +69,14 @@
   // Staged demo data — illustrative, not real users or results.
   // Scoring (repo rules): exact score +3, correct result +1, otherwise 0.
   //          pick   points before   if it ends 1–1   full time 2–1
-  // Jack     1–1    16              +3 → 19 (1st)     0 → 16 (2nd)
+  // Josh     1–1    16              +3 → 19 (1st)     0 → 16 (2nd)
   // You      2–1    15              0  → 15 (2nd)     +3 → 18 (1st)
   const PLAYERS = [
-    { id: 'jack', name: 'JACK', pick: [1, 1], base: 16 },
+    { id: 'rival', name: 'JOSH', pick: [1, 1], base: 16 }, // the mate who laughs at your 2–1
     { id: 'you',  name: 'YOU',  pick: [2, 1], base: 15 },
   ];
   const FIXTURE = { home: 'Arsenal', away: 'Chelsea', kickoff: '15:00' };
-  const MATES = ['JACK', 'SAM', 'DAZ', 'MO']; // stickers in the opening
+  const MATES = ['LOUIE', 'JOSH', 'CASEY', 'ZAC']; // stickers in the opening
 
   function points(pick, score) {
     const [ph, pa] = pick, [ah, aa] = score;
