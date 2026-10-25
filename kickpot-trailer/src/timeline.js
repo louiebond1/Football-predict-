@@ -75,7 +75,7 @@
     { id: 'rival', name: 'JOSH', pick: [1, 1], base: 16 }, // the mate who laughs at your 2–1
     { id: 'you',  name: 'YOU',  pick: [2, 1], base: 15 },
   ];
-  const FIXTURE = { home: 'Arsenal', away: 'Chelsea', kickoff: '15:00' };
+  const FIXTURE = { home: 'Aston Villa', away: 'Manchester City', kickoff: '15:00' };
   const MATES = ['LOUIE', 'JOSH', 'CASEY', 'ZAC']; // stickers in the opening
 
   function points(pick, score) {

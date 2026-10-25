@@ -202,7 +202,7 @@
     const img = A.stadium, z = (o.zoom || 1.06) + (t % 40) * 0.003;
     const s = Math.max(W / img.width, H / img.height) * z, dw = img.width * s, dh = img.height * s;
     ctx.fillStyle = C.night; ctx.fillRect(-200, -200, W + 400, H + 400);
-    ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2 - 20);
+    ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2 - 20, dw, dh); // scaled to cover the whole frame
     ctx.fillStyle = rgba(C.night, o.dim ?? 0.76); ctx.fillRect(-200, -200, W + 400, H + 400);
     const g = ctx.createRadialGradient(960, 520, 200, 960, 540, 1250);
     g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${o.vig ?? 0.55})`);
@@ -309,10 +309,10 @@
     ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 52); ctx.fillStyle = C.card; ctx.fill(); ctx.shadowColor = 'transparent';
     ctx.lineWidth = 2; ctx.strokeStyle = C.line; ctx.stroke();
     text(ctx, 'MATCHDAY', -w / 2 + 64, -h / 2 + 92, { size: 34, font: F.bold, color: C.goldPaper, align: 'left', ls: 9 });
-    text(ctx, FIXTURE.home, -w / 2 + 64, -h / 2 + 230, { size: 92, font: F.serifUp, color: C.ink, align: 'left' });
-    text(ctx, FIXTURE.away, w / 2 - 64, -h / 2 + 230, { size: 92, font: F.serifUp, color: C.ink, align: 'right' });
-    text(ctx, FIXTURE.kickoff, 0, -h / 2 + 196, { size: 50, font: F.bold, color: C.muted });
-    text(ctx, 'Locks in 2h', 0, -h / 2 + 246, { size: 34, font: F.body, color: '#9a978f' });
+    // kick-off time sits up with the eyebrow so long team names get the full width
+    text(ctx, `${FIXTURE.kickoff}  ·  Locks in 2h`, w / 2 - 64, -h / 2 + 92, { size: 34, font: F.body, color: '#9a978f', align: 'right' });
+    text(ctx, FIXTURE.home, -w / 2 + 64, -h / 2 + 222, { size: 70, font: F.serifUp, color: C.ink, align: 'left' });
+    text(ctx, FIXTURE.away, w / 2 - 64, -h / 2 + 222, { size: 70, font: F.serifUp, color: C.ink, align: 'right' });
     // steppers: app default draft is 1–1; one tap makes it 2–1
     const home = t >= T.tap ? 2 : 1, away = 1;
     const sy = -h / 2 + 300, sh = 200, sw = 410;

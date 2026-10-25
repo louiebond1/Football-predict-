@@ -9,7 +9,7 @@ A 32-second, 1920×1080, 30 fps trailer with an original synthesised soundtrack.
 | Time | Beat | What happens |
 |---|---|---|
 | 0.0–3.4 | What it is | **PREDICT THE SCORE. BEAT YOUR MATES.** slams in word by word on the beat, and your mates’ names pop up around it as stickers. A terrace-chant hook starts. |
-| 3.4–7.7 | 1 · Pick the score | The Matchday card rises in: Arsenal v Chelsea, starting at the app’s default 1–1. One tap makes it **2–1**. “Lock in my picks” → “✓ Picks saved”. |
+| 3.4–7.7 | 1 · Pick the score | The Matchday card rises in: Aston Villa v Manchester City, starting at the app’s default 1–1. One tap makes it **2–1**. “Lock in my picks” → “✓ Picks saved”. |
 | 7.7–11.0 | Your mate | The card shrinks into **YOUR PICK 2–1**, and **JOSH’S PICK 1–1** slides in beside it. *“‘2–1? You’re having a laugh.’ — Josh”* |
 | 11.0–14.4 | 2 · Locked at kick-off | A green wipe and a whistle. Both padlocks close: **KICK-OFF. PICKS LOCKED.** Then the rules: **EXACT SCORE +3 POINTS**, **RIGHT RESULT +1 POINT**. |
 | 14.4–18.2 | 3 · Follow it live | Push into the stadium: **live 1–1, 89th minute**, beside your 2–1. The group table shows *if it ends 1–1*: Josh top on 19 (his dashed **+3**), you second on 15. |
