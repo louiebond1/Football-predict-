@@ -1,6 +1,6 @@
 # KickPot trailer — “2–1? You’re having a laugh.”
 
-A 22-second, 1920×1080, 30 fps trailer with an original synthesised soundtrack.
+A 30-second, 1920×1080, 30 fps trailer with an original synthesised soundtrack. It tells the story in order, one idea per shot, so someone who has never heard of KickPot understands the game. Numbered step labels (1–4) walk through how it works.
 
 **Finished film:** `out/KickPot_Trailer.mp4`
 
@@ -8,24 +8,25 @@ A 22-second, 1920×1080, 30 fps trailer with an original synthesised soundtrack.
 
 | Time | Beat | What happens |
 |---|---|---|
-| 0.0–3.8 | The challenge | A giant **2–1** slams in as *your prediction*. A green “?” lands, then: *“You’re having a laugh.”* — Jack, who went 1–1. The 2–1 shrinks into a green **YOUR PICK** card and the padlock clicks shut. |
-| 3.8–7.2 | The situation | Match-cut to the stadium: **live 1–1, 89:30**, beside your locked 2–1. The group table slides in: Jack 1st (19, with a dashed **+3 LIVE** projection), Sam 16, you 3rd on 15. *“Jack’s already screenshotted it.”* |
-| 7.2–9.4 | The tension | The music cuts out. The camera tightens on live 1–1 v your 2–1. The clock ticks faster against a heartbeat. |
-| 9.4–13.2 | The goal | **GOAL.** The 1 flips to a 2 and the crowd erupts. The live 2–1 slides onto your 2–1 and they lock: **+3 EXACT SCORE**. Full-time whistle. Points are awarded, you charge from 3rd to 1st, and the crown flips off Jack and lands on you. |
-| 13.2–17.0 | How you called it | Rewind to before kick-off: the Matchday card at the app’s default 1–1, tapped up to 2–1 (via a cheeky 3–1). **PICK IT.** “Lock in my picks” → “✓ Picks saved”. **CALL IT.** Kick-off locks it. **OWN IT.** Fast-forward back. |
-| 17.0–22.0 | The punchline | You, top of the table, crowned. *“You’ll be* **UNBEARABLE.**” The crown swells with your ego on three beats, then flies to centre and becomes the KickPot logo. *“Your mates won’t hear the end of it.”* One last button hit and out. |
+| 0.0–3.4 | What it is | **PREDICT THE SCORE. BEAT YOUR MATES.** |
+| 3.4–7.7 | 1 · Pick the score | The Matchday card rises in: Arsenal v Chelsea, starting at the app’s default 1–1. One tap makes it **2–1**. “Lock in my picks” → “✓ Picks saved”. |
+| 7.7–11.0 | Your mate | The card shrinks into **YOUR PICK 2–1**, and **JACK’S PICK 1–1** slides in beside it. *“‘2–1? You’re having a laugh.’ — Jack”* |
+| 11.0–14.4 | 2 · Locked at kick-off | A green wipe and a whistle. Both padlocks close: **KICK-OFF. PICKS LOCKED.** Then the rules: **EXACT SCORE +3 POINTS**, **RIGHT RESULT +1 POINT**. |
+| 14.4–18.2 | 3 · Follow it live | Push into the stadium: **live 1–1, 89th minute**, beside your 2–1. The group table shows *if it ends 1–1*: Jack top on 19 (his dashed **+3**), you second on 15. |
+| 18.2–20.2 | Tension | The music drops out and the clock ticks faster against a heartbeat. The camera tightens on 1–1 v 2–1. |
+| 20.2–25.0 | 4 · Top the table | **GOAL!** 1–1 flips to 2–1. The live score slides onto your pick: **+3 EXACT SCORE**. Full-time whistle. Jack’s +3 falls away (16), your +3 lands (18), you go top and the crown moves to you. |
+| 25.0–29.9 | Punchline | Your row, crowned. *“You’ll be* **UNBEARABLE.**” The crown flies to centre and becomes the KickPot logo: *“Predict the score. Beat your mates.”* |
 
 ### Scoring continuity (staged demo data)
 
 Rules from the repo: exact score **+3**, correct result **+1**, otherwise 0. The two don’t stack.
 
-| Player | Pick | Before | Live at 1–1 (projected) | Full time 2–1 (awarded) |
+| Player | Pick | Before | If it ends 1–1 | Full time 2–1 |
 |---|---|---|---|---|
-| Jack | 1–1 | 16 | +3 → **19** (1st) | 0 → **16** (3rd) |
-| Sam | 2–0 | 16 | 0 → 16 (2nd) | +1 → **17** (2nd) |
-| You | 2–1 | 15 | 0 → 15 (3rd) | +3 → **18** (1st) |
+| Jack | 1–1 | 16 | +3 → **19** (1st) | 0 → **16** (2nd) |
+| You | 2–1 | 15 | 0 → 15 (2nd) | +3 → **18** (1st) |
 
-Projected points are shown as dashed **LIVE** chips under a “LIVE · PROJECTED” header. Awarded points are solid chips under “FULL TIME · AWARDED”. There are no ties at any point. The data lives in `src/timeline.js`, and `film.js` calculates every number from it.
+During the match, points that depend on the final score are shown as a dashed chip under an “IF IT ENDS 1–1” header. Awarded points are solid chips under “FULL TIME”. There are no ties at any point. The data lives in `src/timeline.js`, and `film.js` calculates every number from it.
 
 ## Project layout
 
@@ -33,7 +34,7 @@ Projected points are shown as dashed **LIVE** chips under a “LIVE · PROJECTED
 index.html        Preview player: play / scrub / arrow keys step frames / motion-blur toggle
 render.mjs        Renders the MP4 (Chromium via Playwright → PNG frames → FFmpeg)
 src/timeline.js   Every cue time (125 BPM grid), match clock, players, picks, scoring
-src/film.js       All picture: scenes, layout, typography, motion, rewind/FF effects
+src/film.js       All picture: scenes, layout, typography, motion, transitions
 src/audio.js      All sound: music, crowd, whistles, clicks, ticks, mastering (Web Audio)
 assets/           stadium.jpg and crown.svg (from the app repo); fonts (SIL OFL)
 out/              Finished film
@@ -45,7 +46,7 @@ build/            Render intermediates (soundtrack.wav, stills) — safe to dele
 Open `index.html` in Chrome. Some browsers block fonts loaded from `file://`. If that happens, serve the folder instead: `python3 -m http.server` and visit `http://localhost:8000`.
 
 - **Retime anything:** edit `src/timeline.js`. Picture and sound both read from it, so they stay in sync.
-- **Change copy:** search `src/film.js` for the line, e.g. `UNBEARABLE.` or `screenshotted`.
+- **Change copy:** search `src/film.js` for the line, e.g. `UNBEARABLE.` or `PREDICT THE SCORE.`
 - **Change names, picks or points:** edit `PLAYERS` in `src/timeline.js`. Rankings, chips and the crown follow the numbers. Check the order still tells the story.
 - **Change the music:** `src/audio.js` → *ARRANGEMENT*. `LEVEL` in `renderSoundtrack()` sets overall loudness.
 
@@ -54,7 +55,7 @@ Open `index.html` in Chrome. Some browsers block fonts loaded from `file://`. If
 Needs Node 18+, Playwright with Chromium (`npm i playwright && npx playwright install chromium`) and FFmpeg on `PATH`.
 
 ```sh
-node render.mjs                  # final: 5-sample motion blur → out/KickPot_Trailer.mp4 (~8 min)
+node render.mjs                  # final: 5-sample motion blur → out/KickPot_Trailer.mp4 (~10 min)
 node render.mjs --samples 1      # quick draft without motion blur
 node render.mjs --stills --at 2.0,9.5,12.5   # check individual frames → build/stills
 node render.mjs --audio-only     # just the soundtrack → build/soundtrack.wav
@@ -64,7 +65,7 @@ Mastered to about −14 LUFS integrated, true peak below −1 dBTP.
 
 ## Honesty notes
 
-- The interface elements are simplified motion graphics based on the app’s Matchday and Live table designs. They are not screen recordings, and they are not pixel-exact. Button and status copy (“Lock in my picks”, “✓ Picks saved”, “Locked”, “Locks in 2h”) and the 1–1 default draft come from `matchday-reference-live.js`.
+- The interface elements are simplified motion graphics based on the app’s Matchday and Live table designs. They are not screen recordings, and they are not pixel-exact. Button and status copy (“Lock in my picks”, “✓ Picks saved”, “Locks in 2h”) and the 1–1 default draft come from `matchday-reference-live.js`.
 - The match, players, picks and points are illustrative.
 - All music and sound effects are synthesised in `src/audio.js`. There are no samples, licensed music or voices.
 - Fonts: Barlow / Barlow Condensed and Instrument Serif, both under the SIL Open Font License (licences in `assets/fonts`).

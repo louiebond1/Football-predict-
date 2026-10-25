@@ -1,8 +1,7 @@
 // KickPot trailer — sound.
 // An original soundtrack and sound design, synthesised with the Web Audio API in an
 // OfflineAudioContext. No samples or licensed music. Every cue reads its time from timeline.js.
-// Pass 1 renders the film's sound in order; pass 2 builds the rewind / fast-forward from
-// reversed and sped-up slices of pass 1, then masters the result.
+// Pass 1 renders the film's sound; pass 2 masters it.
 (function () {
   const { T, B, DUR, CLOCK } = window.KP_TIMELINE;
   const SR = 48000;
@@ -162,11 +161,11 @@
       }
     }
     const cg = crowdG.gain, cf = crowdLP.frequency;
-    cg.setValueAtTime(0, 0); cg.setValueAtTime(0, T.live - 0.01); cg.linearRampToValueAtTime(0.3, T.live + 0.08);
+    cg.setValueAtTime(0, 0); cg.setValueAtTime(0, T.toLive); cg.linearRampToValueAtTime(0.3, T.live + 0.1);
     cg.setValueAtTime(0.3, T.tension); cg.linearRampToValueAtTime(0.05, T.tension + 0.15); cg.linearRampToValueAtTime(0.16, T.goal - 0.06);
-    cg.linearRampToValueAtTime(0.05, T.goal - 0.01); cg.linearRampToValueAtTime(1.25, T.goal + 0.08); cg.setValueAtTime(1.25, T.goal + 0.7);
-    cg.linearRampToValueAtTime(0.55, T.ft); cg.linearRampToValueAtTime(0.75, T.ft + 0.6); cg.linearRampToValueAtTime(0.3, T.rew - 0.05); cg.linearRampToValueAtTime(0, T.rew);
-    cg.setValueAtTime(0, T.back); cg.linearRampToValueAtTime(0.22, T.back + 0.2); cg.setValueAtTime(0.22, T.wipe); cg.linearRampToValueAtTime(0, T.logo + 0.4);
+    cg.linearRampToValueAtTime(0.05, T.goal - 0.01); cg.linearRampToValueAtTime(1.2, T.goal + 0.08); cg.setValueAtTime(1.2, T.goal + 0.7);
+    cg.linearRampToValueAtTime(0.5, T.ft); cg.linearRampToValueAtTime(0.7, T.ft + 0.6); cg.linearRampToValueAtTime(0.25, T.punch + 0.3);
+    cg.setValueAtTime(0.25, T.wipe); cg.linearRampToValueAtTime(0, T.logo + 0.4);
     cf.setValueAtTime(3800, 0); cf.setValueAtTime(3800, T.tension); cf.exponentialRampToValueAtTime(650, T.tension + 0.25); cf.exponentialRampToValueAtTime(1400, T.goal - 0.02);
     cf.exponentialRampToValueAtTime(6500, T.goal + 0.03);
 
@@ -186,26 +185,39 @@
       }
     }
 
-    // 1. The challenge
-    kick(0, 1.3); boom(0, 0.9); crash(0, 1); stab(0, [50, 57, 62, 66], 1.4, 0.5, 2500); bass(0, 26, 0.5, 1.2);
-    for (let i = 1; i < 8; i++) { const t = i * B; if (i % 2 === 0) kick(t, 0.9); hat(t + B / 2, 0.7, true); hat(t, 0.4); }
-    clap(T.q, 1.1); stab(T.q, [69, 74, 78], 0.8, 0.16, 5000);
-    bwomp(T.laugh, 1.2);
-    hat(T.jack, 0.8); clap(T.jack + B / 2, 0.5);
-    whoosh(T.sweep - 0.05, 0.36, 0.9, false);
-    lockClunk(T.lock, 1.1);
-    for (let i = 0; i < 4; i++) snare(T.lock + 0.12 + i * B / 4, 0.4 + i * 0.2);
+    // 1. What the game is
+    kick(T.title1, 1.2); boom(T.title1, 0.7); crash(T.title1, 0.8); stab(T.title1, [50, 57, 62, 66], 1.2, 0.45, 2500); bass(T.title1, 26, 0.45, 1.1);
+    kick(T.title2, 1.1); stab(T.title2, [57, 62, 66, 69], 1.2, 0.35, 3000); clap(T.title2, 0.8);
+    groove(T.title2 + B, T.toPick, { stabs: false, bass: false, clap: false });
+    whoosh(T.toPick, T.pick - T.toPick + 0.1, 0.8, true);
 
-    // 2. The situation: full groove + crowd
+    // 2. Pick the score: light, playful, tactile clicks
+    groove(T.pick, T.toRival, { stabs: false, clap: false, open: false, bass: false, pluck: true, kickV: 0.75 });
+    uiClick(T.tap, 1000, 1.3);
+    uiClick(T.save, 700, 1); bell(T.save + 0.04, [79, 86], 0.9, 0.09);
+
+    // 3. Your mate: groove with bass, a snare on "2–1?", a sarcastic bass drop on "laugh"
+    whoosh(T.toRival, T.rival - T.toRival, 0.6, false);
+    groove(T.rival, T.toKO, { stabs: false, clap: true, open: false });
+    snare(T.q1, 1); stab(T.q1, [69, 74, 78], 0.7, 0.14, 5000);
+    bwomp(T.q2 + 0.24, 1.1);
+
+    // 4. Kick-off: whistle, padlocks, full groove; a ding for each scoring rule
+    whoosh(T.toKO, T.ko - T.toKO, 0.9, true);
+    whistle(T.ko, 0.5, 0.9); lockClunk(T.ko + 0.02, 1.2); kick(T.ko, 1.2); crash(T.ko, 0.7); stab(T.ko, [62, 66, 69], 1, 0.3);
+    groove(T.ko + B, T.toLive, { stabs: true });
+    bell(T.rule1, [81, 86], 0.8, 0.06); bell(T.rule2, [78], 0.7);
+    whoosh(T.toLive - 0.1, 0.36, 0.9, true);
+
+    // 5. Live: crowd, full groove, quiet clock ticks
     crash(T.live, 0.9); kick(T.live, 1.2); boom(T.live, 0.5);
     groove(T.live, T.tension - B, { stabs: true });
-    for (let i = 0; i < 8; i++) snare(T.tension - B + i * B / 8, 0.3 + i * 0.09);
+    whoosh(T.table - 0.12, 0.3, 0.6);
+    for (let i = 0; i < 8; i++) snare(T.tension - B + i * B / 8, 0.25 + i * 0.08);
     kick(T.tension - B, 1); kick(T.tension - B / 2, 1);
-    whoosh(T.table - 0.15, 0.3, 0.7);
-    stab(T.joke, [74, 78], 0.5, 0.1, 6000); stab(T.joke + B * 0.75, [73, 76], 0.5, 0.1, 6000);
     for (const [t0] of CLOCK) if (t0 < T.tension) tick(t0, 0.35);
 
-    // 3. The tension: music cut, clock, heartbeat, drone
+    // 6. Tension: music cut, clock, heartbeat, drone, riser
     for (const [t0] of CLOCK) if (t0 >= T.tension && t0 < T.goal) { tick(t0, 1.7); heartbeat(t0 + B / 2, 0.8); }
     { const o = osc('sawtooth', midi(26), T.tension, T.goal - T.tension), lp = BQ('lowpass', 160, 3), g = G(0);
       o.frequency.setValueAtTime(midi(26), T.tension); o.frequency.exponentialRampToValueAtTime(midi(28), T.goal - 0.05);
@@ -217,36 +229,28 @@
       g.gain.setValueAtTime(0, T.goal - 1.2); g.gain.exponentialRampToValueAtTime(0.3, T.goal - 0.07); g.gain.linearRampToValueAtTime(0, T.goal - 0.045);
       n.connect(bp); bp.connect(g); g.connect(sfx); }
 
-    // 4. The goal and payoff
+    // 7. Goal and payoff
     kick(T.goal, 1.5); boom(T.goal, 1.3); crash(T.goal, 1.4);
     stab(T.goal, [62, 66, 69, 74], 1.6, 0.6, 3000); bass(T.goal, 26, 0.6, 1.4);
     { const n = noise(T.goal, 0.5, white), lp = BQ('lowpass', 2500), g = G(0); perc(g, T.goal, 0.5, 0.45, 0.003); n.connect(lp); lp.connect(g); g.connect(sfx); }
-    groove(T.goal + B, T.rew, { stabs: true, kickV: 1.05 });
+    kick(T.flip, 0.9); snare(T.flip, 0.6);
+    groove(T.goal + 2 * B, T.punch, { stabs: true, kickV: 1.05 });
     whoosh(T.merge, T.exact - T.merge, 0.8, true);
-    bell(T.exact, [74, 78, 81, 86], 1.3, 0.05); kick(T.exact, 0.8); lockClunk(T.exact, 0.6);
+    bell(T.exact, [74, 78, 81, 86], 1.3, 0.05); lockClunk(T.exact, 0.6);
     whistle(T.ft, 0.15, 1); whistle(T.ft + 0.19, 0.15, 1); whistle(T.ft + 0.38, 0.6, 1);
     for (let i = 0; i < 4; i++) tick(T.award + i * 0.08, 0.5, i % 2 === 0);
     bell(T.award, [86, 90], 0.8, 0.07);
-    whoosh(T.reorder - 0.05, 0.38, 1.1, true);
+    whoosh(T.swap - 0.05, 0.4, 1, true);
     sparkle(T.crownLift, T.crownLand - T.crownLift, 1);
     bell(T.crownLand, [62, 69, 74, 78, 81], 1.4, 0.035); crash(T.crownLand, 0.7);
 
-    // 5. How you called it — lighter groove, tactile clicks
-    groove(T.pick, T.ko, { stabs: false, clap: false, open: false, bass: false, pluck: true, kickV: 0.8 });
-    uiClick(T.tap1, 950, 1.2); uiClick(T.tap2, 1150, 1.2); uiClick(T.tap3, 760, 1.2);
-    uiClick(T.save, 700, 1); bell(T.save + 0.04, [79, 86], 0.9, 0.09);
-    whistle(T.ko, 0.5, 0.9); lockClunk(T.ko + 0.02, 1.2); kick(T.ko, 1.2); crash(T.ko, 0.6);
-    groove(T.ko + B, T.ff, { stabs: true, pluck: false });
-    stab(T.ko, [62, 66, 69], 1, 0.3);
-
-    // 6. The punchline
-    kick(T.back, 1.2); crash(T.back, 0.9); stab(T.back, [62, 66, 69, 74], 1, 0.25);
-    bass(T.back, 26, T.unbear2 - T.back, 1); // stop-time: everything holds for "You'll be…"
-    kick(T.unbear2, 1.5); boom(T.unbear2, 1); crash(T.unbear2, 1.2); clap(T.unbear2, 1.2); stab(T.unbear2, [59, 62, 67, 71], 1.5, 0.45, 3200);
-    groove(T.unbear2 + B, T.wipe, { stabs: false });
-    [[T.ego1, [69, 74]], [T.ego2, [74, 78]], [T.ego3, [78, 81, 86]]].forEach(([t0, n], i) => { stab(t0, n, 0.9 + i * 0.3, 0.32, 3500 + i * 1500); });
+    // 8. Punchline and logo
+    kick(T.punch, 1.1); crash(T.punch, 0.7);
+    bass(T.unbear1, 26, T.unbear2 - T.unbear1, 1); // a held breath on "You'll be…"
+    kick(T.unbear2, 1.4); boom(T.unbear2, 0.9); crash(T.unbear2, 1); clap(T.unbear2, 1.1); stab(T.unbear2, [59, 62, 67, 71], 1.4, 0.45, 3200);
+    groove(T.unbear2 + B, T.wipe, { stabs: true });
     whoosh(T.wipe, T.logo - T.wipe, 1, true);
-    kick(T.logo, 1.4); boom(T.logo, 1.1); crash(T.logo, 1.2); stab(T.logo, [62, 66, 69, 74, 78], 1.5, 0.7, 2800); bell(T.logo + 0.02, [74, 81, 86], 1, 0.04);
+    kick(T.logo, 1.3); boom(T.logo, 1); crash(T.logo, 1.1); stab(T.logo, [62, 66, 69, 74, 78], 1.4, 0.7, 2800); bell(T.logo + 0.02, [74, 81, 86], 1, 0.04);
     groove(T.logo + B, T.sting, { stabs: false, clap: true, kickV: 0.8, open: false });
     kick(T.sting, 1.3); crash(T.sting, 1); stab(T.sting, [50, 62, 66, 69, 74], 1.6, 0.8, 2600); bass(T.sting, 26, 0.8, 1.2); bell(T.sting + 0.02, [86], 0.7);
 
@@ -256,12 +260,6 @@
     for (const t of ducks) { dg.setValueAtTime(1, Math.max(0, t - 0.005)); dg.linearRampToValueAtTime(0.4, t + 0.004); dg.linearRampToValueAtTime(1, t + 0.2); }
 
     return ctx.startRendering();
-  }
-
-  function sliceBuffer(ctx, src, t0, t1, reverse) {
-    const a = Math.floor(t0 * SR), b = Math.floor(t1 * SR), out = ctx.createBuffer(2, b - a, SR);
-    for (let c = 0; c < 2; c++) { const s = src.getChannelData(c).subarray(a, b), d = out.getChannelData(c); if (reverse) for (let i = 0; i < d.length; i++) d[i] = s[s.length - 1 - i]; else d.set(s); }
-    return out;
   }
 
   async function renderSoundtrack() {
@@ -276,26 +274,7 @@
     out.gain.setValueAtTime(LEVEL * 0.6, T.goal - 0.005); out.gain.linearRampToValueAtTime(LEVEL, T.goal);
     bus.connect(comp); comp.connect(shaper); shaper.connect(out); out.connect(ctx.destination);
 
-    // main film audio with gaps for the tape effects
-    const main = ctx.createBufferSource(); main.buffer = stem; const mg = ctx.createGain(); main.connect(mg); mg.connect(bus); main.start(0);
-    const g = mg.gain; g.setValueAtTime(1, 0);
-    for (const [a, b] of [[T.rew, T.pick], [T.ff, T.back]]) { g.setValueAtTime(1, a - 0.012); g.linearRampToValueAtTime(0, a); g.setValueAtTime(0, b - 0.004); g.linearRampToValueAtTime(1, b); }
-
-    // tape effects: rewind plays the last few seconds backwards at speed, fast-forward plays the goal forwards at speed
-    function tapeSeg(at, until, srcA, srcB, reverse) {
-      const buf = sliceBuffer(ctx, stem, srcA, srcB, reverse), s = ctx.createBufferSource(); s.buffer = buf;
-      const rate = (srcB - srcA) / (until - at); s.playbackRate.value = rate;
-      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200;
-      const sg = ctx.createGain(); sg.gain.setValueAtTime(0, at); sg.gain.linearRampToValueAtTime(0.75, at + 0.02); sg.gain.setValueAtTime(0.75, until - 0.03); sg.gain.linearRampToValueAtTime(0, until);
-      s.connect(lp); lp.connect(sg); sg.connect(bus); s.start(at); s.stop(until);
-      // motor whine
-      const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(reverse ? 900 : 300, at); o.frequency.exponentialRampToValueAtTime(reverse ? 300 : 1100, until);
-      const ol = ctx.createBiquadFilter(); ol.type = 'bandpass'; ol.frequency.value = 1500; ol.Q.value = 2;
-      const og = ctx.createGain(); og.gain.setValueAtTime(0, at); og.gain.linearRampToValueAtTime(0.05, at + 0.05); og.gain.linearRampToValueAtTime(0, until);
-      o.connect(ol); ol.connect(og); og.connect(bus); o.start(at); o.stop(until);
-    }
-    tapeSeg(T.rew, T.pick, T.goal - 0.6, T.rew, true);
-    tapeSeg(T.ff, T.back, T.goal - 0.2, T.crownLand + 0.4, false);
+    const main = ctx.createBufferSource(); main.buffer = stem; main.connect(bus); main.start(0);
 
     const buf = await ctx.startRendering();
     // short fade at the very end

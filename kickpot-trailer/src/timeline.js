@@ -1,75 +1,73 @@
 // KickPot trailer — master timeline.
 // Every visual cue (film.js) and every sound cue (audio.js) reads its time from here,
 // so retiming a beat in one place keeps picture and sound in sync.
-// Grid: 125 BPM, one beat = 0.48 s. Times are seconds.
+// Grid: 125 BPM, one beat = 0.48 s, one bar = 1.92 s. Times are seconds.
+// The story runs in order, one idea per shot:
+//   what the game is → you pick 2–1 → your mate laughs → picks lock + how points work
+//   → live 1–1 late on, mate top → tension → goal, exact score → you top the table → logo
 (function () {
   const BPM = 125, B = 60 / BPM;
-  const FPS = 30, DUR = 22.0;
+  const FPS = 30, DUR = 29.9;
 
   const T = {
-    // 1. The challenge
-    slam: 0.00,        // giant 2–1 lands
-    tag: 0.20,         // "YOUR PREDICTION" label
-    q: 0.72,           // "?" — the mate questions it
-    quote1: 1.20,      // "You're having a"
-    laugh: 1.56,       // "laugh."
-    jack: 2.04,        // attribution: Jack, who went 1–1
-    sweep: 2.88,       // quote swept away, 2–1 becomes a pick card
-    lock: 3.36,        // pick card padlock closes
-    // 2. The situation
-    live: 3.84,        // cut to live match 1–1, 89th minute
-    table: 4.80,       // group table slides in, Jack top, you third
-    joke: 5.76,        // "Jack's already screenshotted it."
-    // 3. The tension
-    tension: 7.20,     // music cuts, clock ticks, camera tightens
-    // 4. The goal and payoff
-    goal: 9.36,        // GOAL. 1–1 becomes 2–1
-    flip: 9.56,        // score digit flips under the GOAL type
-    merge: 9.84,       // live 2–1 slides onto your 2–1
-    exact: 10.32,      // they lock together: +3 exact score
-    ft: 10.80,         // full-time whistle, table returns
-    award: 11.04,      // points awarded
-    reorder: 11.28,    // your row charges to first
-    crownLift: 11.52,  // crown leaves Jack
-    crownLand: 12.24,  // crown lands on you
-    // 5. How you called it (rewind)
-    rew: 13.20,        // rewind starts
-    pick: 13.68,       // matchday card, before kick-off — "PICK IT."
-    tap1: 13.92,       // home +  (1–1 → 2–1)
-    tap2: 14.16,       // home +  (→ 3–1)
-    tap3: 14.40,       // home −  (→ 2–1, second thoughts)
-    save: 14.64,       // "Lock in my picks" → "✓ Picks saved" — "CALL IT."
-    ko: 15.60,         // kick-off: prediction locked — "OWN IT."
-    ff: 16.56,         // fast-forward back to the table
-    back: 17.04,       // back at the top of the table
-    // 6. The punchline
-    unbear1: 17.28,    // "You'll be"
-    unbear2: 17.52,    // "UNBEARABLE."
-    ego1: 18.00,       // crown grows (big head)
-    ego2: 18.48,
-    ego3: 18.96,
-    wipe: 19.20,       // crown flies to centre, paper wipe
-    logo: 19.44,       // KickPot lockup
-    line: 19.92,       // "Your mates won't hear the end of it."
-    sting: 21.36,      // final button hit
+    // 1. What the game is
+    title1: 0.00,      // "PREDICT THE SCORE."
+    title2: 0.96,      // "BEAT YOUR MATES."
+    toPick: 2.88,      // title lifts away, Matchday card rises in
+    // 2. Pick the score
+    pick: 3.36,        // step 1 label
+    tap: 4.80,         // home + : 1–1 → 2–1
+    save: 5.76,        // "Lock in my picks" → "✓ Picks saved"
+    // 3. Your mate
+    toRival: 7.20,     // Matchday card shrinks into your pick card
+    rival: 7.68,       // Jack's pick slides in beside yours
+    q1: 8.64,          // "‘2–1?"
+    q2: 9.36,          // "You're having a laugh.’"
+    // 4. Kick-off: picks lock, how points work
+    toKO: 11.04,       // green wipe
+    ko: 11.52,         // padlock + whistle: "KICK-OFF. PICKS LOCKED."
+    rule1: 12.24,      // exact score +3
+    rule2: 12.72,      // right result +1
+    toLive: 14.16,     // push through to the stadium
+    // 5. Live
+    live: 14.40,       // 1–1, 89th minute, beside your 2–1
+    table: 15.36,      // group table: Jack top (if it ends 1–1), you second
+    // 6. Tension
+    tension: 18.24,    // music drops, clock ticks, camera tightens
+    // 7. Goal and payoff
+    goal: 20.16,       // GOAL
+    flip: 20.52,       // 1–1 becomes 2–1
+    merge: 20.88,      // live 2–1 slides onto your 2–1
+    exact: 21.36,      // exact score: +3
+    ft: 22.08,         // full-time whistle, table returns
+    award: 22.56,      // points awarded
+    swap: 23.04,       // you go top
+    crownLift: 23.28,  // crown leaves Jack
+    crownLand: 24.00,  // crown lands on you
+    // 8. Punchline and logo
+    punch: 24.96,      // your row, big
+    unbear1: 25.20,    // "You'll be"
+    unbear2: 25.44,    // "UNBEARABLE."
+    wipe: 27.12,       // crown flies to centre, paper wipe
+    logo: 27.36,       // KickPot lockup
+    line: 27.84,       // "Predict the score. Beat your mates."
+    sting: 29.28,      // final hit
     end: DUR,
   };
 
-  // Match clock: each entry is [time it appears, text]. Ticks speed up in the tension beat.
+  // Match clock: [time it appears, text]. Ticks speed up in the tension beat.
   const CLOCK = [
-    [3.84, '89:30'], [4.80, '89:31'], [5.76, '89:32'], [6.72, '89:33'],
-    [7.44, '89:34'], [7.92, '89:35'], [8.40, '89:36'], [8.88, '89:37'], [9.36, '89:38'],
+    [14.40, '89:41'], [15.36, '89:42'], [16.32, '89:43'], [17.28, '89:44'],
+    [18.24, '89:45'], [18.72, '89:46'], [19.20, '89:47'], [19.68, '89:48'], [20.16, '89:49'],
   ];
 
   // Staged demo data — illustrative, not real users or results.
   // Scoring (repo rules): exact score +3, correct result +1, otherwise 0.
-  //            pick   points before this match   projected at 1–1   awarded at 2–1 FT
-  // Jack       1–1    16                          +3 → 19            0  → 16
-  // Sam        2–0    16                          0  → 16            +1 → 17
-  // You        2–1    15                          0  → 15            +3 → 18
+  //          pick   points before   if it ends 1–1   full time 2–1
+  // Jack     1–1    16              +3 → 19 (1st)     0 → 16 (2nd)
+  // You      2–1    15              0  → 15 (2nd)     +3 → 18 (1st)
   const PLAYERS = [
     { id: 'jack', name: 'JACK', pick: [1, 1], base: 16 },
-    { id: 'sam',  name: 'SAM',  pick: [2, 0], base: 16 },
     { id: 'you',  name: 'YOU',  pick: [2, 1], base: 15 },
   ];
   const FIXTURE = { home: 'Arsenal', away: 'Chelsea', kickoff: '15:00' };

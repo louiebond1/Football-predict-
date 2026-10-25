@@ -30,7 +30,7 @@ const { FPS, DUR } = await page.evaluate(() => window.KP_TIMELINE);
 
 if (args.includes('--stills')) {
   const dir = path.join(root, 'build', 'stills'); fs.mkdirSync(dir, { recursive: true });
-  const times = (arg('--at', '') || '0.1,0.9,1.4,1.9,2.4,3.1,3.6,4.2,5.4,6.4,7.6,8.9,9.45,9.7,10.1,10.5,11.0,11.4,11.9,12.6,13.4,13.8,14.3,14.9,15.9,16.3,16.8,17.4,17.8,18.7,19.3,19.6,20.8,22.5').split(',').map(Number);
+  const times = (arg('--at', '') || '0.5,1.5,3.6,4.9,6.3,7.45,8.2,9.9,11.3,11.8,13.2,14.3,14.9,16.5,19.0,20.3,20.7,21.6,22.4,22.8,23.6,24.5,25.3,26.5,27.3,28.5').split(',').map(Number);
   for (const t of times) {
     await page.evaluate(([t, s]) => window.KP.draw(t, s), [t, samples]);
     await page.screenshot({ path: path.join(dir, `t${t.toFixed(2).padStart(5, '0')}.png`), clip });
