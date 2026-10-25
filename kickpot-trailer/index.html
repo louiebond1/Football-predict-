@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KickPot Trailer</title>
+<style>
+  :root { --paper:#f4f1e8; --ink:#131a16; --green:#137a49; --gold:#a58a48; }
+  html, body { margin:0; background:#0b0f0d; color:var(--paper); font:500 14px/1.4 system-ui, sans-serif; }
+  body.render { background:#000; overflow:hidden; }
+  body.render #ui { display:none; }
+  body.render canvas { position:fixed; left:0; top:0; width:1920px; height:1080px; }
+  #wrap { max-width:1280px; margin:16px auto; padding:0 16px; }
+  canvas { display:block; width:100%; aspect-ratio:16/9; background:#000; }
+  #ui { display:flex; gap:12px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+  button { background:var(--green); color:var(--paper); border:0; border-radius:20px; padding:8px 16px; font:inherit; font-weight:700; cursor:pointer; }
+  input[type=range] { flex:1; min-width:200px; accent-color:var(--gold); }
+  #time { font-variant-numeric:tabular-nums; min-width:110px; }
+  label { display:flex; gap:6px; align-items:center; opacity:.8; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div id="ui">
+    <button id="play">Loading…</button>
+    <input id="scrub" type="range" min="0" max="22" step="0.001" value="0">
+    <span id="time">0.00 s</span>
+    <label><input id="blur" type="checkbox"> Motion blur</label>
+  </div>
+</div>
+<script src="src/timeline.js"></script>
+<script src="src/film.js"></script>
+<script src="src/audio.js"></script>
+<script>
+(async () => {
+  const render = location.search.includes('render');
+  if (render) document.body.classList.add('render');
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  await KP_FILM.load();
+  const { DUR } = KP_TIMELINE;
+
+  // hooks used by render.mjs
+  window.KP = {
+    draw: (t, samples = 1) => { KP_FILM.drawFrame(ctx, t, { samples }); },
+    wav: async () => {
+      const buf = await KP_AUDIO.renderSoundtrack(), bytes = KP_AUDIO.toWav(buf);
+      let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return btoa(s);
+    },
+  };
+  window.KP_READY = true;
+  if (render) return;
+
+  // interactive preview
+  const play = document.getElementById('play'), scrub = document.getElementById('scrub'), time = document.getElementById('time'), blur = document.getElementById('blur');
+  scrub.max = DUR;
+  let t = 0, playing = false, ac = null, src = null, startAt = 0, buffer = null;
+  const draw = () => { KP_FILM.drawFrame(ctx, t, { samples: blur.checked ? 4 : 1 }); time.textContent = t.toFixed(2) + ' s'; scrub.value = t; };
+  draw();
+  play.textContent = 'Building sound…';
+  buffer = await KP_AUDIO.renderSoundtrack();
+  play.textContent = 'Play';
+  function stop() { if (src) { src.stop(); src = null; } playing = false; play.textContent = 'Play'; }
+  play.onclick = () => {
+    if (playing) return stop();
+    ac = ac || new AudioContext();
+    if (t >= DUR - 0.05) t = 0;
+    src = ac.createBufferSource(); src.buffer = buffer; src.connect(ac.destination); src.start(0, t);
+    startAt = ac.currentTime - t; playing = true; play.textContent = 'Pause';
+    const loop = () => { if (!playing) return; t = Math.min(DUR, ac.currentTime - startAt); draw(); if (t >= DUR) stop(); else requestAnimationFrame(loop); };
+    loop();
+  };
+  scrub.oninput = () => { const was = playing; if (was) stop(); t = +scrub.value; draw(); };
+  blur.onchange = draw;
+  addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); play.click(); } if (e.code === 'ArrowRight') { t = Math.min(DUR, t + 1 / 30); draw(); } if (e.code === 'ArrowLeft') { t = Math.max(0, t - 1 / 30); draw(); } });
+})();
+</script>
+</body>
+</html>
