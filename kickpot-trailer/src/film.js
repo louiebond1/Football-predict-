@@ -3,7 +3,7 @@
 // The film runs in story order, one idea per shot, with step labels (1–4) explaining the game.
 // All staged data (names, picks, points) comes from timeline.js.
 (function () {
-  const { T, FPS, DUR, CLOCK, PLAYERS, FIXTURE, points } = window.KP_TIMELINE;
+  const { T, FPS, DUR, CLOCK, PLAYERS, FIXTURE, MATES, points } = window.KP_TIMELINE;
   const W = 1920, H = 1080;
 
   // KickPot identity: cream, ink, football green, muted gold (brand-pass1.css).
@@ -150,9 +150,12 @@
 
   // ---------- camera & shake (kept gentle: only the big moments hit) ----------
   const IMPACTS = [
-    [T.title1, 10], [T.title2, 6], [T.ko, 10], [T.live, 8], [T.goal, 30], [T.flip, 12],
-    [T.exact, 10], [T.crownLand, 10], [T.unbear2, 14], [T.logo, 8], [T.sting, 5],
+    [T.title1, 12], [T.title1b, 6], [T.title2, 10], [T.title2b, 6], [T.ko, 12], [T.live, 10], [T.goal, 34], [T.flip, 14],
+    [T.exact, 12], [T.crownLand, 14], [T.jackLine, 6], [T.unbear2, 18], [T.logo, 10], [T.cta, 6], [T.sting, 6],
   ];
+  // a quick zoom "punch" on each cut and big hit, so every scene lands on the beat
+  const PUNCHES = [T.title1, T.title1b, T.title2, T.title2b, T.pick, T.rival, T.ko, T.live, T.goal, T.flip, T.exact, T.ft, T.crownLand, T.punch, T.unbear2, T.logo, T.sting];
+  const punchAt = t => PUNCHES.reduce((s, t0) => s + (t >= t0 && t - t0 < 0.5 ? 0.045 * Math.exp(-(t - t0) * 9) : 0), 0);
   function shake(t) {
     let x = 0, y = 0, r = 0;
     for (const [t0, a] of IMPACTS) {
@@ -164,7 +167,7 @@
   }
   function camera(ctx, t, s = 1, cx = W / 2, cy = H / 2) {
     const k = shake(t);
-    ctx.translate(W / 2 + k.x, H / 2 + k.y); ctx.rotate(k.r); ctx.scale(s, s); ctx.translate(-cx, -cy);
+    ctx.translate(W / 2 + k.x, H / 2 + k.y); ctx.rotate(k.r); s *= 1 + punchAt(t); ctx.scale(s, s); ctx.translate(-cx, -cy);
   }
   // Big display line, vertically centred on y.
   function headline(ctx, s, x, y, size, color, o = {}) {
@@ -277,6 +280,22 @@
     ctx.restore();
   }
 
+  // Confetti: deterministic particles fired from (ox, oy) at time t0, falling under gravity.
+  function confetti(ctx, t, t0, ox, oy, o = {}) {
+    const d = t - t0, life = o.life || 2.2; if (d < 0 || d > life) return;
+    const r = rng(o.seed || 7), cols = [C.gold, '#f0cf7d', C.cream, '#43b873', C.green];
+    ctx.save(); ctx.globalAlpha *= 1 - P(d, life - 0.5, life);
+    for (let i = 0; i < (o.n || 90); i++) {
+      const a = (o.angle ?? -Math.PI / 2) + (r() - 0.5) * (o.spread || 2.6), sp = (o.speed || 1300) * (0.45 + r() * 0.7);
+      const spin = r() * 10 - 5, flutter = 4 + r() * 6, ph = r() * 6, w = 12 + r() * 14, h = 7 + r() * 7, col = cols[Math.floor(r() * cols.length)];
+      const k = (1 - Math.exp(-2.2 * d)) / 2.2;
+      const x = ox + Math.cos(a) * sp * k + Math.sin(d * 3 + ph) * 24, y = oy + Math.sin(a) * sp * k + 520 * d * d;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(ph + d * spin); ctx.scale(1, Math.cos(d * flutter + ph));
+      ctx.fillStyle = col; ctx.fillRect(-w / 2, -h / 2, w, h); ctx.restore();
+    }
+    ctx.restore();
+  }
+
   // =====================================================================
   // 1–2. What the game is, then you pick the score (paper)
   // =====================================================================
@@ -332,9 +351,25 @@
     if (out < 1) {
       ctx.save(); ctx.translate(0, -out * 900);
       crown(ctx, 960, 260, 130 * eBack(P(t, 0, 0.35), 2), { color: C.goldPaper });
-      const a1 = eExpo(P(t, T.title1, T.title1 + 0.35)), a2 = eExpo(P(t, T.title2, T.title2 + 0.35));
-      headline(ctx, 'PREDICT THE SCORE.', 960, 510, 210, C.ink, { scale: lerp(1.2, 1, a1), alpha: a1 * 2 });
-      if (t >= T.title2) headline(ctx, 'BEAT YOUR MATES.', 960, 740, 210, C.green, { scale: lerp(1.2, 1, a2), alpha: a2 * 2 });
+      // each word slams in on the beat
+      const lines = [[[['PREDICT ', T.title1], ['THE SCORE.', T.title1b]], 510, C.ink], [[['BEAT ', T.title2], ['YOUR MATES.', T.title2b]], 740, C.green]];
+      for (const [parts, y, color] of lines) {
+        let x = 960 - measure(parts.map(p => p[0]).join(''), 210, F.disp) / 2;
+        for (const [w, t0] of parts) {
+          const ww = measure(w, 210, F.disp);
+          if (t >= t0) { const e = eExpo(P(t, t0, t0 + 0.3)); headline(ctx, w, x + ww / 2, y, 210, color, { scale: lerp(1.6, 1, e), alpha: e * 2 }); }
+          x += ww;
+        }
+      }
+      // your mates pop in around the title
+      const spots = [[300, 330, -0.12, C.ink], [1620, 320, 0.1, C.goldPaper], [330, 930, 0.08, C.goldPaper], [1600, 940, -0.09, C.ink]];
+      MATES.forEach((name, i) => {
+        const t0 = T.mates + i * 0.24; if (t < t0) return;
+        const [x, y, r, bg] = spots[i % spots.length], e = eBack(P(t, t0, t0 + 0.28), 2.6);
+        ctx.save(); ctx.translate(x, y + Math.sin((t - t0) * 3 + i) * 6); ctx.rotate(r);
+        pill(ctx, 0, 0, name, { size: 64, bg, color: C.cream, scale: e, font: F.disp, ls: 4 });
+        ctx.restore();
+      });
       ctx.restore();
     }
     // step 1: pick the score
@@ -531,10 +566,23 @@
     }
     ctx.restore(); // objA
 
+    // callback to Jack's line
+    const jl = eOut(P(t, T.jackLine, T.jackLine + 0.25));
+    if (jl > 0) text(ctx, 'Still laughing, Jack?', 960, 990 + (1 - jl) * 24, { size: 96, font: F.serif, color: C.cream, alpha: jl });
+
+    // celebrations: confetti cannons for the goal, a shower when the crown lands
+    confetti(ctx, t, T.goal, 120, 1150, { angle: -1.15, spread: 1.0, speed: 2600, n: 120, seed: 3, life: 2.6 });
+    confetti(ctx, t, T.goal, 1800, 1150, { angle: -1.99, spread: 1.0, speed: 2600, n: 120, seed: 5, life: 2.6 });
+    if (t >= T.crownLand) { const c = crownOnRow(slotRect(rowSlot('you', T.crownLand), tableOffset(T.crownLand))); confetti(ctx, t, T.crownLand, c.x, c.y, { speed: 1100, n: 70, seed: 9, life: 2.2 }); }
+
     // GOAL: one clean full-frame hit, then out of the way
     if (t >= T.goal && t < T.flip + 0.15) {
       const fl = 1 - P(t, T.goal, T.goal + 0.08);
       if (fl > 0) { ctx.fillStyle = `rgba(255,253,240,${fl})`; ctx.fillRect(-300, -300, W + 600, H + 600); }
+      // sunburst behind the word
+      ctx.save(); ctx.translate(960, 540); ctx.rotate((t - T.goal) * 0.6); ctx.fillStyle = 'rgba(243,241,232,.09)';
+      for (let i = 0; i < 16; i++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 1600, (i / 16) * Math.PI * 2, (i / 16 + 1 / 32) * Math.PI * 2); ctx.fill(); }
+      ctx.restore();
       const e = eExpo(P(t, T.goal, T.goal + 0.2)), ex = eIn(P(t, T.flip - 0.04, T.flip + 0.12));
       headline(ctx, 'GOAL!', 960, 540, 600, C.cream, { scale: lerp(1.5, 1, e) * (1 + ex * 0.5), alpha: Math.min(1, e * 3) * (1 - ex), ls: 6 });
     }
@@ -581,7 +629,8 @@
         x += lw;
       }
       const la = eOut(P(t, T.line, T.line + 0.4));
-      if (la > 0) text(ctx, 'Predict the score. Beat your mates.', 960, 900 + (1 - la) * 24, { size: 84, font: F.serif, color: C.ink, alpha: la });
+      if (la > 0) text(ctx, 'Predict the score. Beat your mates.', 960, 870 + (1 - la) * 24, { size: 84, font: F.serif, color: C.ink, alpha: la });
+      if (t >= T.cta) pill(ctx, 960, 985, 'START A GROUP WITH YOUR MATES', { size: 54, bg: C.green, color: C.cream, scale: eBack(P(t, T.cta, T.cta + 0.3), 2.4), ls: 5 });
     }
     const land = t >= T.logo ? t - T.logo : -1;
     const sq = land >= 0 ? 0.25 * Math.exp(-land * 8) * Math.cos(land * 34) : 0;

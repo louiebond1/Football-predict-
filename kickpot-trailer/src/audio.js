@@ -3,7 +3,7 @@
 // OfflineAudioContext. No samples or licensed music. Every cue reads its time from timeline.js.
 // Pass 1 renders the film's sound; pass 2 masters it.
 (function () {
-  const { T, B, DUR, CLOCK } = window.KP_TIMELINE;
+  const { T, B, DUR, CLOCK, MATES } = window.KP_TIMELINE;
   const SR = 48000;
 
   function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -169,6 +169,37 @@
     cf.setValueAtTime(3800, 0); cf.setValueAtTime(3800, T.tension); cf.exponentialRampToValueAtTime(650, T.tension + 0.25); cf.exponentialRampToValueAtTime(1400, T.goal - 0.02);
     cf.exponentialRampToValueAtTime(6500, T.goal + 0.03);
 
+    // ---- football fun: lead hook, crowd chant, stadium claps, "hey!", party popper ----
+    // The hook: a short terrace-style tune over two bars (beat offset, MIDI note, length in beats).
+    const HOOK = [[0, 74, 0.5], [0.5, 74, 0.5], [1, 76, 0.5], [1.5, 74, 0.5], [2, 71, 0.75], [3, 69, 1],
+                  [4, 74, 0.5], [4.5, 74, 0.5], [5, 76, 0.5], [5.5, 78, 0.5], [6, 81, 1.5]];
+    function lead(t, n, dur, v = 1) {
+      const lp = BQ('lowpass', 3200, 1), g = G(0), out = G(0.07 * v);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + 0.012); g.gain.setValueAtTime(1, t + dur - 0.05); g.gain.linearRampToValueAtTime(0, t + dur + 0.06);
+      lp.connect(g); g.connect(out); out.connect(music); send(out, 0.35);
+      const vib = osc('sine', 5.5, t, dur + 0.1), vg = G(0); vg.gain.setValueAtTime(0, t); vg.gain.linearRampToValueAtTime(midi(n) * 0.006, t + 0.25); vib.connect(vg);
+      for (const det of [-8, 8]) { const o = osc('sawtooth', midi(n), t, dur + 0.1); o.detune.value = det; vg.connect(o.frequency); o.connect(lp); }
+      const sq = osc('square', midi(n - 12), t, dur + 0.1), sg = G(0.3); vg.connect(sq.frequency); sq.connect(sg); sg.connect(lp);
+    }
+    function chant(t, n, dur, v = 1, vowel = [450, 800, 2600]) {
+      const out = G(0), bank = G(1); out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(0.5 * v, t + 0.05); out.gain.setValueAtTime(0.5 * v, t + dur - 0.05); out.gain.linearRampToValueAtTime(0, t + dur + 0.1);
+      out.connect(master); send(out, 0.5);
+      vowel.forEach((f, i) => { const b = BQ('bandpass', f, 6), bg = G([1, 0.6, 0.25][i]); bank.connect(b); b.connect(bg); bg.connect(out); });
+      for (let i = 0; i < 7; i++) { const o = osc('sawtooth', midi(n - 12), t + r() * 0.03, dur + 0.15); o.detune.value = (r() - 0.5) * 50; const og = G(0.05), p = PAN(r() * 1.4 - 0.7); o.connect(og); og.connect(p); p.connect(bank); }
+    }
+    function playHook(t0, o = {}) {
+      for (const [b, n, d] of HOOK) {
+        if (o.lead !== false) lead(t0 + b * B, n, d * B * 0.95, o.leadV || 1);
+        if (o.chant) chant(t0 + b * B, n, d * B * 0.95, o.chantV || 1);
+      }
+    }
+    function stadiumClap(t, v = 1) { for (let i = 0; i < 6; i++) { const tt = t + r() * 0.025; const n = noise(tt, 0.08), bp = BQ('bandpass', 900 + r() * 1300, 1.2), g = G(0), p = PAN(r() * 1.6 - 0.8); perc(g, tt, 0.22 * v, 0.06); n.connect(bp); bp.connect(g); g.connect(p); p.connect(drums); } }
+    function hey(t, v = 1) { chant(t, 67, 0.16, 1.4 * v, [530, 1850, 2500]); stadiumClap(t, 0.8 * v); }
+    function popper(t, v = 1) {
+      const n = noise(t, 0.3), hp = BQ('highpass', 1200), g = G(0); perc(g, t, 0.5 * v, 0.12, 0.001); n.connect(hp); hp.connect(g); g.connect(sfx); send(g, 0.3);
+      for (let i = 0; i < 14; i++) { const tt = t + 0.05 + r() * 0.5, c = noise(tt, 0.01), cb = BQ('highpass', 4000), cg2 = G(0); perc(cg2, tt, 0.12 * v * (1 - (tt - t)), 0.006, 0.001); c.connect(cb); cb.connect(cg2); cg2.connect(sfx); }
+    }
+
     // ================= ARRANGEMENT =================
     const chordAt = (t, t0) => CHORDS[Math.floor((t - t0) / (4 * B) + 1e-6) % 4];
     const rootAt = (t, t0) => ROOTS[Math.floor((t - t0) / (4 * B) + 1e-6) % 4];
@@ -187,8 +218,12 @@
 
     // 1. What the game is
     kick(T.title1, 1.2); boom(T.title1, 0.7); crash(T.title1, 0.8); stab(T.title1, [50, 57, 62, 66], 1.2, 0.45, 2500); bass(T.title1, 26, 0.45, 1.1);
-    kick(T.title2, 1.1); stab(T.title2, [57, 62, 66, 69], 1.2, 0.35, 3000); clap(T.title2, 0.8);
-    groove(T.title2 + B, T.toPick, { stabs: false, bass: false, clap: false });
+    kick(T.title1b, 1); clap(T.title1b, 0.7);
+    kick(T.title2, 1.2); stab(T.title2, [57, 62, 66, 69], 1.2, 0.35, 3000); clap(T.title2, 0.8);
+    kick(T.title2b, 1); clap(T.title2b, 0.9); hey(T.title2b, 0.8);
+    groove(T.mates, T.toPick, { stabs: false, bass: true, clap: true });
+    for (let i = 0; i < MATES.length; i++) { uiClick(T.mates + i * 0.24, 1200 + i * 180, 1); pluck(T.mates + i * 0.24, 81 + [0, 2, 4, 7][i % 4], 0.9); }
+    playHook(T.title1, { leadV: 0.8 });
     whoosh(T.toPick, T.pick - T.toPick + 0.1, 0.8, true);
 
     // 2. Pick the score: light, playful, tactile clicks
@@ -206,12 +241,15 @@
     whoosh(T.toKO, T.ko - T.toKO, 0.9, true);
     whistle(T.ko, 0.5, 0.9); lockClunk(T.ko + 0.02, 1.2); kick(T.ko, 1.2); crash(T.ko, 0.7); stab(T.ko, [62, 66, 69], 1, 0.3);
     groove(T.ko + B, T.toLive, { stabs: true });
+    playHook(T.ko + B, { leadV: 0.6 });
     bell(T.rule1, [81, 86], 0.8, 0.06); bell(T.rule2, [78], 0.7);
     whoosh(T.toLive - 0.1, 0.36, 0.9, true);
 
     // 5. Live: crowd, full groove, quiet clock ticks
     crash(T.live, 0.9); kick(T.live, 1.2); boom(T.live, 0.5);
     groove(T.live, T.tension - B, { stabs: true });
+    for (let b = 1; b < Math.round((T.tension - B - T.live) / B); b += 2) stadiumClap(T.live + b * B, 0.9);
+    playHook(T.live + 4 * B, { lead: false, chant: true, chantV: 0.45 });
     whoosh(T.table - 0.12, 0.3, 0.6);
     for (let i = 0; i < 8; i++) snare(T.tension - B + i * B / 8, 0.25 + i * 0.08);
     kick(T.tension - B, 1); kick(T.tension - B / 2, 1);
@@ -234,7 +272,11 @@
     stab(T.goal, [62, 66, 69, 74], 1.6, 0.6, 3000); bass(T.goal, 26, 0.6, 1.4);
     { const n = noise(T.goal, 0.5, white), lp = BQ('lowpass', 2500), g = G(0); perc(g, T.goal, 0.5, 0.45, 0.003); n.connect(lp); lp.connect(g); g.connect(sfx); }
     kick(T.flip, 0.9); snare(T.flip, 0.6);
-    groove(T.goal + 2 * B, T.punch, { stabs: true, kickV: 1.05 });
+    groove(T.goal + 2 * B, T.punch, { stabs: true, kickV: 1.1 });
+    playHook(T.goal + 2 * B, { chant: true, chantV: 0.9, leadV: 1 });
+    for (const t0 of [T.goal + 0.96, T.goal + 1.92, T.ft + 0.96]) hey(t0, 1);
+    popper(T.goal + 0.02, 1.2); popper(T.crownLand, 1);
+    bwomp(T.jackLine + 0.12, 1.1);
     whoosh(T.merge, T.exact - T.merge, 0.8, true);
     bell(T.exact, [74, 78, 81, 86], 1.3, 0.05); lockClunk(T.exact, 0.6);
     whistle(T.ft, 0.15, 1); whistle(T.ft + 0.19, 0.15, 1); whistle(T.ft + 0.38, 0.6, 1);
@@ -249,9 +291,12 @@
     bass(T.unbear1, 26, T.unbear2 - T.unbear1, 1); // a held breath on "You'll be…"
     kick(T.unbear2, 1.4); boom(T.unbear2, 0.9); crash(T.unbear2, 1); clap(T.unbear2, 1.1); stab(T.unbear2, [59, 62, 67, 71], 1.4, 0.45, 3200);
     groove(T.unbear2 + B, T.wipe, { stabs: true });
+    hey(T.unbear2 + B, 1);
+    playHook(T.unbear2 + B, { chant: true, chantV: 0.8, leadV: 1 }); // runs through the logo into the final hit
     whoosh(T.wipe, T.logo - T.wipe, 1, true);
     kick(T.logo, 1.3); boom(T.logo, 1); crash(T.logo, 1.1); stab(T.logo, [62, 66, 69, 74, 78], 1.4, 0.7, 2800); bell(T.logo + 0.02, [74, 81, 86], 1, 0.04);
-    groove(T.logo + B, T.sting, { stabs: false, clap: true, kickV: 0.8, open: false });
+    groove(T.logo + B, T.sting, { stabs: true, clap: true, kickV: 0.9 });
+    uiClick(T.cta, 900, 1); bell(T.cta + 0.03, [81, 86], 0.8, 0.06);
     kick(T.sting, 1.3); crash(T.sting, 1); stab(T.sting, [50, 62, 66, 69, 74], 1.6, 0.8, 2600); bass(T.sting, 26, 0.8, 1.2); bell(T.sting + 0.02, [86], 0.7);
 
     // sidechain duck of the tonal bus on every kick

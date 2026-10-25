@@ -7,12 +7,15 @@
 //   → live 1–1 late on, mate top → tension → goal, exact score → you top the table → logo
 (function () {
   const BPM = 125, B = 60 / BPM;
-  const FPS = 30, DUR = 29.9;
+  const FPS = 30, DUR = 32.0;
 
   const T = {
     // 1. What the game is
-    title1: 0.00,      // "PREDICT THE SCORE."
-    title2: 0.96,      // "BEAT YOUR MATES."
+    title1: 0.00,      // "PREDICT"
+    title1b: 0.48,     // "THE SCORE."
+    title2: 0.96,      // "BEAT"
+    title2b: 1.44,     // "YOUR MATES."
+    mates: 1.92,       // mates' names pop in, one per half-beat
     toPick: 2.88,      // title lifts away, Matchday card rises in
     // 2. Pick the score
     pick: 3.36,        // step 1 label
@@ -43,15 +46,17 @@
     award: 22.56,      // points awarded
     swap: 23.04,       // you go top
     crownLift: 23.28,  // crown leaves Jack
-    crownLand: 24.00,  // crown lands on you
+    crownLand: 24.00,  // crown lands on you — confetti
+    jackLine: 24.48,   // "Still laughing, Jack?"
     // 8. Punchline and logo
-    punch: 24.96,      // your row, big
-    unbear1: 25.20,    // "You'll be"
-    unbear2: 25.44,    // "UNBEARABLE."
-    wipe: 27.12,       // crown flies to centre, paper wipe
-    logo: 27.36,       // KickPot lockup
-    line: 27.84,       // "Predict the score. Beat your mates."
-    sting: 29.28,      // final hit
+    punch: 26.40,      // your row, big
+    unbear1: 26.64,    // "You'll be"
+    unbear2: 26.88,    // "UNBEARABLE."
+    wipe: 28.56,       // crown flies to centre, paper wipe
+    logo: 28.80,       // KickPot lockup
+    line: 29.28,       // "Predict the score. Beat your mates."
+    cta: 30.24,        // "START A GROUP WITH YOUR MATES"
+    sting: 31.20,      // final hit
     end: DUR,
   };
 
@@ -71,6 +76,7 @@
     { id: 'you',  name: 'YOU',  pick: [2, 1], base: 15 },
   ];
   const FIXTURE = { home: 'Arsenal', away: 'Chelsea', kickoff: '15:00' };
+  const MATES = ['JACK', 'SAM', 'DAZ', 'MO']; // stickers in the opening
 
   function points(pick, score) {
     const [ph, pa] = pick, [ah, aa] = score;
@@ -79,5 +85,5 @@
     return 0;
   }
 
-  window.KP_TIMELINE = { BPM, B, FPS, DUR, T, CLOCK, PLAYERS, FIXTURE, points };
+  window.KP_TIMELINE = { BPM, B, FPS, DUR, T, CLOCK, PLAYERS, FIXTURE, MATES, points };
 })();

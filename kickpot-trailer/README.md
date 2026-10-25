@@ -1,6 +1,6 @@
 # KickPot trailer — “2–1? You’re having a laugh.”
 
-A 30-second, 1920×1080, 30 fps trailer with an original synthesised soundtrack. It tells the story in order, one idea per shot, so someone who has never heard of KickPot understands the game. Numbered step labels (1–4) walk through how it works.
+A 32-second, 1920×1080, 30 fps trailer with an original synthesised soundtrack. It tells the story in order, one idea per shot, so someone who has never heard of KickPot understands the game. Numbered step labels (1–4) walk through how it works.
 
 **Finished film:** `out/KickPot_Trailer.mp4`
 
@@ -8,14 +8,14 @@ A 30-second, 1920×1080, 30 fps trailer with an original synthesised soundtrack.
 
 | Time | Beat | What happens |
 |---|---|---|
-| 0.0–3.4 | What it is | **PREDICT THE SCORE. BEAT YOUR MATES.** |
+| 0.0–3.4 | What it is | **PREDICT THE SCORE. BEAT YOUR MATES.** slams in word by word on the beat, and your mates’ names pop up around it as stickers. A terrace-chant hook starts. |
 | 3.4–7.7 | 1 · Pick the score | The Matchday card rises in: Arsenal v Chelsea, starting at the app’s default 1–1. One tap makes it **2–1**. “Lock in my picks” → “✓ Picks saved”. |
 | 7.7–11.0 | Your mate | The card shrinks into **YOUR PICK 2–1**, and **JACK’S PICK 1–1** slides in beside it. *“‘2–1? You’re having a laugh.’ — Jack”* |
 | 11.0–14.4 | 2 · Locked at kick-off | A green wipe and a whistle. Both padlocks close: **KICK-OFF. PICKS LOCKED.** Then the rules: **EXACT SCORE +3 POINTS**, **RIGHT RESULT +1 POINT**. |
 | 14.4–18.2 | 3 · Follow it live | Push into the stadium: **live 1–1, 89th minute**, beside your 2–1. The group table shows *if it ends 1–1*: Jack top on 19 (his dashed **+3**), you second on 15. |
 | 18.2–20.2 | Tension | The music drops out and the clock ticks faster against a heartbeat. The camera tightens on 1–1 v 2–1. |
-| 20.2–25.0 | 4 · Top the table | **GOAL!** 1–1 flips to 2–1. The live score slides onto your pick: **+3 EXACT SCORE**. Full-time whistle. Jack’s +3 falls away (16), your +3 lands (18), you go top and the crown moves to you. |
-| 25.0–29.9 | Punchline | Your row, crowned. *“You’ll be* **UNBEARABLE.**” The crown flies to centre and becomes the KickPot logo: *“Predict the score. Beat your mates.”* |
+| 20.2–26.4 | 4 · Top the table | **GOAL!** Sunburst and confetti cannons. 1–1 flips to 2–1. The live score slides onto your pick: **+3 EXACT SCORE**. Full-time whistle. Jack’s +3 falls away (16), your +3 lands (18), you go top and the crown moves to you in a shower of confetti. *“Still laughing, Jack?”* |
+| 26.4–32.0 | Punchline | Your row, crowned. *“You’ll be* **UNBEARABLE.**” The crown flies to centre and becomes the KickPot logo: *“Predict the score. Beat your mates.”* Then the call to action: **START A GROUP WITH YOUR MATES**. |
 
 ### Scoring continuity (staged demo data)
 
@@ -67,5 +67,5 @@ Mastered to about −14 LUFS integrated, true peak below −1 dBTP.
 
 - The interface elements are simplified motion graphics based on the app’s Matchday and Live table designs. They are not screen recordings, and they are not pixel-exact. Button and status copy (“Lock in my picks”, “✓ Picks saved”, “Locks in 2h”) and the 1–1 default draft come from `matchday-reference-live.js`.
 - The match, players, picks and points are illustrative.
-- All music and sound effects are synthesised in `src/audio.js`. There are no samples, licensed music or voices.
+- All music and sound effects are synthesised in `src/audio.js`, including the terrace-chant hook (formant-filtered synth voices, not recordings). There are no samples, licensed music or real voices.
 - Fonts: Barlow / Barlow Condensed and Instrument Serif, both under the SIL Open Font License (licences in `assets/fonts`).
