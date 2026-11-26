@@ -2,6 +2,7 @@ import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { timingSafeEqual } from 'node:crypto';
 import {applySecurityHeaders} from './security-headers.mjs';
 import { chooseRound, validateMatches } from './football.mjs';
 
@@ -13,6 +14,8 @@ const COMPETITION = process.env.FOOTBALL_DATA_COMPETITION || 'PL';
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || '';
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || '';
+// Lets a scheduler keep scores current while the app sleeps. Off unless set, and only a long secret is accepted.
+const CRON_SECRET = (process.env.CRON_SECRET || '').length >= 24 ? process.env.CRON_SECRET : '';
 if(!Number.isInteger(PORT)||PORT<0||PORT>65535)throw new Error('PORT must be a valid TCP port');
 if(COMPETITION!=='PL')throw new Error('KickPot requires FOOTBALL_DATA_COMPETITION=PL');
 if(SUPABASE_URL){
@@ -70,7 +73,21 @@ async function getCurrentMatchday(){return cached(`matchday:${COMPETITION}`,30*1
 function normaliseFixture(m){return{id:m.id,kickoff:m.utcDate,status:{short:mapStatus(m.status),elapsed:null},venue:m.venue||null,league:{id:m.competition?.id,name:m.competition?.name},home:{id:m.homeTeam?.id,name:m.homeTeam?.shortName||m.homeTeam?.name,logo:m.homeTeam?.crest},away:{id:m.awayTeam?.id,name:m.awayTeam?.shortName||m.awayTeam?.name,logo:m.awayTeam?.crest},goals:{home:m.score?.fullTime?.home??null,away:m.score?.fullTime?.away??null},score:m.score};}
 async function syncFixtures(matchday,rawMatches){if(!SUPABASE_SECRET_KEY||!rawMatches.length)return;const dates=rawMatches.map(m=>new Date(m.utcDate).getTime()).filter(Number.isFinite);const season=Number(rawMatches[0]?.season?.startDate?.slice(0,4))||new Date().getFullYear();const gw=await supabaseAdmin('gameweeks?on_conflict=league_id,season,round_name',{method:'POST',body:[{league_id:39,season,round_name:`Matchday ${matchday}`,starts_at:new Date(Math.min(...dates)).toISOString(),ends_at:new Date(Math.max(...dates)).toISOString()}],prefer:'resolution=merge-duplicates,return=representation'});const gameweekId=gw?.[0]?.id;if(!gameweekId)return;const fixtures=rawMatches.map(m=>({id:m.id,gameweek_id:gameweekId,kickoff:m.utcDate,home_team_id:m.homeTeam.id,home_team_name:m.homeTeam.shortName||m.homeTeam.name,away_team_id:m.awayTeam.id,away_team_name:m.awayTeam.shortName||m.awayTeam.name,status:mapStatus(m.status),home_goals:m.score?.fullTime?.home??null,away_goals:m.score?.fullTime?.away??null,updated_at:new Date().toISOString()}));await supabaseAdmin('fixtures?on_conflict=id',{method:'POST',body:fixtures,prefer:'resolution=merge-duplicates'});return gameweekId;}
 async function getFixtures(matchday){const md=matchday||await getCurrentMatchday();if(!md)return {matches:[],gameweekId:null,matchday:null};return cached(`fixtures:${COMPETITION}:${md}`,30*1000,async()=>{const d=await footballData(`competitions/${COMPETITION}/matches`,{matchday:md});const raw=validateMatches(d.matches);const gameweekId=await syncFixtures(md,raw);return {matches:raw,gameweekId:gameweekId||null,matchday:md};});}
+/** POST /api/cron/sync with "Authorization: Bearer <CRON_SECRET>": write the current and previous matchday's scores to the database. */
+async function cronSync(req,res){
+  if(!CRON_SECRET)return send(res,404,{error:'Not found'});
+  if(req.method!=='POST')return send(res,405,{error:'Method not allowed'},'application/json',{Allow:'POST'});
+  const got=Buffer.from(String(req.headers.authorization||'')),want=Buffer.from(`Bearer ${CRON_SECRET}`);
+  if(got.length!==want.length||!timingSafeEqual(got,want))return send(res,401,{error:'Unauthorised'});
+  if(!FOOTBALL_DATA_TOKEN||!SUPABASE_SECRET_KEY)return send(res,503,{error:'Sync is not configured'});
+  const md=await getCurrentMatchday();
+  const synced=[];
+  // The previous matchday too, so final scores land even if the round ended while nobody was looking.
+  for(const round of [md,md-1].filter(n=>Number.isInteger(n)&&n>=1)){const r=await getFixtures(round);synced.push({matchday:round,fixtures:r.matches.length});}
+  return send(res,200,{synced});
+}
 async function handleApi(req,res,url){try{
+  if(url.pathname==='/api/cron/sync')return await cronSync(req,res);
   if(!['GET','HEAD'].includes(req.method))return send(res,405,{error:'Method not allowed'},'application/json',{Allow:'GET, HEAD'});
   if(url.pathname==='/api/health')return send(res,200,{ok:true,app:'KickPot'});
 
