@@ -4,7 +4,7 @@ import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 let child, origin;
 test.before(async()=>{
- child=spawn(process.execPath,['start.mjs'],{env:{...process.env,PORT:'0',NODE_ENV:'test',SUPABASE_URL:'',SUPABASE_SECRET_KEY:'',SUPABASE_PUBLISHABLE_KEY:'',FOOTBALL_DATA_TOKEN:''},stdio:['ignore','pipe','pipe']});
+ child=spawn(process.execPath,['start.mjs'],{env:{...process.env,PORT:'0',NODE_ENV:'test',SUPABASE_URL:'',SUPABASE_SECRET_KEY:'',SUPABASE_PUBLISHABLE_KEY:'',FOOTBALL_DATA_TOKEN:'',CRON_SECRET:'test-cron-secret-0123456789abcdef'},stdio:['ignore','pipe','pipe']});
  origin=await new Promise((resolve,reject)=>{child.stdout.on('data',d=>{const m=String(d).match(/listening on (\d+)/);if(m)resolve('http://127.0.0.1:'+m[1]);});child.on('error',reject);child.on('exit',c=>reject(Error('server exited '+c)));});
 });
 test.after(async()=>{child.kill();await once(child,'exit');});
@@ -19,4 +19,18 @@ test('legacy Railway entry point boots the canonical app with built assets',asyn
   const url=await new Promise((resolve,reject)=>{legacy.stdout.on('data',d=>{const m=String(d).match(/listening on (\d+)/);if(m)resolve('http://127.0.0.1:'+m[1]);});legacy.on('error',reject);legacy.on('exit',code=>reject(Error('legacy launch failed '+code)));});
   assert.equal((await fetch(url+'/api/health')).status,200);assert.equal((await fetch(url+'/vendor/supabase.js')).status,200);
  }finally{legacy.kill();await once(legacy,'exit');}
+});
+test('scheduled sync endpoint: POST only, and only with the exact secret',async()=>{
+ assert.equal((await fetch(origin+'/api/cron/sync')).status,405);
+ assert.equal((await fetch(origin+'/api/cron/sync',{method:'POST'})).status,401);
+ assert.equal((await fetch(origin+'/api/cron/sync',{method:'POST',headers:{authorization:'Bearer wrong'}})).status,401);
+ // Right secret, but no football or database credentials in tests: refuses rather than pretending.
+ assert.equal((await fetch(origin+'/api/cron/sync',{method:'POST',headers:{authorization:'Bearer test-cron-secret-0123456789abcdef'}})).status,503);
+});
+test('scheduled sync endpoint does not exist when no secret is set',async()=>{
+ const off=spawn(process.execPath,['start.mjs'],{env:{...process.env,PORT:'0',NODE_ENV:'test',SUPABASE_URL:'',SUPABASE_SECRET_KEY:'',SUPABASE_PUBLISHABLE_KEY:'',FOOTBALL_DATA_TOKEN:'',CRON_SECRET:''},stdio:['ignore','pipe','pipe']});
+ try{
+  const url=await new Promise((resolve,reject)=>{off.stdout.on('data',d=>{const m=String(d).match(/listening on (\d+)/);if(m)resolve('http://127.0.0.1:'+m[1]);});off.on('error',reject);off.on('exit',c=>reject(Error('server exited '+c)));});
+  assert.equal((await fetch(url+'/api/cron/sync',{method:'POST',headers:{authorization:'Bearer x'}})).status,404);
+ }finally{off.kill();await once(off,'exit');}
 });
