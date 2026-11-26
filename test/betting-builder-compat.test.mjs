@@ -97,7 +97,7 @@ test('blocks guaranteed, contradictory and duplicate-event Bet Builder combinati
 test('global validation catches impossible combinations that only fail with three or more legs', () => {
   expectBlocked(
     pick('atgs', 'Bukayo Saka'),
-    pick('atgs', 'Gabriel Martinelli'),
+    pick('atgs', 'Viktor Gyokeres'),
     pick('ou15', 'Under 1.5')
   );
 
