@@ -1,0 +1,30 @@
+name: Sync scores while the app sleeps
+# The Fly machine scales to zero, so its own one-minute sync only runs while someone has the app open.
+# This wakes it on a schedule and asks it to write the latest scores. It only sends one HTTPS request.
+# Scheduled workflows run from the repository's default branch only.
+on:
+  schedule:
+    # Every 30 minutes from 11:00 to 22:30 UTC, when Premier League matches are played.
+    # About 25 runs a day, roughly 750 free Actions minutes a month even for a private repository.
+    - cron: '7,37 11-22 * * *'
+    # Once overnight to catch late or rescheduled results.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: sync-scores
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ask KickPot to sync
+        env:
+          SYNC_URL: ${{ vars.KICKPOT_SYNC_URL || 'https://kickpot-louie.fly.dev/api/cron/sync' }}
+          CRON_SECRET: ${{ secrets.KICKPOT_CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "KICKPOT_CRON_SECRET is not set; skipping."; exit 0; fi
+          # A cold start can take a few seconds, so allow retries.
+          curl --fail-with-body --silent --show-error --retry 3 --retry-delay 10 --retry-all-errors --max-time 60 \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" "$SYNC_URL"
